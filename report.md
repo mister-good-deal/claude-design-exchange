@@ -1,31 +1,20 @@
-# Rapport de gates — RELEASE CANDIDATE drop 2 (import du 2026-07-03)
+# Rapport de gates — RELEASE CANDIDATE drop 3 (import du 2026-07-03)
 
-## Statut : ❌ presque — 2 fixes one-line restants (import reverté, l'app reste sur v16)
+## Statut : ✅ ACCEPTÉ — MIGRATION TERMINÉE, pixel-parity 20/20
 
-Le JSX de `LayoutDesigner.tsx` est réparé ✅ (12 erreurs → 0 sur ce point). Restent exactement deux lignes :
+Drop 3 importé GREEN (tsc 0, react-doctor 0, lint 0). Depuis, côté app :
 
-## 1. `LayoutDesigner.tsx:19` — import inutilisé (tsc TS6133 + eslint no-unused-vars)
+- **AppShell câblé** : le chrome DS tourne en production (routing, kill-switch, engine status, room select,
+  window controls Tauri injectés par le slot). Les callbacks `onPreview`/`onStopPreview` pilotent les VRAIES
+  fenêtres de preview, la rejection surface des saved-rows est branchée sur le gate backend.
+- **Baseline générée depuis `standalone.entry.tsx`** comme proposé : `vite build` single-file → un HTML
+  auto-contenu de 361 KB partageant la source avec ce qui ship. Excellente idée, adoptée telle quelle.
+- **Pixel-parity : 20/20 régions vertes.** Suite complète : vitest 99, e2e 71/71, gates 0.
+- `Monitor.model` existe maintenant dans notre contrat backend (le gap le plus ancien, clos).
 
-```tsx
-    type LayoutRejection,   // ← importé mais jamais utilisé dans ce fichier
-```
+## Pour info (aucune action requise)
 
-Supprime-le de l'import (le type ne sert que dans `LayoutDesigner.fixtures.ts`).
-
-## 2. `LayoutDesigner.tsx:358` — react-doctor `prefer-tag-over-role`
-
-Le fix a11y des empty-cells utilise `role="button"` + `tabIndex` sur une `<div>` :
-
-```tsx
-<div className={styles.emptyCell} role="button" tabIndex={-1} aria-label={`Empty cell ...`} ...>
-```
-
-Notre doctor exige l'élément sémantique : remplace la div par un vrai
-`<button type="button" className={styles.emptyCell} aria-label={...}>` (les handlers onDragEnter/
-onDragOver/onDrop se portent tels quels ; c'est exactement le markup qu'avait l'ancien écran app).
-
-## Rien d'autre
-
-Tout le reste du drop 2 passe : plus d'erreur de syntaxe, `BASELINE_SCREENS` correctement déplacé,
-@stylistic absorbé. Même RC avec ces 2 lignes corrigées = accepté, et on câble l'AppShell dans la foulée.
-Checklist avant zip : `tsc` → 0, `react-doctor` → 0, `lint-bundle npm run check` → 0.
+- Le slot `glow` du baseline est monté avec notre GlowConfig app + fixtures — c'est le seul pixel non-DS du
+  baseline, par design (slot app-owned).
+- Prochaine boucle éventuelle : itérations visuelles normales via ce même canal. Merci pour la série —
+  16+3 drops, tous les gaps fermés à la source.
