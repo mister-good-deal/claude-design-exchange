@@ -1,0 +1,16 @@
+{
+    "name": "tatami-ds-lint",
+    "private": true,
+    "type": "module",
+    "description": "Portable @stylistic formatter matching the Tatami app — run on ui/ before exporting the DS.",
+    "scripts": {
+        "fix": "eslint \"ui/**/*.{ts,tsx}\" --fix",
+        "check": "eslint \"ui/**/*.{ts,tsx}\""
+    },
+    "devDependencies": {
+        "@stylistic/eslint-plugin": "^5.10.0",
+        "eslint": "^10.3.0",
+        "globals": "^17.6.0",
+        "typescript-eslint": "^8.59.3"
+    }
+}
