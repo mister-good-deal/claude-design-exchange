@@ -53,13 +53,20 @@ baseline itself, §6), `.jsx` previews, bundler artifacts, `doctor.config.ts`, `
     { "from": "ui/",           "to": "apps/web/src/ui/",              "mode": "replace-dir" },
     { "from": "ui/screens/",   "to": "apps/web/src/ui/screens/",      "mode": "replace-dir" },
     { "from": "tokens/",       "to": "apps/web/src/styles/tokens/",   "mode": "replace-dir" },
-    { "from": "styles.css",    "to": "apps/web/src/styles/styles.css","mode": "replace-file" }
+    { "from": "styles.css",    "to": "apps/web/src/styles/styles.css","mode": "replace-file" },
+    { "from": "pages/",        "to": "apps/web/public/",              "mode": "merge-dir" }
   ]
 }
 ```
 
 `ui/` is 100 % yours: the app's own components (`ErrorBoundary`, `GlowConfig`, `WindowControls`) live in
 `app/components/`, so `replace-dir` is a clean wholesale replace — no exclusions needed.
+
+`pages/` carries the STANDALONE HTML deliverables (self-contained, no external assets): `preview-window.html`
+today, the checkout pages if they migrate later. Target mode is `merge-dir` (overlay), not `replace-dir`, so
+app-owned files that may land in `public/` survive a drop. Include a page in the zip only when it changed —
+merge-dir leaves absent siblings untouched. Without this target a page fix has no rail to ship on (a
+`cursor: none` removal was lost exactly this way).
 
 ## 3 — Screens are PRESENTATIONAL-WITH-PROPS (the rule that kills drift)
 
