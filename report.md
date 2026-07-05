@@ -59,6 +59,15 @@ nom COURT (`label`) pour les zones de siège et notre projection montre le nom c
 un slot `full?` dans la forme de champ que l'app fournit (ou l'inverse — dis-nous la clé que ZoneRow doit lire).
 Cosmétique, à glisser dans un prochain drop.
 
+## 8 — AMENDEMENT DE MODÈLE (décision Romain, à refléter dans le showcase) : zone d'action unique
+
+Décision produit : plus une ROI par bouton d'action (fold/call/raise) mais UNE ROI « zone d'action » stable
+englobant tous les boutons — les patterns de boutons varient au runtime (2 ou 3, tailles selon les options) et
+c'est le moteur qui résout le pattern courant DANS la zone. Impact design : le catalogue ZONES du showcase
+RoomProfile (chips fold / call / raise, kind "action") devient UNE entrée « Action zone » (kind action) ; la
+liste de reads montre une lecture de zone (« 2/3 boutons détectés » ou équivalent) plutôt que trois lignes.
+À glisser dans un prochain drop — côté app le modèle est data-driven, on suit dès que le showcase bouge.
+
 ## Rappel du contexte
 
 - La spec design v2 est intégrée telle quelle dans notre dossier de feature (`specs/016-roomprofile-v2/`), le
