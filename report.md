@@ -1,33 +1,30 @@
-# Rapport de gates — drop 2026-07-09 (min-window-size + drag ghost), importé sur `beta-final-review`
+# Rapport de gates — micro-drop 2026-07-09 (LayoutDesigner re-découpé), importé sur `beta-final-review`
 
-## Statut : ⚠️ IMPORTÉ — fonctionnellement complet, 1 finding react-doctor à lever au prochain drop
+## Statut : ⚠️ IMPORTÉ — doctor purgé ✓, 1 erreur lint restante (même famille que la fois précédente)
 
-Le drop livre les deux évolutions demandées et elles sont bien reçues :
+Le re-découpage fonctionne : **react-doctor 0 diagnostic** (`no-giant-component` levé), tsc 0. Merci.
 
-- **A — min-window-size** : `belowFloor`/`minWidth`/`tileWidth` dans le contrat + états d'alerte designés,
-  fixtures nominal/below-floor/valeur éditée présentes. L'app câble `useLayoutAlert()` dessus (notre côté).
-- **B — drag ghost plein footprint** : preview `cw×ch` ancré comme le drop réel (clamp aux bords), distinction
-  place/swap à l'échelle du bloc, fixtures 1×1 / 2×2 / 2×2 clampée / swap multi-cellules. Exactement l'intention.
-- **Reliquat v2** : lint 0, les 3 warnings doctor de `RoomProfile.tsx` sont levés, `sizes: []` a son état vide,
-  `cropOffer` + callbacks présents. Merci — tout le rapport précédent est purgé.
+## Le dernier finding
+
+```
+src/ui/screens/LayoutDesigner.tsx  395:31  error  Unnecessary parentheses around expression  @stylistic/no-extra-parens
+```
+
+C'est la même famille que le `RoomProfileCalibration.tsx:246` du rapport d'avant : des parenthèses autour d'un
+ternaire en corps d'arrow, que notre `lint:fix` mécanique ne corrige pas en JSX/arrow. La ligne :
+
+```ts
+return tiles.map(t => (t.id === a.id ? { ...t, mon, col: nc, row: nr } : t));
+//                    ^— parens à retirer : t => t.id === a.id ? { … } : t
+```
+
+Rappel de la règle repo : `@stylistic/no-extra-parens` + `arrow-parens: as-needed` — pas de parens autour d'un
+corps d'arrow qui est un ternaire. Un micro-drop `LayoutDesigner.tsx` seul suffit, rien d'autre à toucher.
 
 ## Gates
 
 ```
-lint   ✓ (0)
+lint   ✗ 1 erreur (ci-dessus)
 tsc    ✓ (0)
-vitest ✓ (142 — les containers app compilent et passent contre le nouveau contrat)
-doctor ✗ 1 warning
+doctor ✓ (0 — merci pour le découpage)
 ```
-
-## Le finding à lever (prochain drop, pas d'urgence fonctionnelle)
-
-```
-⚠ Maintainability: Component is too large   src/ui/screens/LayoutDesigner.tsx:1272   (no-giant-component)
-```
-
-`LayoutDesigner.tsx` a grossi avec le ghost + l'alerte min-width et dépasse le plafond. Même recette que les
-fois précédentes : extraire des sous-composants nommés (le bloc ghost/footprint et/ou le bandeau d'alerte sont
-des candidats naturels — `<DragGhost />`, `<MinSizeAlert />`), sans changer un pixel. Rappel contrat : on
-n'édite jamais un fichier DS à la main côté app, donc ce warning reste rouge chez nous (gate CI bloquant)
-jusqu'à ton prochain drop — un micro-drop ne contenant que `LayoutDesigner.tsx` re-découpé nous va très bien.
