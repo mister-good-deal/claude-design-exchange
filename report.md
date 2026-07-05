@@ -1,95 +1,101 @@
-# Rapport de gates — drop RoomProfile v2 COMPLET (import du 2026-07-06, branche feat/016-roomprofile-v2)
+# Rapport & demandes d'itération — 2026-07-05 (préparation bêta)
 
-## Statut : ⚠️ IMPORTÉ SUR LA BRANCHE DE FEATURE — 4 findings DS-source à corriger pour le prochain drop
+## Statut : ✅ RoomProfile v2 mergé sur master — nouvelle itération : 2 évolutions Layout Designer + reliquat
 
-Le v2 complet (fixtures + `RoomProfile` v2 + `RoomProfileCalibration`) est bien COHÉRENT cette fois — la vue
-compile contre son contrat, merci. L'implémentation app (feature 016) démarre dessus. Les gates relèvent 4 points
-dans les fichiers DS, aucun bloquant pour notre avancement Rust, mais le prochain drop doit les lever (notre
-hand-back exige lint/doctor 0) :
+Le drop RoomProfile v2 est intégré et la feature 016 est mergée. Cette itération combine **deux évolutions du
+Layout Designer** (sections A et B — livrables dans le MÊME drop, elles touchent le même écran) et le **reliquat
+du rapport précédent** (section C, findings inchangés). Livraison selon `contract.md` habituel : zip + manifest,
+gates 0, fixtures mises à jour.
 
-## 1 — lint (1 erreur, non auto-fixable en JSX)
+---
 
-```
-ui/screens/RoomProfileCalibration.tsx:246:74  error  Unnecessary parentheses around expression  @stylistic/no-extra-parens
-```
+## A — Contrainte « taille minimum de fenêtre » dans le Layout Designer
 
-## 2-4 — react-doctor (3 warnings, RoomProfile.tsx)
+Tatami tuile des fenêtres de poker réelles. Chaque room impose une **taille minimum de fenêtre** : en dessous, le
+client (Unibet) refuse simplement le resize — le tuilage produirait alors des fenêtres qui ne correspondent pas au
+canvas. Aujourd'hui le Layout Designer laisse composer des slots arbitrairement petits (50×50 possible) sans aucun
+retour visuel. Le backend, lui, connaît déjà la contrainte et émet une alerte — c'est un pur gap d'UI.
 
-```
-⚠ Performance: Array lookup inside a loop      src/ui/screens/RoomProfile.tsx:290   (js-set-map-lookups)
-⚠ Performance: array.find() inside a loop      src/ui/screens/RoomProfile.tsx:321   (js-index-maps → construire une Map avant la boucle)
-⚠ Bugs: Many related useState calls            src/ui/screens/RoomProfile.tsx:348   (prefer-useReducer → grouper les états liés)
-```
+### Données disponibles (contrat IPC existant, rien à inventer)
 
-Le pattern `useReducer` groupé avait déjà réglé le même finding sur LayoutDesigner — même recette.
+- **Par room** : `minWidth` en pixels (la hauteur minimum se **dérive** du ratio forcé du layout : le designer impose
+  déjà un ratio aux fenêtres de jeu, donc `minHeight = minWidth / ratio`). Valeur **pré-remplie** par le profil room
+  (Unibet, valeur mesurée empiriquement) et **éditable** par l'utilisateur — les clients room changent, une valeur
+  figée fausse serait une impasse.
+- **Alerte existante** : `LayoutAlertDto { belowFloor: boolean, tileWidth: number, minWidth: number }` — émise quand
+  la largeur de tuile calculée passe sous le plancher. Elle est déjà transportée jusqu'au front (`useLayoutAlert()`)
+  mais **aucun écran ne la consomme**.
 
-## 5 — DÉCOUVERTE DE CONTRAT (câblage T003) : la vue crashe sur `sizes: []`
+### Besoin UX (à toi de concevoir la forme, voilà l'intention)
 
-`ui/screens/RoomProfile.tsx:356-357` :
+1. **Rendre la contrainte visible en permanence** dans le Layout Designer : le joueur doit voir la taille minimum de
+   la room active (ex. « Unibet — min 480 × 340 px ») pendant qu'il compose. Probablement près des contrôles de
+   grille/zone, là où se décide la taille effective des slots.
+2. **Réaction immédiate quand un slot passe sous le plancher** : composer une grille trop dense sur une zone trop
+   petite doit se voir sans ambiguïté (état d'alerte sur les tuiles concernées et/ou le contrôle fautif), avec la
+   valeur calculée vs le minimum (« tuiles 312 px < min 480 px »). Ce n'est **pas bloquant** (on tuile quand même —
+   comportement backend actuel « alerte mais tuile ») : c'est un avertissement fort, pas une erreur.
+3. **Édition de la valeur** : champ éditable pré-rempli, avec un moyen évident de revenir à la valeur d'origine du
+   profil. À toi de trancher où il vit le mieux (réglages du designer ? écran Room Profile, où la contrainte
+   appartient conceptuellement à la room ?) — la valeur est **globale par room**, pas par layout.
+4. **Hiérarchie d'honnêteté** : la valeur pré-remplie vient d'une mesure empirique, pas d'une doc officielle. Si tu
+   distingues visuellement « valeur d'usine » vs « valeur modifiée par le joueur », c'est un plus.
 
-```ts
-const size = data.sizes.find(s => s.id === data.activeSizeId) ?? data.sizes[0];
-const shots = size.shots;   // ← size undefined quand sizes est vide → throw
-```
+### Contraintes
 
-Un `RoomProfileData` avec `sizes: []` est légal (room sans layout encore, données honnêtement vides au premier
-câblage) mais la vue n'a AUCUN état vide. Demandes : garde sur `data.sizes[0]` + un état vide designé
-(« Aucune taille à calibrer — crée des layouts d'abord », dans ton langage). En attendant, l'app affiche un
-placeholder app-side quand sizes est vide (supprimé dès ton état vide livré).
+- Écran(s) touché(s) : `LayoutDesigner` (affichage + alerte), potentiellement `RoomProfile` (édition de la valeur).
+- Room unique pour cette phase : Unibet. Pas d'UI multi-room à prévoir.
+- Fixtures couvrant au moins : état nominal (aucune alerte), état below-floor (tuiles sous le plancher), valeur
+  éditée vs valeur d'usine.
+- Zéro logique métier dans les vues : le calcul `tileWidth`/`belowFloor` arrive par props (il existe déjà backend).
 
-## 6 — GAP DE CONTRAT (câblage T020) : pas de surface pour l'offre de recadrage à l'import
+---
 
-Le flux d'import FR-006 exige une PROPOSITION explicite de rognage sur un near-miss (≤+40 l / ≤+60 h), mais le
-contrat n'offre aucune surface : pas de champ `cropOffer`, pas de callbacks confirm/decline, et `ImportShotDialog`
-se ferme dès le drop. Demandes :
+## B — Ghost de drag & drop à l'empreinte réelle de la tuile
 
-1. `data.cropOffer?: { sizeId, rect } | null` + `onConfirmCrop?()` / `onDeclineCrop?()` — l'app fournit l'offre,
-   la vue la matérialise (bandeau/dialog dans ton langage).
-2. Bonus : un sélecteur de label de situation dans `ImportShotDialog` (aujourd'hui l'import prend le premier
-   label par défaut, re-étiquetable après coup seulement).
+Dans le Layout Designer, une tuile peut occuper plusieurs cellules de la grille (`cw × ch`, ex. une table en 2×2).
+Pendant un drag, le retour visuel de drop actuel n'allume qu'**une seule cellule** — celle sous le curseur
+(`data-over` sur le `EmptyCell`/`TileCell` survolé). Pour une tuile 2×2 on ne voit donc qu'un quart de l'empreinte
+réelle : impossible de juger si la tuile rentre, ce qu'elle recouvre, ou où elle va vraiment atterrir.
 
-En attendant, l'app passe l'offre par le canal `rejection` (texte explicite) et « réimporter le même fichier »
-vaut acceptation — fonctionnel mais pas au niveau de l'UX visée.
+### Comportement actuel (repères dans TON export)
 
-## 7 — Micro-gap (parité rooms-rois, non bloquant) : nom court vs nom complet des zones
+- `LayoutDesigner.tsx` : `TileCell` / `EmptyCell` posent `data-over` quand `ctx.over` correspond à leur clé — un
+  seul élément à la fois, span ignoré.
+- Le drag connaît déjà la tuile déplacée (`ctx.drag`) donc son `cw`/`ch` ; la géométrie de drop (clamp aux bords,
+  swap vs place) est déjà calculée au drop — seul le **retour visuel pendant le survol** est en retard.
 
-Le conteneur n'a qu'UNE chaîne par zone (le `label` du champ backend) alors que `ZoneRow` du prototype affiche le
-nom COURT (`label`) pour les zones de siège et notre projection montre le nom complet (« Hero Pseudo » vs
-« Pseudo »). Parité rooms-rois plafonnée à 0.0046 (seuil 0.006 documenté) au lieu de 0. Fix propre côté contrat :
-un slot `full?` dans la forme de champ que l'app fournit (ou l'inverse — dis-nous la clé que ZoneRow doit lire).
-Cosmétique, à glisser dans un prochain drop.
+### Besoin UX (à toi de concevoir la forme, voilà l'intention)
 
-## 8 — AMENDEMENT DE MODÈLE (décision Romain, à refléter dans le showcase) : zone d'action unique
+1. **Le ghost couvre l'empreinte complète** : en survol, les `cw × ch` cellules que la tuile occuperait s'allument
+   comme un seul bloc (ex. 4 cellules pour une 2×2), ancré exactement comme le drop réel le poserait — y compris le
+   clamp quand on approche un bord de grille (le ghost se décale comme la tuile se décalera, pas de mensonge visuel).
+2. **Lisibilité du résultat** : distinguer visuellement « je vais me poser sur du vide » de « je vais swapper avec
+   cette tuile » à l'échelle de l'empreinte entière (le hint Swap/Place actuel existe déjà sur une cellule — à
+   généraliser ou repenser à l'échelle du bloc).
+3. **Cohérence avec l'existant** : même vocabulaire visuel que les états `data-over`/`data-selected` actuels du
+   canvas ; le `sizeBadge` (`2×2`) peut aider à annoncer l'empreinte pendant le drag si tu le juges utile.
 
-Décision produit : plus une ROI par bouton d'action (fold/call/raise) mais UNE ROI « zone d'action » stable
-englobant tous les boutons — les patterns de boutons varient au runtime (2 ou 3, tailles selon les options) et
-c'est le moteur qui résout le pattern courant DANS la zone. Impact design : le catalogue ZONES du showcase
-RoomProfile (chips fold / call / raise, kind "action") devient UNE entrée « Action zone » (kind action) ; la
-liste de reads montre une lecture de zone (« 2/3 boutons détectés » ou équivalent) plutôt que trois lignes.
-À glisser dans un prochain drop — côté app le modèle est data-driven, on suit dès que le showcase bouge.
+### Contraintes
 
-## 9 — Gap wizard (découvert par les tests T028) : la rejection est masquée pendant la calibration
+- Écran touché : `LayoutDesigner` uniquement (canvas de composition).
+- Le calcul de la cellule d'ancrage/clamp peut rester dans la vue DS (géométrie pure de grille, déjà ton
+  territoire — drop/swap/clamp vivent déjà dans l'export), zéro nouvel aller-retour app.
+- Fixtures couvrant au moins : drag d'une tuile 1×1 (comportement actuel préservé), drag d'une 2×2 en plein milieu,
+  drag d'une 2×2 clampée contre un bord, survol d'une tuile existante (swap) avec empreinte multi-cellules.
 
-`data.rejection` se rend uniquement dans la bande du canvas (RoomProfile.tsx:473), HORS du <dialog> fullscreen du
-CaptureWizard — un refus survenant en plein tour (plafond, taille de fenêtre changée) est dans le DOM mais
-invisible sous le dialog. Demande : une surface de rejection propre au wizard (bandeau dans le dialog, même
-langage que la bande canvas). Non bloquant (les gardes UI disabled couvrent les cas courants), à glisser dans un
-prochain drop.
+---
 
-## 10 — DEMANDE : le badge « taille non calibrée » par table (FR-015, dernier morceau du flux)
+## C — Reliquat du drop RoomProfile v2 (rapport précédent, toujours dû)
 
-Le backend expose désormais `roiSource: "bucket" | "v1Fallback" | null` sur chaque table du snapshot (null =
-indéterminé, jamais badgé). Il manque la SURFACE par table côté design : aucun écran actuel ne consomme la liste
-des tables avec un slot badge. Demande : où et comment afficher « size not calibrated — reduced accuracy » sur une
-table en `v1Fallback` — vraisemblablement le mur d'écrans/l'état des tables du cockpit (AppShell ? un futur écran
-tables ?). À toi de trancher l'emplacement dans ton langage ; côté app le flag est prêt (fixtures : table 3 en
-v1Fallback pour tes essais).
-
-## Rappel du contexte
-
-- La spec design v2 est intégrée telle quelle dans notre dossier de feature (`specs/016-roomprofile-v2/`), le
-  contrat `RoomProfile.fixtures.ts` est notre source de vérité côté app (FR-014).
-- Retours UX/contrat éventuels pendant le câblage arriveront ici même (ex. état `capturing`, badge « taille non
-  calibrée » côté cockpit — on te sollicitera pour son emplacement).
-- `preview-screen.html` : la lecture `window.__TATAMI_TILES__` demandée précédemment n'était pas dans ce zip —
-  à inclure quand tu veux, le câblage 1-fenêtre-par-écran de la preview attend juste ça.
+1. **lint** : `ui/screens/RoomProfileCalibration.tsx:246:74` — `@stylistic/no-extra-parens` (non auto-fixable en JSX).
+2. **react-doctor** (3 warnings `RoomProfile.tsx`) : `js-set-map-lookups` (l.290), `js-index-maps` (l.321 —
+   construire une Map avant la boucle), `prefer-useReducer` (l.348 — même recette que LayoutDesigner).
+3. **Vue crashe sur `sizes: []`** (`RoomProfile.tsx:356-357`) : garde sur `data.sizes[0]` + un état vide designé
+   (« Aucune taille à calibrer — crée des layouts d'abord », dans ton langage). Un `RoomProfileData` avec
+   `sizes: []` est légal.
+4. **Surface d'offre de recadrage à l'import** : `data.cropOffer?: { sizeId, rect } | null` +
+   `onConfirmCrop?()` / `onDeclineCrop?()` — l'app fournit l'offre, la vue la matérialise. Bonus : sélecteur de
+   label de situation dans `ImportShotDialog`.
+5. **Micro-gap parité rooms-rois** : nom court vs complet des zones de siège — dis-nous la clé que `ZoneRow` doit
+   lire (slot `full?` ou l'inverse), cosmétique.
