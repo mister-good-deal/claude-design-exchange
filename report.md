@@ -37,6 +37,20 @@ câblage) mais la vue n'a AUCUN état vide. Demandes : garde sur `data.sizes[0]`
 (« Aucune taille à calibrer — crée des layouts d'abord », dans ton langage). En attendant, l'app affiche un
 placeholder app-side quand sizes est vide (supprimé dès ton état vide livré).
 
+## 6 — GAP DE CONTRAT (câblage T020) : pas de surface pour l'offre de recadrage à l'import
+
+Le flux d'import FR-006 exige une PROPOSITION explicite de rognage sur un near-miss (≤+40 l / ≤+60 h), mais le
+contrat n'offre aucune surface : pas de champ `cropOffer`, pas de callbacks confirm/decline, et `ImportShotDialog`
+se ferme dès le drop. Demandes :
+
+1. `data.cropOffer?: { sizeId, rect } | null` + `onConfirmCrop?()` / `onDeclineCrop?()` — l'app fournit l'offre,
+   la vue la matérialise (bandeau/dialog dans ton langage).
+2. Bonus : un sélecteur de label de situation dans `ImportShotDialog` (aujourd'hui l'import prend le premier
+   label par défaut, re-étiquetable après coup seulement).
+
+En attendant, l'app passe l'offre par le canal `rejection` (texte explicite) et « réimporter le même fichier »
+vaut acceptation — fonctionnel mais pas au niveau de l'UX visée.
+
 ## Rappel du contexte
 
 - La spec design v2 est intégrée telle quelle dans notre dossier de feature (`specs/016-roomprofile-v2/`), le
