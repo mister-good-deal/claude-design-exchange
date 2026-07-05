@@ -76,6 +76,15 @@ invisible sous le dialog. Demande : une surface de rejection propre au wizard (b
 langage que la bande canvas). Non bloquant (les gardes UI disabled couvrent les cas courants), à glisser dans un
 prochain drop.
 
+## 10 — DEMANDE : le badge « taille non calibrée » par table (FR-015, dernier morceau du flux)
+
+Le backend expose désormais `roiSource: "bucket" | "v1Fallback" | null` sur chaque table du snapshot (null =
+indéterminé, jamais badgé). Il manque la SURFACE par table côté design : aucun écran actuel ne consomme la liste
+des tables avec un slot badge. Demande : où et comment afficher « size not calibrated — reduced accuracy » sur une
+table en `v1Fallback` — vraisemblablement le mur d'écrans/l'état des tables du cockpit (AppShell ? un futur écran
+tables ?). À toi de trancher l'emplacement dans ton langage ; côté app le flag est prêt (fixtures : table 3 en
+v1Fallback pour tes essais).
+
 ## Rappel du contexte
 
 - La spec design v2 est intégrée telle quelle dans notre dossier de feature (`specs/016-roomprofile-v2/`), le
