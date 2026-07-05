@@ -23,6 +23,20 @@ ui/screens/RoomProfileCalibration.tsx:246:74  error  Unnecessary parentheses aro
 
 Le pattern `useReducer` groupé avait déjà réglé le même finding sur LayoutDesigner — même recette.
 
+## 5 — DÉCOUVERTE DE CONTRAT (câblage T003) : la vue crashe sur `sizes: []`
+
+`ui/screens/RoomProfile.tsx:356-357` :
+
+```ts
+const size = data.sizes.find(s => s.id === data.activeSizeId) ?? data.sizes[0];
+const shots = size.shots;   // ← size undefined quand sizes est vide → throw
+```
+
+Un `RoomProfileData` avec `sizes: []` est légal (room sans layout encore, données honnêtement vides au premier
+câblage) mais la vue n'a AUCUN état vide. Demandes : garde sur `data.sizes[0]` + un état vide designé
+(« Aucune taille à calibrer — crée des layouts d'abord », dans ton langage). En attendant, l'app affiche un
+placeholder app-side quand sizes est vide (supprimé dès ton état vide livré).
+
 ## Rappel du contexte
 
 - La spec design v2 est intégrée telle quelle dans notre dossier de feature (`specs/016-roomprofile-v2/`), le
