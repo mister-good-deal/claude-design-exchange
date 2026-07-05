@@ -68,6 +68,14 @@ RoomProfile (chips fold / call / raise, kind "action") devient UNE entrée « Ac
 liste de reads montre une lecture de zone (« 2/3 boutons détectés » ou équivalent) plutôt que trois lignes.
 À glisser dans un prochain drop — côté app le modèle est data-driven, on suit dès que le showcase bouge.
 
+## 9 — Gap wizard (découvert par les tests T028) : la rejection est masquée pendant la calibration
+
+`data.rejection` se rend uniquement dans la bande du canvas (RoomProfile.tsx:473), HORS du <dialog> fullscreen du
+CaptureWizard — un refus survenant en plein tour (plafond, taille de fenêtre changée) est dans le DOM mais
+invisible sous le dialog. Demande : une surface de rejection propre au wizard (bandeau dans le dialog, même
+langage que la bande canvas). Non bloquant (les gardes UI disabled couvrent les cas courants), à glisser dans un
+prochain drop.
+
 ## Rappel du contexte
 
 - La spec design v2 est intégrée telle quelle dans notre dossier de feature (`specs/016-roomprofile-v2/`), le
