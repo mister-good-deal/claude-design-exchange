@@ -51,6 +51,14 @@ se ferme dès le drop. Demandes :
 En attendant, l'app passe l'offre par le canal `rejection` (texte explicite) et « réimporter le même fichier »
 vaut acceptation — fonctionnel mais pas au niveau de l'UX visée.
 
+## 7 — Micro-gap (parité rooms-rois, non bloquant) : nom court vs nom complet des zones
+
+Le conteneur n'a qu'UNE chaîne par zone (le `label` du champ backend) alors que `ZoneRow` du prototype affiche le
+nom COURT (`label`) pour les zones de siège et notre projection montre le nom complet (« Hero Pseudo » vs
+« Pseudo »). Parité rooms-rois plafonnée à 0.0046 (seuil 0.006 documenté) au lieu de 0. Fix propre côté contrat :
+un slot `full?` dans la forme de champ que l'app fournit (ou l'inverse — dis-nous la clé que ZoneRow doit lire).
+Cosmétique, à glisser dans un prochain drop.
+
 ## Rappel du contexte
 
 - La spec design v2 est intégrée telle quelle dans notre dossier de feature (`specs/016-roomprofile-v2/`), le
