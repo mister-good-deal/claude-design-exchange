@@ -1,42 +1,47 @@
-# Iteration request — LayoutDesigner (2026-07-08)
+# Iteration request — NOUVEL écran « Account » (Compte) + onglet nav (feature 017)
 
-**Verdict of the last import (DS v2026-07-08):** GREEN — drop-in clean (lint + tsc + react-doctor = 0, pixel-parity
-26/26, e2e 21/21 on LayoutDesigner). No gate failures. This is a **feature iteration** from live testing (`make run`),
-scoped to the **LayoutDesigner** screen only.
+Verdict du dernier import (DS 2026-07-08) : GREEN. Cette itération **ajoute un écran** et **un onglet de nav** — elle ne modifie pas les écrans existants. Garder tous les gates verts (tsc + react-doctor = 0 au source, cf. `contract.md`). Ré-exporter le DS complet.
 
-Please apply the two changes below and re-export the full DS. Keep every gate green (tsc + react-doctor = 0 at source,
-per `contract.md`). Touch only `ui/screens/LayoutDesigner.tsx` + `ui/screens/LayoutDesigner.module.css` (+ its
-`.fixtures.ts` as noted).
+## Contexte produit
 
-## 1. Drag cursor while placing a window (palette drag)
+L'app desktop gagne un auto-updater (gaté par licence, non forcé) et il faut une surface de **gestion post-activation**. L'écran **Activation** existant (015) reste la porte d'entrée (hors-licence, saisie du code) — **ne pas y toucher**. Le nouvel écran **Account** est la gestion pour un utilisateur déjà licencié : abonnement, version de l'app, mises à jour.
 
-**Symptom (live):** while dragging a slot-type from the palette onto the canvas, the cursor stays the default arrow —
-it should read as a "placing / copy" drag, not a plain pointer.
+## 1. Nouvel écran présentationnel `Account` (Compte)
 
-**Diagnosis:** in `LayoutDesigner.tsx`, `PaletteItem.onDragStart` sets `e.dataTransfer.effectAllowed = "copy"` (good),
-but the drop-zone `onDragOver` handlers only call `e.preventDefault()` without ever setting
-`e.dataTransfer.dropEffect`, so the browser falls back to the default cursor over the canvas:
-- `TileCell` `onDragOver` (~line 552)
-- `EmptyCell` `onDragOver` (~line 589)
-- the canvas / gutter `onDragOver` (~line 692)
+Même patron que les autres écrans DS : présentationnel pur, props `{ data, on }`, primitives + tokens existants (Panel, Badge, Button, etc.), cohérent visuellement avec Overlay/Activation. Fichiers attendus : `ui/screens/Account.tsx` + `.module.css` + `.fixtures.ts`, et l'ajouter à `ui/screens/index.ts` + au manifeste.
 
-**Ask:** set `e.dataTransfer.dropEffect = "copy"` in those `onDragOver` handlers while a palette drag is active, so the
-browser shows the copy cursor over valid drop targets (and the native "no-drop" cursor only over genuinely invalid
-areas). Optionally add `cursor: grabbing` on the canvas root while a drag is in progress for extra clarity.
-For consistency, the tile-move and monitor-reorder drags use `effectAllowed = "move"` — the same `dropEffect = "move"`
-treatment is welcome, but the palette "copy" case is the one reported.
+**`AccountData`** :
+- `subscription`: `{ state: "active" | "expired" | "unknown", validUntil?: string (ISO), planLabel?: string }`
+- `appVersion`: `string` (ex. `"0.3.0"`)
+- `update`: `{ state: "up-to-date" | "checking" | "available" | "downloading" | "ready" | "error", version?: string, notes?: string, progressPct?: number, error?: string }`
 
-## 2. Never offer to delete the last layout
+**`AccountCallbacks`** :
+- `onCheckUpdate(): void` — bouton « Vérifier les mises à jour »
+- `onApplyUpdate(): void` — bouton « Redémarrer pour appliquer » (visible seulement en état `ready`)
+- `onOpenBilling(): void` — bouton « Gérer l'abonnement » (ouvre le portail)
 
-**New app invariant:** a room profile now always keeps **≥ 1 layout** — the backend refuses deleting the last one (a
-room must have a layout to tile). The UI must therefore not offer a Remove that will be rejected.
+**Sections de l'écran** (3 Panels) :
+1. **Abonnement** — badge d'état (active = accent, expired = danger, unknown = neutral), échéance lisible (`validUntil`), `planLabel` si présent, bouton « Gérer l'abonnement ». Si `state="unknown"` ou `validUntil` absent → afficher « indisponible » honnêtement, **jamais** une valeur inventée.
+2. **Version** — la version courante (`appVersion`) en évidence (mono), libellé « Version installée ».
+3. **Mises à jour** — piloté par `update.state` :
+   - `up-to-date` → « À jour » (état calme, discret) + bouton « Vérifier ».
+   - `checking` → indicateur « Vérification… ».
+   - `available` → « Version {version} disponible » + `notes` (zone de texte) — pas d'action de download (le téléchargement démarre automatiquement en fond côté app).
+   - `downloading` → barre de progression (`progressPct` 0–100) + « Téléchargement… ».
+   - `ready` → « Mise à jour prête » + bouton **« Redémarrer pour appliquer »** (accent). Message clair : l'app redémarrera.
+   - `error` → message d'erreur honnête (`error`) + bouton « Réessayer » (rappelle `onCheckUpdate`). Jamais un faux « à jour ».
 
-**Ask:** in the Saved "Layouts" panel (`SavedRow`), when only **one** layout remains (`data.saved.length <= 1`),
-**disable** that row's **Remove** control (keep Rename / Rebind / Apply active), ideally with a disabled tooltip such
-as "A room keeps at least one layout". No new data prop is needed — `data.saved.length` already carries it. With 2+
-layouts, Remove is unchanged.
+Honnêteté (contrainte projet forte) : aucune donnée fabriquée ; un champ absent = état « indisponible » explicite.
+
+## 2. Onglet « Compte » dans la nav (AppShell)
+
+Ajouter une entrée de nav **Compte** au rail de l'AppShell (icône type compte/utilisateur), après les écrans existants. Elle DOIT porter une **pastille discrète** (dot) quand une maj demande l'attention — piloté par une prop d'AppShell, ex. `data.accountBadge: boolean` (true quand l'update est `available` | `downloading` | `ready`). Pas de modale, pas d'interruption : juste la pastille sur l'onglet.
+
+## Fixtures / états à couvrir
+
+Fournir des fixtures couvrant : subscription `active` (avec échéance) et `expired` ; update dans chaque état (`up-to-date`, `available` avec notes, `downloading` à ~40 %, `ready`, `error`). Et une variante AppShell avec `accountBadge: true` pour exercer la pastille.
 
 ## Notes
-- Keep `LayoutDesigner.fixtures.ts` seeding ≥ 2 layouts so the Remove-enabled path stays visible; please also cover
-  the single-layout state (a fixture variant or story) so the disabled Remove is exercised.
-- Re-export the whole DS with `manifest.json` unchanged so `pnpm import-ds` stays a clean drop-in.
+
+- Ne modifie **que** : nouvel `Account.*`, `AppShell` (ajout onglet + prop badge), `index.ts`, `manifest.json`, fixtures. Aucun autre écran.
+- Ré-exporter le DS complet (`pnpm import-ds` doit rester un drop-in clean).
