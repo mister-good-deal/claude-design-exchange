@@ -1,20 +1,45 @@
-# Iteration — aligner `Account.fixtures` sur le rendu HONNÊTE de l'app (pixel-parity)
+# Iteration — GlowConfig : rendre `rejection`, protéger `glow.html` au manifest
 
-Petite itération ciblée. L'écran **Account** (Compte) est en place et bon. Un seul ajustement : la **fixture par défaut** `ACCOUNT_FIXTURE` doit refléter ce que l'app affiche RÉELLEMENT, pour que la pixel-parity (standalone ↔ container app) tienne.
+L'export **v2026-07-10** est intégré : **drop-in CLEAN** (lint / tsc / react-doctor verts, zéro retouche à la main),
+écran **GlowConfig** câblé derrière son container, onglet nav « glow » actif, **pixel-parity 32/32** — les deux
+nouvelles régions `glow-main` / `glow-panel` matchent à **diff 0**. Beau boulot. Deux ajustements pour le prochain
+export, une question de ménage, et des confirmations de contrat.
 
-## Pourquoi
+## 1. `manifest.json` — la cible `pages/` doit protéger `glow.html`
 
-La pixel-parity compare le **standalone** (qui rend `ACCOUNT_FIXTURE`) au **vrai container app**. Or le container dérive l'abonnement de l'**entitlement de licence**, qui **ne porte AUCUN nom de plan**. L'app n'affiche donc **jamais** de `planLabel` (règle d'honnêteté du projet : ne rien fabriquer). Tant que la fixture démo montre « Tatami Pro · monthly », la référence de design montre une donnée que le produit réel n'a pas → le panneau Abonnement ne peut pas matcher, et les 4 régions pixel-parity de l'écran Compte restent désactivées.
+La cible `{ "from": "pages/", "to": "apps/web/public/", "mode": "replace-dir" }` n'a **pas de `keepGlob`** : le
+replace-dir a SUPPRIMÉ `apps/web/public/glow.html`, un fichier **app-owned** (l'overlay natif du glow — la page que
+les fenêtres Tauri `glow-*` chargent autour des tables ; elle porte de la logique produit : budget d'intrusion des
+sondes, repli de couleur, pulsation). Je l'ai restauré à la main cette fois.
 
-## Changement — UNIQUEMENT `ui/screens/Account.fixtures.ts`
+**Demande** : ajoute `"keepGlob": ["glow.html"]` à la cible `pages/` — même mécanique que `ErrorBoundary.*` sur la
+cible `ui/`. (Alternative si tu veux posséder cette page : l'embarquer dans `pages/` de l'export — mais ses
+contraintes sont pilotées par le moteur de capture, je recommande de la laisser app-owned.)
 
-- **`ACCOUNT_FIXTURE`** (la fixture par défaut, celle que rend le standalone) :
-  - `subscription`: `{ state: "active", validUntil: "July 12, 2026" }` — **retirer `planLabel`**.
-  - `appVersion`: `"0.2.0"` (la version réelle courante, pas une démo « 0.3.0 »).
-  - `update`: `{ state: "up-to-date" }` (inchangé).
-- Par cohérence d'honnêteté, **retirer aussi `planLabel`** des autres fixtures Account (`ACCOUNT_EXPIRED_FIXTURE`, etc.) — l'app ne fournit jamais de nom de plan. Le champ optionnel `planLabel?` peut rester dans le type (inutilisé) ou être supprimé, au choix.
-- Ne toucher à **rien d'autre** (ni le composant `Account.tsx`, ni les autres écrans, ni l'i18n). Ré-exporter le DS complet : `pnpm import-ds` doit rester un drop-in clean (lint / tsc / react-doctor verts).
+## 2. `GlowConfig.tsx` — afficher `data.rejection`
 
-## Côté app (je m'en occupe après ton export, pour info)
+Le contrat (`GlowConfig.fixtures.ts`) déclare `rejection?: GlowRejection {id, message}` — « App-supplied rejection
+for the last attempted change » — mais **le composant ne le rend pas** (aucun markup ne consomme `data.rejection`).
+Côté app c'est déjà branché : quand le backend refuse un réglage, le container remplit `rejection` avec l'id du
+trigger visé et le message, et le nettoie au succès suivant. Il ne manque que l'affichage.
 
-Je rendrai le mapping de date sensible à la locale (en parité l'app rend `"en"` → « July 12, 2026 »), je fournirai dans la fixture prototype un entitlement (actif, échéance = 12 juillet 2026), `appVersion "0.2.0"` et l'état `up-to-date`, puis je ré-activerai les 4 régions pixel-parity Compte.
+**Demande** : rendre le message près de la ligne du trigger `rejection.id` (inline sous la ligne, ton alerte —
+style à ta main, `var(--alert)` probable), disparition naturelle quand `rejection` redevient `undefined`.
+
+## 3. Ménage — `pages/preview-window.html` a-t-il encore un usage ?
+
+L'export livre `preview-window.html` (template `{{SLOT_KIND}}`/`{{SLOT_LABEL}}`) mais **aucun code app ne le
+consomme** — le preview réel passe par `preview-screen.html` (une fenêtre par écran, tuiles via
+`window.__TATAMI_TILES__`). Si c'est un reliquat d'une itération antérieure, retire-le de l'export ; s'il a un rôle
+à venir, dis-le-moi dans le prochain README.
+
+## Confirmations de contrat (rien à faire, pour info)
+
+- `width` 1..5 pas 0.5 : câblé tel quel — clamp côté app, persisté dans le store natif (migration silencieuse des
+  stores existants, défauts alignés sur ta fixture : hover 1.5, action/timer 2.5), appliqué par l'overlay natif.
+- `onPreview` : branché sur le **preview réel** du layout actif — chaque trigger activé étiquette une tuile
+  (« Action à jouer », « Table active (survolée) », « Timer proche », bilingue) et porte un vrai overlay de glow
+  natif ; un réglage modifié pendant l'aperçu se répercute à chaud.
+- `GLOW_SWATCHES`, `blocked` (timer non calibré), `locale` : consommés tels quels.
+- Rappel process inchangé : ré-export **complet** drop-in — `pnpm import-ds` doit rester vert (lint / tsc /
+  react-doctor) sans édition manuelle ; la parité re-vérifie `glow-main`/`glow-panel`.
