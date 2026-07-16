@@ -1,46 +1,40 @@
-# Rapport de gates — import du re-export v2026-07-16 : VERT, les deux itérations sont closes
+# Iteration report — GlowConfig screen: adopt the pulse keyframe fix (app-side hand-fix pending in your source)
 
-`pnpm import-ds --latest` sur l'export `tatami 2026-07-16` : sync complet (ui/, ui/screens/, tokens/, styles.css,
-pages/), lockfile `.ds-sync.json` re-baseliné (61 fichiers). Toutes les gates passent sur le drop-in, zéro édition de
-l'export :
+**Export concerned:** 2026-07-16 (responsive preview tiles + reordered Overlay + dedicated GlowConfig screen).
+Import went green on every gate (lint / tsc / react-doctor 0, unit 179/179, e2e 73/73, pixel-parity 30/30).
 
-- lint ✓ · tsc ✓ · react-doctor ✓ (0 diagnostic)
-- unit 179/179 ✓ · e2e chromium 73/73 ✓ · build ✓ · baseline standalone regénérée ✓ · **pixel-parity 30/30 ✓**
+## What we had to fix by hand, and why
 
-## Itération « aperçu responsive » (2026-07-16) — CLOSE ✓
+Live validation caught a UX defect on the **GlowConfig vignette**: checking « Pulsé » rendered a **static ring**.
+The `glowRing` keyframe in `ui/screens/GlowConfig.module.css` kept the solid ring identical at both extremes
+(`box-shadow: 0 0 0 var(--gw) var(--tc)`) and only varied the diffuse bloom (blur 14→30, alpha 40→55 %) —
+imperceptible on our dark background. Meanwhile the real OS overlay (`glow.html`) breathes opacity 1 → 0.55: the
+vignette, which sits right under the user's eyes next to the toggle, must mirror that behaviour.
 
-- `ui/screens/LayoutDesigner.module.css` : les règles responsives sont adoptées à l'identique (container
-  `preview-win / size`, clamps `cqi`, plancher 16 px du feutre, les trois paliers de délestage). Diff vs le fix
-  app-side : uniquement du reformatage de commentaires — parfait.
-- `pages/preview-screen.html` : livré dans l'export avec les mêmes règles (padding `min(1.6cqmin, 4%)`, label
-  `clamp(12px, …)` + `break-word`, délestage content-box en fin de feuille). Re-vérifié sous Playwright aux 4
-  paliers (960×540 → 54×54) : aucun débordement, délestage conforme au barème.
-- Détail contrat : §1 cite encore `preview-window.html` comme seul livrable pages/ — ajouter `preview-screen.html`
-  à l'énumération au prochain toilettage du contrat (rien de bloquant).
+Because the release was imminent, we hand-fixed the DS-owned file app-side and did a **deliberate ds-sync
+re-baseline**. Please adopt the fix at the source so your next export carries it and the divergence disappears:
 
-## Itération « Overlay en retard » (2026-07-10) — CLOSE ✓
+```css
+/* ring + border breathe alpha 100 % → 45 %, mirroring the overlay's opacity 1 → 0.55 (glow.html) */
+@keyframes glowRing {
+    0%, 100% {
+        border-color: var(--tc);
+        box-shadow: 0 0 0 var(--gw) var(--tc), 0 0 14px -2px color-mix(in srgb, var(--tc) 40%, transparent);
+    }
+    50% {
+        border-color: color-mix(in srgb, var(--tc) 45%, transparent);
+        box-shadow: 0 0 0 var(--gw) color-mix(in srgb, var(--tc) 45%, transparent), 0 0 30px 2px color-mix(in srgb, var(--tc) 55%, transparent);
+    }
+}
+```
 
-- La preview « Overlay on table » est **en tête de page, pleine largeur** (premier Panel du DOM, configGrid en
-  dessous) — conforme à la maquette.
-- Le slot `glow` a disparu du contrat de l'écran Overlay et l'export livre l'écran **GlowConfig dédié**
-  (`ui/screens/GlowConfig.*`) — l'ambiguïté est tranchée dans le sens recommandé.
+`prefers-reduced-motion` handling is unchanged. No markup change — CSS keyframe only.
 
-## Adaptations app-side faites à l'import (pas des défauts d'export)
+## Contract fix needed — §4 is now ambiguous about GlowConfig
 
-La disparition du slot `glow` a cassé `tsc` au premier passage (2 erreurs, sites d'injection app) — résorbé côté
-app comme prévu par l'itération : injections `glow={GLOW}` retirées (`OverlayContainer`, baseline parité), et le
-legacy `GlowPanel`/`GlowConfig` app-owned (+ ses 6 tests qui assertaient le contrat slot retiré) supprimé — code
-mort sans consommateur. L'entrée nav de l'écran GlowConfig dédié reste à câbler côté app (branche feature 018,
-hors périmètre de cet import).
-
-## Écart contrat repéré (non bloquant, mais à trancher)
-
-Le manifest de cet export passe le rail `pages/` de `merge-dir` (contrat §2, rationale : les fichiers app-owned de
-`public/` survivent au drop) à **`replace-dir` + `keepGlob: ["glow.html"]`** — et supprime au passage
-`preview-window.html` (v1 morte, zéro référence code : nettoyage bienvenu). Ça a fonctionné ici parce que `public/`
-ne contenait rien d'autre, mais c'est une déviation silencieuse du contrat, exactement ce que le contrat demande de
-signaler. **Demande** : au prochain export, soit tu reviens à `merge-dir` (et la suppression de v1 se fait côté app),
-soit on documente `replace-dir` + keepGlob dans le contrat §2 — dis ta préférence dans le README de l'export et le
-contrat sera aligné.
-
-Prochain sujet : rien d'autre d'ouvert côté app. À toi si tu as une itération en cours ; sinon la boucle est au repos.
+Contract §4 (« App-owned, NOT in the export ») still lists `GlowConfig` as app-owned. That clause described the
+**old app component** (`apps/web/src/app/components/GlowConfig`), which we deleted once your 2026-07-16 export
+shipped the dedicated **GlowConfig screen** under `ui/screens/` (DS-owned, covered by our drift gate). The stale
+clause already misled an automated fix into believing a direct edit was contract-legal. Please update §4 and the
+« Do NOT ship » list of §2: `ErrorBoundary` and `WindowControls` remain app-owned; the GlowConfig **screen** is
+yours.
