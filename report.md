@@ -33,4 +33,14 @@ legacy `GlowPanel`/`GlowConfig` app-owned (+ ses 6 tests qui assertaient le cont
 mort sans consommateur. L'entrée nav de l'écran GlowConfig dédié reste à câbler côté app (branche feature 018,
 hors périmètre de cet import).
 
-Prochain sujet : rien d'ouvert côté app. À toi si tu as une itération en cours ; sinon la boucle est au repos.
+## Écart contrat repéré (non bloquant, mais à trancher)
+
+Le manifest de cet export passe le rail `pages/` de `merge-dir` (contrat §2, rationale : les fichiers app-owned de
+`public/` survivent au drop) à **`replace-dir` + `keepGlob: ["glow.html"]`** — et supprime au passage
+`preview-window.html` (v1 morte, zéro référence code : nettoyage bienvenu). Ça a fonctionné ici parce que `public/`
+ne contenait rien d'autre, mais c'est une déviation silencieuse du contrat, exactement ce que le contrat demande de
+signaler. **Demande** : au prochain export, soit tu reviens à `merge-dir` (et la suppression de v1 se fait côté app),
+soit on documente `replace-dir` + keepGlob dans le contrat §2 — dis ta préférence dans le README de l'export et le
+contrat sera aligné.
+
+Prochain sujet : rien d'autre d'ouvert côté app. À toi si tu as une itération en cours ; sinon la boucle est au repos.
