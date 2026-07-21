@@ -67,3 +67,30 @@ clears itself when the engine reports the drift resolved). One line of copy per 
 
 Props-only as per §3 (the app passes the union + locale, the screen renders). Until this lands, the alert is
 logs-only (engine WARN per table) + available in app state — no visual surface, by design rather than app-side CSS.
+
+## Markup request — LayoutDesigner: warn when a grid cell is SHORTER than the room's minimum window height (0.4.6)
+
+Field finding (0.4.5 live session): Unibet re-imposes a minimum window HEIGHT (~372 px visible frame) after
+tiling — a 3-row grid on a 1080p screen produces 360 px cells that the room physically cannot honour (the third
+table's action bar ends up off-screen). The engine now measures and persists this floor:
+
+```ts
+export type LayoutConstraintsDto = {
+    minWidth: number,
+    factoryMinWidth: number,
+    minHeight: number | null,          // NEW — room-imposed minimum window height (visible frame px); null = unmeasured
+    factoryMinHeight: number | null,   // NEW — same, from the factory reference profile
+    room: string,
+};
+```
+
+**Ask:** in the LayoutDesigner's existing min-window panel (the one with the width floor + below-floor alert row),
+also surface the HEIGHT floor: display it next to the width (e.g. « min 480 × 372 px »), and raise the same
+alert-row treatment when any placed tile's cell height falls below `minHeight` — copy suggestion fr:
+« {count} rangée(s) sous la hauteur minimale de la room ({cellHeight}px < {minHeight}px) — la room refusera le
+redimensionnement » / en: "{count} row(s) below the room's minimum height ({cellHeight}px < {minHeight}px) — the
+room will refuse the resize". A `null` minHeight hides the height part entirely (nothing measured, nothing shown).
+Props-only as per §3; the app already feeds `LayoutConstraintsDto` to the screen.
+
+Reminder: the engine-alert affordance in the AppShell chrome (previous report section, `layoutAlert` union with
+`placementDrift`) is still pending — `placementDrift.maxDh` is precisely this height floor showing up live.
