@@ -1,45 +1,35 @@
-# Tatami — iteration request: AppShell topbar session timer + session strip cleanup
+# Tatami — import report: DS export 2026-07-22 (session timer + BetSizing restructure)
 
-Date: 2026-07-22 · From: app workspace (beta feedback) · Concerns: `AppShell` screen only
+Date: 2026-07-22 · From: app workspace · Verdict: **imported, all gates green** (lint / tsc / doctor / vitest 214 /
+e2e 70 / pixel-parity 30) after app-side container adaptations. No DS file was hand-edited.
 
-## Context
+## Landed and wired
 
-Beta feedback on the cockpit topbar (the `titleZone` session strip and the window chrome). Two changes are requested
-from the design side; one FYI requires no design work but explains the current chrome behavior.
+- **Session timer**: exactly the requested contract (`sessionTimer` + toggle/reset callbacks). The app now feeds a
+  real wall-clock (start / pause / resume / reset) and the "Tables" stat is gone. The topbar strip stays honestly
+  empty (`session: []`) in the shipped build. Thanks — clean export.
+- **Hotkeys restructure**: the app maps its bindings/automation as before onto the new contract. See the open point
+  below for `sizing`.
 
-## Request 1 — Controllable session timer in the topbar
+## QUESTION — Overlay `glow` slot removed (please confirm intent)
 
-Today the session strip renders `SessionStat[]` readouts and the "Session 01:42:18" value is a static prototype
-figure. The beta needs it to become a real, user-controllable session timer:
+The export dropped the `glow?: ReactNode` slot from `Overlay` and moved `GlowConfig` to a standalone baseline entry.
+This contradicts the recorded product decision (018): *the Window glow section lives inside the Overlay screen — no
+dedicated tab*. Our contract mirror (§2 manifest sample) still lists `"slots": ["glow"]` for Overlay.
 
-- **Start / pause / reset controls**, visually integrated with the timer readout in the topbar (compact control
-  cluster next to the elapsed time — not floating buttons). UX is yours: pick iconography, hover/active states, and
-  how reset is protected against accidental clicks (e.g. only visible while paused, or a hold-to-reset affordance).
-- **Three states** the design must cover: `idle` (00:00:00, only "start" affordance), `running` (elapsed ticking,
-  "pause" affordance), `paused` (elapsed frozen, "resume" + "reset" affordances).
-- Proposed contract extension (adapt as you see fit, but keep the presentational-with-props rule):
+Interim on our side (pixel-parity green): the app and the baseline both compose `GlowConfig` as a sibling directly
+below the Overlay page inside the screen host — visually the section now sits after the Overlay content instead of
+inside its page container.
 
-```ts
-// AppShellData
-sessionTimer?: { elapsed: string; state: "idle" | "running" | "paused" } | undefined;
-// AppShellCallbacks
-onSessionTimerToggle?: (() => void) | undefined;   // start / pause / resume
-onSessionTimerReset?: (() => void) | undefined;
-```
+Please answer one of:
+1. **Unintentional** → restore the `glow` slot in the next export (we revert to slot injection).
+2. **Intentional** → tell us where glow config should live now (own rail tab? a section of another screen?) and ship
+   the corresponding AppShell/nav design so we can wire it properly.
 
-The app will own the actual clock (ticking, persistence) and feed `elapsed` as a formatted string, per the contract.
+## FYI — sizing editor renders empty in the app for now
 
-## Request 2 — Drop the "Tables" stat from the session strip
-
-The "Tables 14/16" readout is not useful to beta users and is removed from the product. Please drop it from the
-`AppShell` prototype and from `APP_SHELL_FIXTURE.session` (and from the Overlay showcase `sessionStats` sample if it
-still carries one) in the next export. The app will mirror its pixel-parity snapshot (`prototype-snapshot.ts`)
-accordingly when the export lands.
-
-## FYI — window chrome is now frameless (no design action needed)
-
-The main window now ships undecorated (`decorations: false`), so the `windowControls` slot content (minimize /
-maximize / close) is the **only** window chrome — the native OS title bar duplication reported in beta is gone. The
-app makes the whole topbar `<header>` behave as the native drag region (drag + double-click-to-maximize), with
-interactive children opted out. Nothing to change in the AppShell markup; just keep the `windowControls` slot at the
-topbar's right edge with its current hit area.
+The new street × situation `SizingConfig` has no faithful projection from the legacy flat persisted model
+(raise presets + per-street multipliers), so the app feeds an honest empty config and leaves the sizing callbacks
+unwired until the bet-sizing workstream lands the real migration. Pixel-parity renders your `SIZING_FIXTURE` on both
+sides. The `BetSizing` overlay widget is not yet parity-covered (not rail-reachable in the baseline) — coverage
+arrives with its app wiring; legacy preset hotkeys keep their keys reserved in the binding registry meanwhile.
