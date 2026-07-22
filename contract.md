@@ -21,7 +21,11 @@ tatami-ds/
     cx.ts  index.ts  css-modules.d.ts
   ui/screens/                # DS PRESENTATIONAL SCREENS (→ apps/web/src/ui/screens/)
     AppShell.tsx  AppShell.module.css  AppShell.fixtures.ts
+    Account.tsx  Account.module.css  Account.fixtures.ts
+    Activation.tsx  Activation.module.css  Activation.fixtures.ts
     Overlay.tsx  Overlay.module.css  Overlay.fixtures.ts
+    BetSizing.tsx  BetSizing.module.css  BetSizing.fixtures.ts
+    GlowConfig.tsx  GlowConfig.module.css  GlowConfig.fixtures.ts
     Hotkeys.tsx  Hotkeys.module.css  Hotkeys.fixtures.ts
     RoomProfile.tsx  RoomProfile.module.css  RoomProfile.fixtures.ts
     LayoutDesigner.tsx  LayoutDesigner.module.css  LayoutDesigner.fixtures.ts
@@ -29,9 +33,10 @@ tatami-ds/
     index.ts
   tokens/                    # (→ apps/web/src/styles/tokens/)  colors.css effects.css fonts.css spacing.css typography.css
   styles.css                 # (→ apps/web/src/styles/styles.css) tokens import + @font-face + keyframes
+  pages/                     # STANDALONE HTML pages (→ apps/web/public/)  preview-screen.html
 ```
 
-Do **NOT** ship: `ErrorBoundary`, `GlowConfig` (app-owned, §4), a pre-rendered `standalone.html` (the app builds the
+Do **NOT** ship: `ErrorBoundary` (app-owned, §4), a pre-rendered `standalone.html` (the app builds the
 baseline itself, §6), `.jsx` previews, bundler artifacts, `doctor.config.ts`, `node_modules`.
 
 ## 2 — `manifest.json` (the importer reads this — deterministic sync)
@@ -39,34 +44,39 @@ baseline itself, §6), `.jsx` previews, bundler artifacts, `doctor.config.ts`, `
 ```json
 {
   "designSystem": "tatami",
-  "version": "<ISO date, e.g. 2026-07-03>",
+  "version": "<ISO date, e.g. 2026-07-17>",
   "generatedBy": "claude-design",
   "primitives": ["Button","IconButton","Badge","Kbd","Input","Select","Toggle","Slider","Panel","StatReadout","KillSwitch"],
   "screens": [
     { "name": "AppShell", "props": { "data": "AppShellData", "on": "AppShellCallbacks", "slots": ["windowControls"] } },
-    { "name": "Overlay", "props": { "data": "OverlayData", "on": "OverlayCallbacks", "slots": ["glow"] } },
+    { "name": "Account", "props": { "data": "AccountData", "on": "AccountCallbacks", "slots": [] } },
+    { "name": "Activation", "props": { "data": "ActivationData", "on": "ActivationCallbacks", "slots": [] } },
+    { "name": "Overlay", "props": { "data": "OverlayData", "on": "OverlayCallbacks", "slots": [] } },
+    { "name": "BetSizing", "props": { "data": "BetSizingData", "on": "BetSizingCallbacks", "slots": [] } },
+    { "name": "GlowConfig", "props": { "data": "GlowConfigData", "on": "GlowConfigCallbacks", "slots": [] } },
     { "name": "Hotkeys", "props": { "data": "HotkeysData", "on": "HotkeysCallbacks", "slots": [] } },
     { "name": "RoomProfile", "props": { "data": "RoomProfileData", "on": "RoomProfileCallbacks", "slots": [] } },
     { "name": "LayoutDesigner", "props": { "data": "LayoutDesignerData", "on": "LayoutDesignerCallbacks", "slots": [] } }
   ],
   "targets": [
-    { "from": "ui/",           "to": "apps/web/src/ui/",              "mode": "replace-dir" },
-    { "from": "ui/screens/",   "to": "apps/web/src/ui/screens/",      "mode": "replace-dir" },
-    { "from": "tokens/",       "to": "apps/web/src/styles/tokens/",   "mode": "replace-dir" },
-    { "from": "styles.css",    "to": "apps/web/src/styles/styles.css","mode": "replace-file" },
-    { "from": "pages/",        "to": "apps/web/public/",              "mode": "merge-dir" }
+    { "from": "ui/", "to": "apps/web/src/ui/", "mode": "replace-dir", "keepGlob": ["ErrorBoundary.*"] },
+    { "from": "ui/screens/", "to": "apps/web/src/ui/screens/", "mode": "replace-dir" },
+    { "from": "tokens/", "to": "apps/web/src/styles/tokens/", "mode": "replace-dir" },
+    { "from": "styles.css", "to": "apps/web/src/styles/styles.css", "mode": "replace-file" },
+    { "from": "pages/", "to": "apps/web/public/", "mode": "replace-dir", "keepGlob": ["glow.html"] }
   ]
 }
 ```
 
-`ui/` is 100 % yours: the app's own components (`ErrorBoundary`, `GlowConfig`, `WindowControls`) live in
-`app/components/`, so `replace-dir` is a clean wholesale replace — no exclusions needed.
+`ui/` is yours except the app-owned `ErrorBoundary`, which lives in `apps/web/src/ui/` and survives the
+`replace-dir` through `keepGlob: ["ErrorBoundary.*"]` — do not ship it (§4). `WindowControls` stays in
+`app/components/`, out of the sync path.
 
-`pages/` carries the STANDALONE HTML deliverables (self-contained, no external assets): `preview-window.html`
-today, the checkout pages if they migrate later. Target mode is `merge-dir` (overlay), not `replace-dir`, so
-app-owned files that may land in `public/` survive a drop. Include a page in the zip only when it changed —
-merge-dir leaves absent siblings untouched. Without this target a page fix has no rail to ship on (a
-`cursor: none` removal was lost exactly this way).
+`pages/` carries the STANDALONE HTML deliverables (self-contained, no external assets): `preview-screen.html`
+today, the checkout pages if they migrate later. Target mode is `replace-dir` with `keepGlob: ["glow.html"]` —
+the app-owned `glow.html` survives every drop; everything else in `public/` is yours. Ship the full set of
+DS-owned pages in every zip: under `replace-dir` absent siblings are removed (no more `merge-dir` overlay).
+Without this target a page fix has no rail to ship on (a `cursor: none` removal was lost exactly this way).
 
 ## 3 — Screens are PRESENTATIONAL-WITH-PROPS (the rule that kills drift)
 
@@ -76,7 +86,7 @@ in-flight inline edit). ALL domain data + actions arrive as **props**:
 - `data: <Screen>Data` — everything to render, typed (bindings, ROI set, layouts, seats/tags/notes, …).
 - `on: <Screen>Callbacks` — every user action as a callback (`onRebind(scope,id,chord)`, `onMoveRoi(id,rect)`,
   `onAddTag(tag)`, `onSelectLayout(id)`, …), so the APP owns persistence / validation / IPC.
-- `slots?` — app-injected nodes (Overlay's `glow?: ReactNode`, AppShell's `windowControls?: ReactNode`).
+- `slots?` — app-injected nodes (AppShell's `windowControls?: ReactNode`).
 - `<Screen>.fixtures.ts` exports a typed `<Screen>Data` used as the **default** so your DS preview and our
   pixel-parity render the fixtures; the app passes real data at runtime.
 
@@ -90,9 +100,11 @@ in-view simulation when they are absent.
 
 ## 4 — App-owned (NOT in the export)
 
-`ErrorBoundary`, `GlowConfig`, `WindowControls` are the app's — they live in `apps/web/src/app/components/` (out of
-`ui/`). Do not ship them. `Overlay` exposes `glow?: ReactNode` and `AppShell` exposes `windowControls?: ReactNode`;
-the app fills those slots.
+`ErrorBoundary` and `WindowControls` are the app's — `WindowControls` lives in `apps/web/src/app/components/`,
+`ErrorBoundary` in `apps/web/src/ui/` behind the `ui/` `keepGlob` (§2). Do not ship them. `GlowConfig` is a full DS
+screen — ship it like the others. `Overlay` no longer exposes a `glow` slot (`slots: []`); `AppShell` still exposes
+`windowControls?: ReactNode` and the app fills it. The standalone `glow.html` page in `public/` is app-owned,
+preserved by the `pages/` `keepGlob`.
 
 ## 5 — Gate-clean, UNMODIFIED (this is non-negotiable)
 
@@ -131,8 +143,7 @@ You ship the **composition** (`ui/screens/standalone.entry.tsx`: `StandaloneBase
 the app **builds** the baseline HTML from it (`pnpm build:standalone` → `doc/Tatami-App-(standalone).html`, one
 self-contained file). Because the baseline and the shipped screens share one source, every parity region is 0 by
 construction — never ship a hand-authored or pre-rendered HTML. The app-side mount adds only: nav state (so the parity
-harness can click the rail), the real `GlowConfig` on fixture data in the `glow` slot, and the `app.css` globals
-(border-box reset — parity-critical).
+harness can click the rail) and the `app.css` globals (border-box reset — parity-critical).
 
 ## 7 — Confirmed environment
 
