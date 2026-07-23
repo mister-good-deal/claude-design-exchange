@@ -1,48 +1,60 @@
-# Tatami — iteration report: drops 2026-07-17 & 2026-07-22 imported, one nav gap to fix
+# Tatami app → Claude Design — iteration request (0.5.1) : conflits de hotkeys de presets dans « Hotkeys & bets »
 
-Date: 2026-07-22 · From: app workspace (feature 019 bet-overlay) · Concerns: `AppShell` nav + FYI
+Contexte : release corrective 0.5.1 de l'overlay de mise (feature 019). Côté app + moteur, les hotkeys de presets de
+sizing sont désormais **routées au clavier** (les chiffres 1-4 du ladder arment le preset correspondant, comme le
+clic) et une collision de hotkey de preset ne **rejette plus** toute la section `[sizing]` au chargement — le preset
+est simplement livré non bindé. La décision produit (Romain) est : **gérer les conflits de hotkeys de presets comme
+tous les autres bindings, dans l'onglet « Hotkeys & bets »** — c.-à-d. la même UX inline « Collides with … / Pick
+another / Take it » que les actions, le kill-switch et les bascules de layout.
 
-## Verdict — both drops are drop-in clean
+Cette UX vit dans des fichiers **DS-owned** (`apps/web/src/ui/screens/Hotkeys.tsx`, `BetSizing.tsx`, `i18n.ts`), donc
+elle ne peut pas être portée côté app sans casser `check:ds-sync` — d'où cette demande.
 
-`pnpm import-ds --latest` on **2026-07-17** (BetSizing + Account/Activation/GlowConfig promoted to screens) and then
-**2026-07-22** (AppShell session timer) both synced with **all source-side gates green**: `tsc`, ESLint `@stylistic`,
-and **react-doctor = 0** on every DS-owned file, no hand edits. The `BetSizing` ladder, the `Hotkeys & bets` sizing
-editor and the session timer all wired to the backend without forking a single DS file. Thank you — the
-presentational-with-props contract held perfectly through a large drop.
+## Ce que l'app fournit DÉJÀ (aucun changement DS requis pour ça)
 
-The only red we hit was **app-owned test maintenance** (a stale pixel-parity region, see below), not an export defect.
+- Le moteur route les hotkeys de presets et gère l'armement clavier. Rien à faire côté DS.
+- Le back-end `validate_bindings(registry: BindingRegistryDto)` inclut déjà `raise_presets` dans le registre unifié
+  et renvoie les conflits (`conflicts()`), exactement comme pour les actions/bascules/kill. **La plomberie de conflit
+  côté domaine est prête** — il ne manque que le câblage DS qui alimente le registre avec les presets et affiche la
+  résolution inline sur les lignes de presets.
 
-## Request 1 — ship APP_NAV entries for `glow` and `betsizing` (the one real gap)
+## Changements demandés (dans les fichiers DS-owned)
 
-The 2026-07-17 drop **removed the `glow` slot from `Overlay`** and promoted **`GlowConfig` to a standalone screen**
-(good — one home for glow). But `APP_NAV` in `ui/screens/AppShell.fixtures.ts` still lists only the original 5 items
-(`layouts`, `rooms`, `overlay`, `hotkeys`, `account`) — **no `glow` entry**. Consequences:
+1. **Inclure les presets dans le registre de détection de conflit** de `Hotkeys.tsx` (aujourd'hui la construction du
+   registre ignore les presets — ils sont traités comme hors-registre). Une hotkey de preset doit entrer en collision
+   avec une action / un kill-switch / une bascule de layout, et vice-versa.
 
-- In the **real cockpit**, `GlowConfig` became unreachable (nothing mounts it). We had to add a **temporary app-owned
-  bridge** (`COCKPIT_NAV = [...APP_NAV, { id: "glow", … }]`) to restore access. We'd like to drop that bridge.
-- In the **pixel-parity harness**, the glow screen is unreachable via the rail on both sides, so its region can't run.
-  We removed the stale `overlay-glow` region (it still pointed at the old Overlay slot) — glow parity is uncovered
-  until the nav ships.
+2. **Retirer le contournement preset** dans la capture de rebinding : aujourd'hui un rebind de preset saute la
+   détection d'owner (`scope === "preset" ? null`), donc aucune UX de conflit ne s'affiche pour les presets. Le
+   rebind de preset doit passer par la même résolution d'owner que les autres scopes.
 
-Please add to `APP_NAV` (both are already valid `SCREEN` entries in `standalone.entry.tsx`):
+3. **Afficher la résolution inline** (le même `ConflictNotice` / `PendingNotice` : « Collides with … » → « Pick
+   another » / « Take it » / « Keep current » / « Move it here ») sur les lignes de presets du `SizingPanel`, comme
+   sur les `KeyRow` d'actions/bascules.
 
-```ts
-{ id: "glow", label: <i18n nav.glow: "Window glow" / "Halo des tables">, icon: "…" },
-```
+4. **Conserver la réutilisation inter-situations** : une même touche (ex. « 2 ») peut légitimement servir dans
+   plusieurs situations de sizing (preflop open, 3bet, 4bet…) car **une seule liste street × situation est active à
+   la fois**. La détection de conflit pour un preset doit donc porter sur : (a) les autres bindings `[input]`
+   (actions / kill / bascules), et (b) les autres presets **de la même liste (street × situation) en cours
+   d'édition** — jamais entre listes distinctes. Ne pas signaler « 2 » de preflop.open contre « 2 » de preflop.3bet.
 
-`i18n.ts` already carries `nav.glow` ("Window glow" / "Halo des tables"), so only the `APP_NAV` array entry is
-missing. The **new baseline screen `betsizing`** is in the same situation (SCREEN entry present, no nav) — if it is
-meant to be cockpit-navigable rather than baseline-only, add a nav entry for it too; otherwise a one-line note that
-`betsizing` is baseline-only is enough and we'll keep it out of the rail.
+5. **i18n** : réutiliser les chaînes de conflit existantes (`collidesPre`/`collidesPost`/`pickAnother`/`takeIt`/
+   `boundToPre`/`keepCurrent`/`moveItHere`, préfixe d'owner `presetPrefix` déjà présent) pour les lignes de presets —
+   plus besoin de s'appuyer sur le message de rejet back-end brut.
 
-## FYI — no design work
+## Comportement back-end à connaître (pour cadrer l'UX, rien à implémenter côté DS)
 
-- `BetSizing` is mounted in its own Tauri window over the hovered table; the app owns the window, the global hotkeys,
-  and the exact-amount typing into the room's bet box. The screen's presentational contract is exactly right as-is.
-- The `Overlay` glow-slot removal is fully absorbed app-side.
+- **Chargement** d'un profil dont une hotkey de preset collisionne : NON bloquant — le preset est livré non bindé
+  (pas d'erreur). Donc au montage de l'onglet, un preset peut apparaître déjà « non bindé » là où l'utilisateur avait
+  posé une touche en conflit : c'est voulu.
+- **Commit** (`update_sizing`) : NON bloquant également (une hotkey en conflit est committée non bindée, pas de rejet
+  dur — pour ne pas empêcher une édition sans rapport quand un conflit préexiste). C'est précisément pourquoi l'UX
+  inline est nécessaire : c'est elle qui doit **empêcher / signaler** le conflit AVANT commit, comme pour les actions
+  (le client appelle `validate_bindings` et propose la résolution), plutôt que de laisser la touche « disparaître »
+  silencieusement.
 
-## Answer to your 2026-07-22 note — yes, please sync the preview kit
+## Critère de recette
 
-You asked whether to synchronize the preview kit (`ui_kits/tatami/AppShell.jsx`) with the new session timer. **Yes —
-please sync it** so the Design System tab renders the timer cluster (idle/running/paused) like the production
-`AppShell.tsx`. Same for any future BetSizing preview card if one is planned.
+Dans l'onglet « Hotkeys & bets », rebinder un preset sur une touche déjà prise (par une action, une bascule, le kill,
+ou un autre preset de la MÊME liste) affiche la même UX de conflit que pour une action, et la même résolution ; poser
+la même touche sur deux listes de situations différentes ne déclenche AUCUN conflit.
