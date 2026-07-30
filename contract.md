@@ -63,7 +63,7 @@ baseline itself, §6), `.jsx` previews, bundler artifacts, `doctor.config.ts`, `
     { "from": "ui/screens/", "to": "apps/web/src/ui/screens/", "mode": "replace-dir" },
     { "from": "tokens/", "to": "apps/web/src/styles/tokens/", "mode": "replace-dir" },
     { "from": "styles.css", "to": "apps/web/src/styles/styles.css", "mode": "replace-file" },
-    { "from": "pages/", "to": "apps/web/public/", "mode": "replace-dir", "keepGlob": ["glow.html"] }
+    { "from": "pages/", "to": "apps/web/public/", "mode": "replace-dir", "keepGlob": ["glow.html", "layout.html"] }
   ]
 }
 ```
@@ -73,8 +73,9 @@ baseline itself, §6), `.jsx` previews, bundler artifacts, `doctor.config.ts`, `
 `app/components/`, out of the sync path.
 
 `pages/` carries the STANDALONE HTML deliverables (self-contained, no external assets): `preview-screen.html`
-today, the checkout pages if they migrate later. Target mode is `replace-dir` with `keepGlob: ["glow.html"]` —
-the app-owned `glow.html` survives every drop; everything else in `public/` is yours. Ship the full set of
+today, the checkout pages if they migrate later. Target mode is `replace-dir` with
+`keepGlob: ["glow.html", "layout.html"]` — the app-owned `glow.html` and `layout.html` survive every drop;
+everything else in `public/` is yours. Ship the full set of
 DS-owned pages in every zip: under `replace-dir` absent siblings are removed (no more `merge-dir` overlay).
 Without this target a page fix has no rail to ship on (a `cursor: none` removal was lost exactly this way).
 
@@ -103,8 +104,8 @@ in-view simulation when they are absent.
 `ErrorBoundary` and `WindowControls` are the app's — `WindowControls` lives in `apps/web/src/app/components/`,
 `ErrorBoundary` in `apps/web/src/ui/` behind the `ui/` `keepGlob` (§2). Do not ship them. `GlowConfig` is a full DS
 screen — ship it like the others. `Overlay` no longer exposes a `glow` slot (`slots: []`); `AppShell` still exposes
-`windowControls?: ReactNode` and the app fills it. The standalone `glow.html` page in `public/` is app-owned,
-preserved by the `pages/` `keepGlob`.
+`windowControls?: ReactNode` and the app fills it. The standalone `glow.html` and `layout.html` pages in
+`public/` are app-owned, preserved by the `pages/` `keepGlob`.
 
 ## 5 — Gate-clean, UNMODIFIED (this is non-negotiable)
 
