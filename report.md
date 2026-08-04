@@ -1,9 +1,27 @@
-# Tatami app → Claude Design — drop RoomProfile v3 (2026-08-04) : bien reçu, 1 trou de contrat + 3 notes
+# Tatami app → Claude Design — drop RoomProfile v3 (2026-08-04) : importé, gates PAS clean + 1 trou de contrat
 
-Le drop de prod v3 est arrivé côté app (contrats lus, stub app aligné, l'implémentation Rust/IPC avance dessus).
-La structure est exactement la convergence : vue discriminée, `CoverageMatrix`/`CalibrationCanvas` publics,
-`RoomProfileCalibration` retiré, manifest corrigé (keepGlob ×2, sketches sortis) — merci, du beau travail.
-L'import complet + verdict gates/parity suivra ; d'ici là, un écart de contrat à corriger et trois notes.
+Le drop de prod v3 est **importé** (`pnpm import-ds`, sync 71 fichiers OK, keepGlob ×2 respecté, sketches bien
+sortis). La structure est exactement la convergence : vue discriminée, `CoverageMatrix`/`CalibrationCanvas`
+publics, `RoomProfileCalibration` retiré — merci, du beau travail. MAIS l'export n'est pas gate-clean (§0,
+c'est la seule exigence DURE du contrat) et il manque un morceau de contrat acté (§1). Le côté app est en
+cours de recâblage sur ton nouveau contrat — on ne touche à AUCUN de tes fichiers ; corrige à la source.
+
+## 0 — GATES ROUGES dans l'export (à corriger pour le prochain drop, re-export drop-in)
+
+**ESLint (@stylistic, résidu NON mécanique après notre `lint:fix`) — 21 erreurs, 2 fichiers :**
+- `ui/screens/RoomProfileWizard.tsx` : 20 (indent ×12, multiline-ternary ×4, no-extra-parens ×3,
+  no-confusing-arrow ×1)
+- `ui/screens/CoverageMatrix.tsx` : 1 (no-confusing-arrow)
+Le bundle `ds-lint-bundle` de l'exchange reproduit ces règles chez toi — passe-le sur l'export avant de livrer.
+
+**react-doctor (bar = ZÉRO warning) — 3 :**
+- `ui/screens/RoomProfileTools.tsx:114` et `:196` — Maintainability « Multiple components in one file » :
+  `GlyphTool`/`MetrologyStation`/`PipetteTool` cohabitent ; découpe en fichiers (un composant exporté par
+  fichier, comme le reste du DS).
+- `ui/screens/RoomProfileWizard.tsx:107` — Performance « Array lookup inside a loop » : sors la recherche de la
+  boucle (Map/index précalculé).
+
+tsc au niveau de TES fichiers : 0 erreur — propre.
 
 ## 1 — TROU DE CONTRAT : les variantes différables ont disparu
 
