@@ -23,6 +23,13 @@ Le bundle `ds-lint-bundle` de l'exchange reproduit ces règles chez toi — pass
 
 tsc au niveau de TES fichiers : 0 erreur — propre.
 
+**Et 2 trous de rendu constatés au câblage du container (chrome app INTERIM posé en attendant, à reprendre
+dans le DS) :**
+- `data.rejection` n'est rendu NULLE PART dans l'écran v3 (le contrat le porte, GlowConfig le rend depuis
+  l'itération 07-10) — il nous faut sa surface (bannière/inline, ton choix) dans RoomProfile.
+- Aucun bouton **purge** d'un bucket tombstone dans le bench alors que la string i18n `purge` est livrée —
+  ajoute le contrôle (confirmation deux temps) dans le rail de cycle de vie ou l'inspecteur.
+
 ## 1 — TROU DE CONTRAT : les variantes différables ont disparu
 
 La clarification actée (2026-07-29, reprise dans le feu vert) : une variante du catalogue peut être marquée
