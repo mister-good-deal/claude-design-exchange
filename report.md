@@ -63,6 +63,49 @@ Demande pour le prochain export :
    manque un état wizard `detect` (candidats de fenêtres + proposition + résultat de test), il nous le faudra —
    propose la forme.
 
+## 3 — TROUS DE RENDU constatés en câblant TOUT l'écran (les 6 stations sont maintenant branchées)
+
+Depuis le premier envoi, l'app a câblé les vues spine / coverage / bench et les stations 2 (métrologie),
+3 (tour), 5 (mesures). À chaque fois qu'un geste du parcours n'avait pas de surface DS, on a posé un contrôle
+**app INTERIM** (non stylé, hors `ui/`) pour ne pas bloquer — chacun est une dette à reprendre chez toi. Liste
+complète, par ordre de gêne :
+
+**Actions sans aucune surface DS (contrôle app interim posé) :**
+1. **Métrologie (station 2)** — aucun bouton pour *Mesurer* / *Interrompre* / *Relancer une phase* / *Committer
+   la mesure*. Le contrat porte pourtant `onRunMetrology`, `onCancelMetrology`, `onRetryPhase` : il leur faut
+   leurs déclencheurs dans la station.
+2. **Outil de la station 5** — `onSelectTool` existe dans le contrat, aucune bascule pipette ↔ glyphes rendue.
+3. **Enregistrer les gabarits** — le bouton « Enregistrer les templates » de `RoomProfileTools.tsx` (~l.220)
+   n'a **aucun `onClick`** : il ne peut rien déclencher. On sauve donc au fil de l'eau après une relecture verte,
+   ce qui n'est pas le geste que tu as dessiné.
+4. **Purge d'un bucket tombstone** — la string i18n `purge` est livrée, aucun bouton ne l'utilise (déjà signalé).
+5. **`data.rejection`** — porté par le contrat, rendu nulle part (déjà signalé ; GlowConfig le rend depuis 07-10).
+
+**Gestes rendus mais sans la donnée qu'ils exigent :**
+6. **« Corriger… » (re-labelliser une capture)** émet `onCorrectLabels(sizeId, shotId, variantIds)` avec
+   `shotId = ""` — il n'y a pas de sélecteur de capture dans le tour. On retombe sur « la dernière capture du
+   bucket », ce qui est faux dès qu'on veut corriger une capture antérieure. Il faut soit un sélecteur, soit
+   que la vignette du filmstrip porte le `shotId`.
+7. **Déclaration de variante imprévue** — `onDeclareVariant(group, label)` est appelé sans saisie utilisateur :
+   aucune surface pour taper le libellé. On pose « Variante imprévue » + id auto, ce qui vide le geste de son sens.
+8. **Vérité-terrain des glyphes** — `onSetGlyphTruth(zoneId, shotId, value)` sans sélecteur de shot : on cible
+   le shot primaire. Or la vérité se saisit précisément sur le shot où le montant est net.
+9. **Adoption d'une suit** — pas d'affordance par couleur (le contrat a `onSampleSuit`, pas d'équivalent
+   « adopter » comme `onAdoptTolerance` pour les sondes) ; on adopte donc dès l'échantillon, sans confirmation.
+10. **Confirmation de fenêtre avant le tour** — aucune surface : le deep-link « capturer » franchit la porte
+    détection tout seul. Si la station 1 arrive (cf. §2.3), elle doit porter ce geste.
+
+**Donnée à corriger dans les fixtures :** `MeasureState.glyphs` liste **18** codes (avec `dot`) — le moteur en a
+**17** (cf. §2.2). L'app sert les 17 ; ta fixture diverge du produit et tire la pixel-parity.
+
+## 4 — État de la parité (pour information)
+
+`pnpm test:pixel-parity` est à **22/25**. Les 3 régions rouges sont toutes « Room profiles » (`rooms-main`,
+`rooms-stations`, `rooms-requirements`) et l'écart est **de notre côté, pas du tien** : ton fixture montre un
+profil showcase (readiness 73 %, 7 lignes, 6 gestes en file) alors que l'app rend la dérivation HONNÊTE du profil
+réel (encore partiel). Ça converge à mesure que les stations se branchent — aucune action attendue de toi
+là-dessus, c'est juste pour que tu ne t'inquiètes pas d'un rouge dans nos rapports.
+
 ## Rappel — toujours en attente
 
 L'itération « conflits de hotkeys de presets résolus inline » (`doc/ds-report-0.5.1-preset-hotkey-conflicts.md`)
