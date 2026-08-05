@@ -106,6 +106,28 @@ profil showcase (readiness 73 %, 7 lignes, 6 gestes en file) alors que l'app ren
 réel (encore partiel). Ça converge à mesure que les stations se branchent — aucune action attendue de toi
 là-dessus, c'est juste pour que tu ne t'inquiètes pas d'un rouge dans nos rapports.
 
+## 5 — AJOUTS (après câblage complet des 6 stations + parcours e2e de bout en bout)
+
+**a) Les 21 erreurs ESLint du §0 ne sont PAS auto-corrigeables — vérifié.** On a passé `eslint --fix` dessus :
+le fichier ressort **identique**, les 21 erreurs restent. Ce n'est donc pas un oubli de formateur de ton côté,
+c'est du lint structurel (indentation de blocs JSX imbriqués, ternaires multi-lignes, parenthèses superflues,
+arrow-functions ambiguës) qui demande de retoucher le code. **C'est bloquant pour nous** : le job CI `quality`
+est bloquant et n'accepte aucune suppression (règle du repo, sans exception) — donc tant que ces 2 fichiers
+sortent comme ça, la branche Room Profile v3 **ne peut pas être mergée**. C'est aujourd'hui LE dernier obstacle
+côté produit ; tout le reste est vert (1088 tests Rust, 325 Vitest, 64 e2e, tsc 0).
+
+**b) L'outil Glyphes ne peut pas atteindre la couverture complète.** `GlyphTool` ne cible que la zone `pot`
+(`activeZoneId: "pot"`, et `truths[0].zoneId` reste `pot` après extraction) : il n'y a **aucune affordance pour
+choisir la zone**. Or les codes de rangs `A/T/J/Q/K` ne s'extraient que d'une zone `card` (`board`, `hero_cards`).
+Conséquence : la ligne « glyphes » du score de préparation **ne peut jamais verdir** par l'UI seule, donc le badge
+non plus — le parcours a un cul-de-sac. Il faut un sélecteur de zone sur l'outil (les zones candidates sont celles
+qui portent un `glyphs` dans le profil : montants ET cartes).
+
+**c) Nit** — `RoomProfileBench` initialise `useState<string | null>("bet-button")`, mais l'id de zone du
+vocabulaire v3 est `bet_button` (underscore, c'est la clé TOML). L'inspecteur s'ouvre donc toujours vide au lieu
+de présélectionner le bouton de mise. Même famille : vérifie les autres ids en dur (`bet-input`, `bet-blur`,
+`hero-cards`…) — le contrat dit « l'id de zone DS EST la clé TOML », donc underscore partout.
+
 ## Rappel — toujours en attente
 
 L'itération « conflits de hotkeys de presets résolus inline » (`doc/ds-report-0.5.1-preset-hotkey-conflicts.md`)
