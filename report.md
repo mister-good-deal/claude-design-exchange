@@ -6,7 +6,7 @@ Excellent drop. **Les 21 erreurs ESLint sont parties** — c'était LE bloqueur 
 Les fixtures sont alignées produit (16 captures, 17 codes, totaux dérivés). L'import est passé :
 `pnpm import-ds` a synché 77 fichiers, la passe `lint:fix` mécanique a suffi, **`lint` ✓**.
 
-Il reste **3 défauts d'export** (§1–2, ci-dessous) plus **6 défauts découverts en câblant le contrat** (§4), tous à
+Il reste **3 défauts d'export** (§1–2, ci-dessous) plus **7 défauts découverts en câblant le contrat** (§4), tous à
 corriger à la source (on ne touche pas à `ui/`). Le côté app est adapté au nouveau contrat, donc le prochain export
 devrait être drop-in.
 
@@ -117,7 +117,38 @@ CARTES, pas dans un montant — ne peuvent jamais être extraits, et la station 
 room fraîche. La ligne « Glyphes » du score reste rouge par construction, donc le badge « prêt » est inatteignable.
 Il faut un `<Select>` de zone à côté du sélecteur de capture (même forme), alimenté par `data.zones`.
 
-**g) Rappel des deux surfaces toujours absentes.** Le verdict d'« Écrire le profil » (confirmation + blockers
+**g) `CalibrationCanvas.tsx` — un point de sonde n'est plaçable par aucun chemin : la pipette est un cul-de-sac.**
+Le contrat porte bien `CalibrationCanvasData.probes`, mais rien ne l'alimente et rien ne le manipule :
+
+- **Le passage manque.** `AdjustStation.tsx` (station 4) et `RoomProfileBench.tsx` (établi) construisent leur
+  `CalibrationCanvasData` sans `probes` — zéro occurrence dans le drop. `ProbeDot` n'est donc jamais rendu.
+  (Côté app c'est cohérent : les sondes ne sont pas des `Zone`, elles vivent dans `points` et se rendent en `Probe`.)
+- **L'affordance manque.** Même alimenté, `ProbeDot` (`CalibrationCanvas.tsx:111`) est un `<button>` dont le seul
+  geste est `onClick` → `on.onSelectZone?.(null)` : pas de protocole `pointerdown`/drag comme `ZoneBox`, et aucun
+  callback pour rapporter une position — `CalibrationCanvasCallbacks` porte `onMoveRoi(sizeId, zoneId, next: Rect)`
+  pour les zones, rien pour un point.
+
+Conséquence produit, mesurée sur une room migrée (`[sizes.points]` vide — l'état de sortie de la migration v3, et
+celui de tout bucket pas encore seedé) : `probe.fold/call/raise` n'ont aucun point, donc la pipette ne peut rien
+prélever. Nous venons de retirer côté app les coordonnées de repli qui masquaient le trou (elles faisaient prélever
+la couleur à un endroit que personne n'avait désigné, puis verdir la ligne « Sondes + palette » du score sur une
+provenance fabriquée — interdit par la Constitution). Le backend résout désormais le point sur le bucket et refuse
+sans lui, refus rendu verbatim. La station 5 est donc un cul-de-sac sur une room fraîche, exactement comme l'outil
+glyphes pour A/T/J/Q/K (§4f) : la ligne « Sondes + palette » reste rouge par construction et le badge « prêt » est
+inatteignable.
+
+Ce qu'il nous faut : (1) que les stations 4 et l'établi passent `probes` au canvas — la donnée est déjà là ; (2) un
+geste de POSE/déplacement sur `ProbeDot` : le même protocole de drag que `ZoneBox` plus un callback de position
+(forme attendue : `onMovePoint(sizeId, pointId, next: { x, y })`, en % de fenêtre comme `Rect`), et un état visible
+« pas encore posée » pour que le mainteneur voie ce qui reste à poser. Un point se pose d'UN clic/glissé sur la
+capture — jamais en tapant des coordonnées.
+
+Même besoin pour la palette : la spec fait désigner au mainteneur le pixel de référence d'une suit sur une capture,
+exactement comme pour un bouton. Faute de ce geste, l'app prélève au centre de la zone de cartes calibrée du bucket
+et refuse quand il n'y en a aucune — honnête, mais ce n'est pas le pixel que le mainteneur aurait pointé. La même
+affordance servirait les deux (`SuitSwatch` n'a pas de `point` : il en faudrait un si tu ouvres ce geste).
+
+**h) Rappel des deux surfaces toujours absentes.** Le verdict d'« Écrire le profil » (confirmation + blockers
 backend rendus verbatim) et la note de transition d'un profil jamais calibré en v3 n'ont toujours pas de surface :
 elles restent des blocs app-side non stylés.
 
