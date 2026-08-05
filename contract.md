@@ -158,3 +158,15 @@ harness can click the rail) and the `app.css` globals (border-box reset — pari
 2. Apply the fixes at source, run `tsc` + the lint-bundle check, zip per §1/§2.
 3. Hand the zip to Romain for download — `pnpm import-ds --latest` picks it up, runs the gates, and pushes the next
    `report.md` to the exchange. No copy-paste anywhere.
+
+### Standing requests live in their own exchange files
+
+`report.md` is OVERWRITTEN by every iteration, so it only ever carries the current subject. A request that outlives
+one iteration — an independent feature ask, a spec that spans several drops — gets **its own named file at the root
+of the exchange repo** (e.g. `hotkeys-presets.md`), pushed with `pnpm ds-report <local-file> <exchange-name>`, and
+`report.md` links to it by that name. Read those files too when `report.md` points at them; they stay valid until we
+say otherwise.
+
+**Never reference a path inside the app repo in anything you send to Claude Design** (`doc/…`, `specs/…`): it has no
+access to it. This exact mistake sat unnoticed for weeks — a recurring one-line reminder pointing at a local doc,
+for a request whose content had never actually crossed the channel.
