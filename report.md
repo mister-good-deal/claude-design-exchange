@@ -46,16 +46,33 @@ l'ajuster » (en et fr) alors que le geste est désormais clavier aussi. Mention
 
 ---
 
+**A6. AJOUT — cliquer sur un pixel DÉJÀ POSÉ ré-arme la pose, et le cadre armé recouvre tous les ROIs.**
+Trouvé en revue, c'est le plus destructeur du lot. `beginPoint` (`CalibrationCanvas.tsx:300`) appelle
+`onSelectPoint(pointId)` au `pointerdown` d'une pastille déjà posée — ce que le contrat mappe sur l'armement.
+`endPoint` (`:311`) ne déclenche `onMovePoint`, donc le désarmement, que si un `pointermove` a eu lieu : **un clic
+simple sur une pastille laisse la pose armée**. Or `.placeSurface` (`CalibrationCanvas.module.css:46`, `z-index: 2`,
+`inset: 22px 0 0 0`) passe au-dessus des `.roi` et couvre toute la capture. Le clic suivant — destiné à saisir un
+ROI — **téléporte la sonde** et déclenche le commit. Le bandeau de consigne rend l'état visible, donc ce n'est pas
+silencieux, mais le geste de récupération naturel est précisément celui qui détruit la mesure.
+*Racine :* un même callback pour « inspecter » et « armer », plus un overlay plein cadre qui masque les ROIs.
+*Attendu :* dissocier les deux (un clic simple sélectionne sans armer ; l'armement reste le geste explicite depuis
+le rail ou la station 5), et/ou ne monter `.placeSurface` que quand un pixel est réellement en attente de pose.
+
 ## B — Deux libellés qui trompent (restes de v3.2)
 
 **B1. `PipetteTool` confond « pas de pixel posé » et « pixel posé mais pas encore prélevé ».**
 Le même texte sert aux deux états, donc « aucun pixel de référence — rien à prélever » s'affiche **à côté d'un
 bouton « Prélever » qui fonctionne**. Deux chaînes distinctes suffisent.
 
-**B2. Le `zoneOptions` du `GlyphTool` propose des zones que le moteur refuse.**
-Il filtre sur `kind === "data"`, plus large que la règle moteur (`number` / `card`) : les sous-ROI `actions.*`
-apparaissent dans le sélecteur et le backend les refuse. Le refus est verbatim donc lisible, mais l'option ne
-devrait pas exister.
+**B2. Le `zoneOptions` du `GlyphTool` propose 17 options refusées sur 20.**
+Il filtre `kind !== "data"` sur `data.zones`, qui est le vocabulaire GÉOMÉTRIE du bucket **actif** — pas la liste
+des ROIs extractibles du bucket **mesuré**, et plus large que la règle moteur (`number` / `card`). Mesuré sur la
+posture par défaut, le sélecteur propose :
+`pot, board, hero_cards, actions.call, actions.fold, actions.raise, actions.slider, title, hero-cards, v1-cards,
+v2-cards, hero-pseudo, hero-stack, hero-bet, v1-pseudo, v1-stack, v1-bet, v2-pseudo, v2-stack, v2-bet` — **seules
+les trois premières passent**. Les 17 autres produisent un refus backend.
+L'app calcule déjà la bonne liste, mais le contrat n'a pas de champ pour la porter : il nous faudrait soit un
+`MeasureState.glyphZoneIds`, soit que `zoneOptions` soit alimenté par une liste que l'app fournit.
 
 ---
 
