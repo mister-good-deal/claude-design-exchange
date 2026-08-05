@@ -128,6 +128,29 @@ vocabulaire v3 est `bet_button` (underscore, c'est la clé TOML). L'inspecteur s
 de présélectionner le bouton de mise. Même famille : vérifie les autres ids en dur (`bet-input`, `bet-blur`,
 `hero-cards`…) — le contrat dit « l'id de zone DS EST la clé TOML », donc underscore partout.
 
+## 6 — Demandes issues du câblage terminé (revue + analyse de cohérence)
+
+Toutes les stations sont câblées et le parcours complet passe en e2e. Ces points-là ne nous bloquent plus
+(contrôles app interim posés), mais ils sont dans TON périmètre et devraient revenir dans le DS :
+
+1. **`onReVerify` perd le `variantId`** (`RoomProfile.tsx:242` : `onReVerify: sizeId => onRunDryRun?.(sizeId)`) —
+   « revérifier » relance donc TOUT le bucket au lieu de la cellule, et l'affordance n'est offerte que sur
+   `missing`/`stale`, jamais sur `captured`/`verified` (donc on ne peut pas revérifier ce qui est déjà attesté).
+   Attendu : `onReVerify(sizeId, variantId)` + disponible sur tous les états attestés.
+2. **`Evidence` perd deux preuves** — le DTO backend porte `labelConfirmedAt` et `lastVerdict`, le type DS
+   `Evidence` ne les a pas : le bloc « dernier verdict » de `CoverageMatrix.tsx:90` est donc mort en production.
+   Et `cropRect` est bien transmis mais le CSS l'ignore (`background-size: cover` sur le shot entier), donc la
+   vignette d'évidence ne montre pas la zone. Attendu : les 2 champs au contrat + le crop réellement appliqué.
+3. **Grain de la matrice** — libellé et badge statiques, aucun champ `grain` ni rappel dans
+   `CoverageMatrix.fixtures.ts`. Soit tu l'ajoutes, soit on retire l'exigence côté spec (dis-nous).
+4. **`onDeclareVariant("Actions", "")`** — appelé sans zone ni libellé saisissables (cf. §3.7). Et la variante
+   déclarée devrait pouvoir être attestée par la capture en cours, ce que le flux `wouldAttest` (perception)
+   ne permet pas : il faudrait que la déclaration s'ajoute aux labels de la capture.
+5. **`RoomProfileBench`** initialise `selectedZoneId` à `"bet-button"` — l'id réel est `bet_button` (§5c).
+   Confirmé maintenant que le catalogue de zones vient du profil : les ids sont les clés TOML, toujours en
+   underscore, et ils VARIENT par room (le profil Unibet déclare `board_1..5`, `hero_1/2`, `villain_*` — pas
+   `board`/`hero_cards`). Ne code aucun id de zone en dur dans le DS : ils arrivent tous par `data.zones`.
+
 ## Rappel — toujours en attente
 
 L'itération « conflits de hotkeys de presets résolus inline » (`doc/ds-report-0.5.1-preset-hotkey-conflicts.md`)
