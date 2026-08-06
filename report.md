@@ -1,110 +1,118 @@
-# Tatami app → Claude Design — itération de finition avant merge : 8 points, tous petits
+# Tatami app → Claude Design — v3.4 : premier import DROP-IN CLEAN, et la parité à 3 chiffres près
 
-Room Profile v3 est **fonctionnellement bouclé** et toutes les gates sont vertes (`make ci` exit 0 : tsc 0, lint 0,
-react-doctor 0, ds-sync 77/77, vitest 373, e2e 64, cargo 1121). On ouvre la MR juste après cette itération — donc
-**aucun de ces points n'est bloquant**, mais on préfère les corriger maintenant, tant que le sujet est frais, plutôt
-que de les laisser vieillir dans un backlog. Ce sont 8 corrections ciblées, la plupart d'une poignée de lignes.
+**`pnpm import-ds` a rendu « DS import GREEN — drop-in clean » pour la première fois de la feature.** lint ✓
+tsc ✓ doctor ✓, 77/77. Les 8 points de finition sont traités, focus et nudge compris. Merci.
 
-Elles sont classées par ce qu'elles coûtent à l'utilisateur, pas par difficulté.
+Le C (fidélité produit) a eu l'effet espéré : après avoir re-dérivé notre shadow de parité avec les mêmes
+prédicats que le backend, **la géométrie est identique au pixel près** — 6 stations, 7 cartes de chemin critique,
+la jauge, les 7 lignes et le bloc des différées tombent aux mêmes coordonnées des deux côtés.
 
----
+| région | avant v3.4 | après |
+|---|---|---|
+| `rooms-requirements` | 22,59 % | **1,43 %** |
+| `rooms-main` | 2,64 % | **0,97 %** |
+| `rooms-stations` | 1,19 % | **0,64 %** |
 
-## A — Le geste de pose au clavier ne tient pas ses promesses (5 points)
-
-Contexte : `react-doctor` est vert parce qu'il constate la PRÉSENCE d'un `onKeyDown`. On a vérifié ce qu'il FAIT,
-en vrai navigateur, et le chemin clavier reste inutilisable en pratique. C'est le bloc qui compte le plus ici.
-
-**A1. Le focus est perdu après la pose.**
-Mesuré : après `Entrée` sur le cadre, `document.activeElement` vaut `BODY`. Le cadre focusé est démonté (`armedLabel`
-repasse à `null`) et rien ne redonne le focus au pixel qui vient d'être posé — ni `CalibrationCanvas.tsx`, ni notre
-container. L'utilisateur clavier perd sa position dans la page **et** ne peut pas enchaîner sur l'ajustement fin,
-qui est pourtant la raison d'être du geste.
-*Attendu :* rendre le `PointDot` fraîchement posé et lui donner le focus.
-*Recette :* poser un pixel à `Entrée`, puis `ArrowRight` sans retoucher au clavier de navigation → le pixel bouge.
-
-**A2. Les flèches ne font pas ce qu'annonce le changelog.**
-`placeFromKey` calcule `50 ± step * 10`, soit **1 %**, pas le dixième de pour-cent (le `NUDGE` à 0,1 % ne s'applique
-qu'au `PointDot` DÉJÀ posé). Et le calcul est **absolu depuis le centre**, donc deux `ArrowRight` ne cumulent pas :
-le premier pose et désarme. Combiné à A1, « les flèches le déplacent » n'est vrai qu'après avoir re-tabulé jusqu'au
-point.
-*Attendu :* soit les flèches sur le cadre pré-positionnent de façon cumulative avant validation, soit elles ne
-posent rien et c'est le `PointDot` focusé (A1) qui porte le nudge. La seconde lecture nous paraît plus simple et
-plus proche du geste réel — à ta main.
-
-**A3. Nom accessible dupliqué.**
-`placeAria(label)` nomme à la fois la puce du rail (qui ARME) et le cadre de pose (qui POSE). Un lecteur d'écran
-annonce deux fois « Poser le pixel Fold » pour deux gestes différents ; seul l'`aria-pressed` de la puce les
-distingue, et le cadre plein écran n'a aucun texte propre.
-*Attendu :* un nom distinct pour la surface, par ex. « Poser Fold sur la capture ». Bénéfice de bord : nos
-sélecteurs de test n'ont plus besoin d'être scopés par la scène pour lever l'ambiguïté.
-
-**A4. Flèches sans `preventDefault`.** `onKeyDown` ne neutralise pas l'action par défaut : la page scrolle sous le
-geste pendant la pose.
-
-**A5. La consigne est restée souris-seule.** `placeHint` dit « Cliquez sur la capture… glissez-le ensuite pour
-l'ajuster » (en et fr) alors que le geste est désormais clavier aussi. Mentionner `Entrée` et les flèches.
+Le seuil est 0,40 %. **Il ne reste que du TEXTE**, et c'est le sujet de ce rapport : on est à trois causes près
+d'un CI vert, et les trois sont chez toi. Le job `pixel-parity` bloque le merge, donc c'est la dernière chose qui
+nous sépare de la MR.
 
 ---
 
-**A6. AJOUT — cliquer sur un pixel DÉJÀ POSÉ ré-arme la pose, et le cadre armé recouvre tous les ROIs.**
-Trouvé en revue, c'est le plus destructeur du lot. `beginPoint` (`CalibrationCanvas.tsx:300`) appelle
-`onSelectPoint(pointId)` au `pointerdown` d'une pastille déjà posée — ce que le contrat mappe sur l'armement.
-`endPoint` (`:311`) ne déclenche `onMovePoint`, donc le désarmement, que si un `pointermove` a eu lieu : **un clic
-simple sur une pastille laisse la pose armée**. Or `.placeSurface` (`CalibrationCanvas.module.css:46`, `z-index: 2`,
-`inset: 22px 0 0 0`) passe au-dessus des `.roi` et couvre toute la capture. Le clic suivant — destiné à saisir un
-ROI — **téléporte la sonde** et déclenche le commit. Le bandeau de consigne rend l'état visible, donc ce n'est pas
-silencieux, mais le geste de récupération naturel est précisément celui qui détruit la mesure.
-*Racine :* un même callback pour « inspecter » et « armer », plus un overlay plein cadre qui masque les ROIs.
-*Attendu :* dissocier les deux (un clic simple sélectionne sans armer ; l'armement reste le geste explicite depuis
-le rail ou la station 5), et/ou ne monter `.placeSurface` que quand un pixel est réellement en attente de pose.
+## 1 — Tes métas citent plus de faits que le contrat n'en porte
 
-## B — Deux libellés qui trompent (restes de v3.2)
+`StationStatusDto` = `{ complete, at, done, total }` : **une** date et **un** compte. Tes métas en citent deux ou
+trois. L'app ne peut donc pas les reproduire — pas par choix, par absence de donnée.
 
-**B1. `PipetteTool` confond « pas de pixel posé » et « pixel posé mais pas encore prélevé ».**
-Le même texte sert aux deux états, donc « aucun pixel de référence — rien à prélever » s'affiche **à côté d'un
-bouton « Prélever » qui fonctionne**. Deux chaînes distinctes suffisent.
+| station | ton prototype | ce que l'app peut rendre au mieux |
+|---|---|---|
+| 1 détection | `4 rules · tested 12/07` | `12/07` |
+| 2 métrologie | `14 points · 28/07` | `28/07` |
+| 3 tour | `9/13 variants · 2/3 buckets` | `20/34 cellules attestées` |
+| 4 ajustage | `6/20 zones · 1/3 buckets stale` | `43/60 gestes d'ajustage` |
+| 5 mesures | `2/3 points · 2/4 suits · 14/17 codes` | `13/17 codes de glyphes` |
+| 6 validation | `0/3 dry-runs` | `1/3 buckets validés` |
 
-**B2. Le `zoneOptions` du `GlyphTool` propose 17 options refusées sur 20.**
-Il filtre `kind !== "data"` sur `data.zones`, qui est le vocabulaire GÉOMÉTRIE du bucket **actif** — pas la liste
-des ROIs extractibles du bucket **mesuré**, et plus large que la règle moteur (`number` / `card`). Mesuré sur la
-posture par défaut, le sélecteur propose :
-`pot, board, hero_cards, actions.call, actions.fold, actions.raise, actions.slider, title, hero-cards, v1-cards,
-v2-cards, hero-pseudo, hero-stack, hero-bet, v1-pseudo, v1-stack, v1-bet, v2-pseudo, v2-stack, v2-bet` — **seules
-les trois premières passent**. Les 17 autres produisent un refus backend.
-L'app calcule déjà la bonne liste, mais le contrat n'a pas de champ pour la porter : il nous faudrait soit un
-`MeasureState.glyphZoneIds`, soit que `zoneOptions` soit alimenté par une liste que l'app fournit.
+**Deux issues possibles, à toi de choisir :**
+- **(a) tu réduis** chaque méta à exactement une date OU un compte — le contrat suit, la parité tombe ;
+- **(b) on enrichit le DTO.** Certains de tes faits sont légitimement dérivables et rendraient l'écran meilleur :
+  le nombre de règles (`[windows]` en a 4), le nombre de points de métrologie (`[metrology.points]`), le nombre
+  de buckets concernés. On peut les porter. Dis-nous lesquels comptent pour le design et on les ajoute.
+
+Notre préférence : **(b) pour les faits vraiment dérivables** (règles, points, buckets), **(a) pour le reste** —
+mieux vaut un écran plus riche qu'un écran appauvri, tant que rien n'est fabriqué.
+
+## 2 — Les libellés de tes lignes ne sont pas dans l'i18n que tu livres
+
+Blocage plus fondamental que le précédent : **aucune clé i18n** n'existe pour « Detection rules validated (live
+test) », « Bucket geometry confirmed », « Button probes + suit palette », « Glyph templates », ni pour les `sub`
+de la file (« guided capture », « canvas »…). Ils vivent dans `RoomProfile.fixtures.ts`.
+
+Or `Station.meta` et `ReadinessLine.label` sont rendus **verbatim** depuis `data` : c'est l'app qui doit les
+fournir, et elle ne peut pas deviner tes formulations. Nos libellés diffèrent donc forcément
+(`Zone geometry` vs `Bucket geometry confirmed`, `Reference pixels + suit palette` vs `Button probes + suit
+palette`…), ce qui pèse dans le diff résiduel.
+
+**Demande :** livre ces chaînes dans `i18n.ts` (fr + en), comme tu le fais déjà pour le reste de l'écran. On les
+consommera et les deux côtés diront exactement la même chose.
+
+**Et l'ORDRE des lignes diffère** : tu affiches la couverture avant la géométrie, `derive_readiness` émet
+`Buckets` puis `Variants` (ordre figé côté Rust, il porte la dépendance : on ne peut pas attester une variante sur
+un bucket sans géométrie). Aligne-toi sur cet ordre, ou dis-nous si le tien porte une intention qu'on n'a pas vue.
+
+## 3 — Ton score pondère 4 états, notre contrat n'en porte que 2
+
+`ReadinessLineStatusDto` est un **booléen** (`ok`). Tes fixtures pondèrent quatre états (`ok`=1, `warn`=0.5,
+`ko`/`pending`=0) → **36 % / 3 blockers** là où la dérivation stricte donne **63 % / 5**. C'est l'arc de jauge plus
+les chiffres, donc la plus grosse part du résidu de `rooms-requirements`.
+
+Si `warn` porte une vraie intention produit — « mesuré mais périmé » n'est pas « jamais mesuré » — dis-le et on
+enrichit `ReadinessLineStatusDto` d'un état intermédiaire, ce qui serait d'ailleurs plus juste que notre binaire.
+Sinon, ramène le score à la conjonction stricte.
 
 ---
 
-## C — La pixel-parity : la balle est chez toi, si tu le veux bien
+## 4 — Trois incohérences internes à tes fixtures v3.4
 
-C'est notre dernier écart non vert (22/25), et il est **entièrement dû à un choix de fixtures**, pas à un défaut.
+Rien de grave, mais elles se contredisent entre elles, donc l'une des deux valeurs est fausse quoi qu'il arrive :
 
-Notre gate de parité compare ton prototype à l'app rendue. Sur les 3 régions `rooms-*`, ton fixture montre un profil
-**showcase** — `readiness.score: 73`, `blockers: 3`, et des métas rédigées à la main (« 4 regex rules · live-tested
-12/07 · table + lobby designated », « missing: 2-buttons, all-in, turn, river @ 960×600 »). L'app, elle, ne peut
-rendre que ce que le backend dérive honnêtement du profil : une date, un `done/total`, et la conjonction stricte du
-badge. D'où `rooms-requirements` à 16 % (tes métas passent à la ligne, +37 px de hauteur), `rooms-main` à 2,6 % et
-`rooms-stations` à 1,2 %.
+- Station 6 : la méta dit `0/3 dry-runs`, la ligne d'exigence dit `1/3 buckets · 15:07`, et `SIZE_BUCKETS` porte
+  bien **un** dry-run vert.
+- Station 5 : la méta dit `14/17 codes` (3 manquants), mais `MEASURE.glyphs` a **quatre** codes à 0 (`7`, `,`,
+  `A`, `Q`).
+- Bloc des différées : tu composes `Actions · All-in confirmation` alors que ton catalogue ne porte que
+  `All-in confirmation` pour cette variante.
 
-**Ce qu'on te demande, si tu es d'accord :** aligner les fixtures des 3 panneaux sur ce que le contrat permet
-RÉELLEMENT de dériver — c'est-à-dire des métas construites uniquement à partir des champs que le DTO porte
-(`at`, `done`, `total`), tenant sur une ligne. Concrètement : `Station.meta` et `ReadinessLine.meta` composées de
-faits, pas de prose ; `readiness.score` cohérent avec les lignes du même fixture plutôt qu'un nombre choisi.
+## 5 — Cinq défauts d'accessibilité sur le geste de pose (dont un critique)
 
-C'est une demande de FIDÉLITÉ PRODUIT, pas de confort de test : aujourd'hui ton prototype montre une richesse
-d'information que l'application ne pourra jamais afficher, ce qui est trompeur pour toi comme pour nous. Si tu
-préfères garder le showcase pour la démo, dis-le et on verrouille nos 3 seuils sur l'acquis en documentant
-pourquoi — c'est ton appel, tu es la source de vérité du design.
+Vérifiés dans le code après ton drop :
+
+- **D1, critique.** Le ref callback est inline (`CalibrationCanvas.tsx:148`) donc ré-invoqué à **chaque** render,
+  et `focusId` n'est jamais purgé : le pixel **reprend le focus à chaque re-render**. Reproduit : on déplace le
+  focus sur un ROI, le commit debouncé arrive ~400 ms plus tard, le focus est arraché. C'est WCAG 3.2.1 (« au
+  focus ») et 2.4.3 (ordre de focus). Fix : consommer `takeFocus` une seule fois (effet + reset) et une ref stable.
+- **D2.** Armer un pixel laisse le focus sur `<body>` (le bouton disparaît, rien ne reprend) — symétrique de ce que
+  tu viens de corriger côté pose.
+- **D3.** Le nudge est **muet** au lecteur d'écran : le nom accessible du pixel ne porte pas sa position. Plier les
+  coordonnées dedans (`pointAria(label, x, y, colour)`) rendrait le geste utilisable sans voir l'écran.
+- **D4.** Aucun `Escape` pour désarmer : mode sans sortie au clavier.
+- **D5.** `placeHint` n'est relié à aucun contrôle (`aria-describedby` manquant), donc la consigne n'est jamais lue.
+
+## 6 — Un trou de garde sur le sélecteur de ROI
+
+`Zone.readKind` fonctionne bien (câblé chez nous ; au passage, comme le champ est optionnel, notre sélecteur
+rendait **zéro** option tant qu'on ne l'avait pas renseigné — pense à ce piège quand tu ajoutes un champ dont
+dépend un rendu). Mais `zoneOptions` n'a **aucune garde géométrique** : il propose `hero_cards` même sur un bucket
+qui ne la place pas, et le backend refuse alors le crop. Il faudrait soit un `Zone.placed?: boolean`, soit que
+`zoneOptions` consomme une liste que l'app fournit — on calcule déjà la bonne.
 
 ---
 
-## Recette globale
+## Recette
 
-Après ton export, on refait tourner l'intégralité : `pnpm import-ds`, `make ci`, e2e Playwright (dont le parcours
-complet qui pose un pixel au clavier), et la pixel-parity. On te renvoie le verdict comme d'habitude.
+Après ton export : `pnpm import-ds`, `make ci`, e2e complet, et pixel-parity — on vise **25/25** cette fois. On te
+renvoie le verdict comme d'habitude.
 
 ## Rappel
 
-`hotkeys-presets.md` (0.5.1, conflits de hotkeys de presets) est sur l'échange dans son fichier dédié, avec tout ce
-qu'il te faut. Indépendante de v3, elle ne bloque pas la 0.6.0.
+`hotkeys-presets.md` (0.5.1) est toujours sur l'échange, indépendante de v3.
