@@ -1,76 +1,89 @@
-# Tatami app → Claude Design — v3.5 : parité 23/25, et il ne reste QUE deux choses
+# Tatami app → Claude Design — v3.6 : parité 24/25, et il ne reste QUE quatre phrases
 
-Drop excellent. Tes deux demandes d'enrichissement étaient justes et sont **livrées côté backend** :
+Ton drop est intégré : le patch `Set` a fermé le dernier diagnostic doctor, ton `LineState` aligné sur notre
+tri-état rend notre mapping passe-plat, et **on a implémenté ta pondération à l'identique** (verte 1, périmée 0,5,
+manquante 0). Merci d'avoir tranché — c'était bien ta décision à prendre.
 
-- **`StationStatusDto.count`** — le nombre de points de métrologie persistés. Champ **distinct**, pas
-  `done`/`total` : « 14 points » est un compte sans dénominateur, le glisser dans un ratio aurait affirmé une cible
-  qui n'existe pas (la campagne sonde autant de tailles qu'il en faut). Zéro point rend `null` et non `0` — un
-  profil mesuré par une version qui ne persistait pas les points a bien été mesuré, sa date le dit.
-- **`ReadinessLineStateDto = "ok" | "stale" | "missing"`** — tu avais raison : « mesuré mais périmé » n'est pas
-  « jamais mesuré », ce n'est pas la même action. Deux lignes le portent honnêtement (`variants`, `dry_runs`) ; les
-  cinq autres restent binaires et on te dit pourquoi : la géométrie `[[sizes]]` n'est pas datée (sa péremption
-  s'écrit en zone projetée, pas en date), les sondes/glyphes ne sont délibérément pas re-comparés au plancher, et
-  `metrology.measured_at` **est** le plancher — il ne peut pas être antérieur à lui-même. `stale` **décrit** un
-  rouge, il n'en crée pas : le badge reste la conjonction stricte.
+**La parité est passée à 24/25.** `rooms-requirements` et `rooms-stations` sont verts. Il ne reste que
+`rooms-main` à **0,573 %** (seuil 0,40 %), avec des boîtes **identiques** des deux côtés (1072×736) : plus aucune
+divergence de mise en page, uniquement du texte.
 
-Tes libellés i18n sont consommés, l'ordre des lignes est aligné, les 3 incohérences de fixtures et les 5 défauts
-a11y sont vérifiés corrigés. **Parité passée à 23/25** — `rooms-stations` est vert (0,31 %).
+On a attribué **100 % des 4 521 pixels résiduels** à des runs nommés — voici l'inventaire complet, et surtout
+**l'arbitrage chiffré** : un seul poste bloque, les autres non.
 
-Il reste **deux points**, et ce sont les derniers avant qu'on ouvre la MR.
+## L'arbitrage : les 4 cartes du chemin critique font 72 % du résidu
 
----
+| scénario | pixels | ratio | verdict |
+|---|---|---|---|
+| aujourd'hui | 4 521 | 0,573 % | ❌ |
+| **on ne ferme QUE les 4 cartes** | 1 246 | **0,158 %** | ✅ |
+| on ferme tout SAUF les 4 cartes | 3 275 | 0,415 % | ❌ |
+| on ne ferme que le score | 4 155 | 0,527 % | ❌ |
+| on ne ferme que la station 6 | 3 949 | 0,501 % | ❌ |
+| on ne ferme que les métas 1+2 | 4 213 | 0,534 % | ❌ |
 
-## 1 — Un diagnostic `react-doctor`, et on a le correctif exact
+Autrement dit : **si tu ne fais qu'une chose, fais les cartes.** Tout le reste peut rester tel quel et la région
+passe au vert.
 
-`ui/screens/GlyphTool.tsx:65` — *Performance: Array lookup inside a loop*. C'est le `allowed.includes(z.id)` dans
-la boucle du `zoneOptions` que tu viens d'ajouter (§6). Notre gate CI `quality` est bloquante à zéro diagnostic,
-donc c'est **la seule chose qui empêche `make ci` de sortir 0** chez nous.
+### Les 4 cartes
 
-On a vérifié le correctif chez nous (puis restauré ton fichier à l'octet près — on ne touche pas à `ui/`) : hisser
-le lookup en `Set` hors de la boucle **élimine le diagnostic**, sortie `No issues found!`. Le patch exact :
+| ton prototype | ce que l'app rend |
+|---|---|
+| `Capture actions/2-buttons @ 960×600` | `Capture 2 buttons — check / bet @ 960×600` |
+| `Capture board/4 and board/5 @ 960×600` | `Capture 4 cards (turn) @ 960×600` |
+| `Confirm 14 projected zones @ 960×600` | `Confirm zone hero_cards @ 960×600` |
+| `Place 1 probe + 2 suit pixels @ 960×600` | `Sample the suit palette with the pipette` |
 
-```tsx
-function zoneOptions(zones: Zone[], allowed: string[] | undefined): SelectOptionLike[] {
-    const out: SelectOptionLike[] = [];
-    const placed = allowed === undefined ? null : new Set(allowed);   // ← hors boucle
+`ResumeItemDto` est **un geste à une adresse** : une action, un bucket, une zone ou une variante. Tes cartes
+agrègent — une *liste* de variantes (carte 2), un *compte* de zones (carte 3), deux comptes et un bucket que le
+geste `measure_suits` ne porte pas (carte 4). Et la carte 1 emploie un slug (`actions/2-buttons`) qui n'est ni ton
+id de variante (`act-2`) ni la paire du DTO (`actions/two_buttons`).
 
-    for (const z of zones) {
-        if (placed !== null) {
-            if (!placed.has(z.id)) continue;                          // ← Set.has
-        } else if (z.readKind !== "number" && z.readKind !== "card") continue;
+**Deux issues :** soit tes cartes se composent d'une action + une adresse (ce que le contrat porte), soit tu nous
+dis quels champs d'agrégation te manquent et on les ajoute. Dis-nous simplement lequel des deux tu préfères.
 
-        out.push({ value: z.id, label: z.full ?? z.label });
-    }
-    …
-```
+## Les trois autres, pour information — deux sont des incohérences de tes fixtures
 
-## 2 — Le score et le compteur de blockers : deux formules, il en faut une
+**Le score, 43 vs 29 : ta fixture se contredit elle-même.** Notre formule est désormais la tienne, au caractère
+près. L'écart ne vient pas du calcul mais de **quelles lignes sont périmées** :
 
-C'est tout ce qui reste de la parité. Les boîtes sont **identiques au pixel** des deux côtés (380×250) : plus
-aucune divergence de mise en page, seulement deux nombres.
+- ligne `coverage` : tu la déclares `stale`. La règle backend veut que `stale` = *toutes* les cellules attestées au
+  moins une fois. Or ton `COVERAGE` porte **4 cellules réellement manquantes** (`s960` × `act-2`, `board-4`,
+  `board-5`, `hero-folded`) — précisément celles que tes propres cartes 1 et 2 demandent de **capturer**. → `missing`.
+- ligne `dryruns` : tu la déclares `stale`. La règle veut que *chaque* bucket actif porte une passe verte. Or
+  `s960` a `dryRun: null`, jamais lancé — comme le dit ta propre carte 7 (`Dry-runs — 3 buckets`). → `missing`.
 
-| | ton prototype | l'app |
-|---|---|---|
-| score | **36 %** (`LINE_WEIGHT` : ok=1, warn=0.5, ko/pending=0) | **63 %** (1/7 par ligne ; une ligne rouge vaut le `done/total` de sa station quand un compte la démontre) |
-| blockers | **3** (tes seuls `ko`) | **5** (toutes les lignes non vertes) |
+Deux `missing` au lieu de deux `stale` = 2/7 = **29 %**, pas 3/7 = 43 %. On ne fera pas dire `stale` à notre shadow :
+il afficherait un nombre que la production ne peut pas produire pour ce profil.
 
-**Sur le score** : c'est une décision de design, pas d'ingénierie — combien vaut une ligne à moitié faite ? **Tranche,
-et on implémente ta formule à l'identique.** Si c'est la pondération 1/0.5/0, dis-le et on la prend : elle est plus
-simple et plus prévisible que la nôtre. Maintenant que le tri-état existe, tu as la donnée qu'il te faut pour la
-calculer côté fixture comme on la calculera côté app.
+**Station 6 `LOCKED`.** Le seul verrou que le contrat exprime est « `[metrology]` absente ⇒ stations 3+ verrouillées ».
+Ici la métrologie est faite. Et ta fixture se contredit deux fois : elle affiche `1/3 buckets validated` (un bucket
+est donc déjà passé) et sa carte 7 propose un geste sur cette station — une station verrouillée n'offre rien.
 
-**Sur les blockers** : là on penche pour notre lecture, et voici l'argument — `write_profile` refuse sur toute ligne
-**non verte**, périmée comprise. Une évidence périmée bloque l'écriture du profil exactement comme une évidence
-absente ; l'annoncer « non bloquante » enverrait le mainteneur cliquer sur un bouton qui refusera. Si tu es d'accord,
-compte les non-vertes (`ok` exclus) et nos deux nombres convergent.
+**Métas des stations 1 et 2.** `4/4 rules` et `5/5 phases` n'ont aucun porteur : `StationStatusDto` remplit `at`
+seul pour la détection, `at` + `count` pour la métrologie. **Et il y a une régression** : tu avais demandé `count`
+en v3.5 précisément pour afficher « 14 points » — on l'a livré, et v3.6 affiche « 5/5 phases » à la place. `count`
+n'est donc plus rendu par personne. Soit tu reviens à `14 points`, soit tu nous demandes `done/total` sur ces deux
+stations et on les ajoute.
 
----
+## Un point silencieux, à savoir avant qu'il ne morde
+
+Tu as redéfini `Readiness.toVerify` comme *le nombre de lignes périmées* (2). Notre `readinessOf` le remplit encore
+avec *les cellules capturées en attente de dry-run* (8). **Aucun de tes composants ne le rend aujourd'hui**, donc la
+parité est aveugle dessus — mais le jour où l'un le rendra, les deux ne diront pas la même chose. Confirme ta
+définition et on aligne.
+
+## Ce qu'on a aligné de notre côté sur ce drop
+
+`43/60 adjustment gestures` → `43/60 adjustments` (tes mots), et le bucket en prose passe de `960 × 600` au compact
+`960×600` que tu emploies dans les cartes et les aria-labels (on garde la forme espacée pour les chips, comme toi).
+Station 4 : 0 pixel d'écart. Stations 3/4/5, les 7 lignes d'exigences et le bloc des différées : **0 pixel**.
 
 ## Recette
 
-Après ton export : `pnpm import-ds`, `make ci` (on vise **exit 0**), e2e, et pixel-parity (on vise **25/25**). Si
-ces deux points tombent, **on ouvre la MR dans la foulée** — tout le reste est vert : tsc 0, lint 0, ds-sync 77/77,
-1123 tests Rust, 389 Vitest, 64 e2e.
+Le job `pixel-parity` est bloquant chez nous : c'est **la dernière chose** qui nous sépare de la MR. Tout le reste
+est vert — `make ci` ne tombe plus que là-dessus : tsc 0, lint 0, doctor 0, ds-sync 77/77, 1123 tests Rust,
+389 Vitest, 64 e2e.
 
 ## Rappel
 
