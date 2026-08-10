@@ -1,26 +1,23 @@
-# Itération courante — drop v2026-08-11 (checklist déclaration/engine) : UN rouge tsc à corriger à la source
+# Itération courante — drops v2026-08-11 → 08-11.3 IMPORTÉS ✓ et câblés de bout en bout
 
-Le drop est récupéré par miroir direct et importé. Le modèle déclaration joueur / verdict engine est bien reçu —
-le câblage app+backend (`onDeclareCoverage`, persistance des déclarations, états `pending`/`contradicted` dans la
-dérivation de couverture) est en cours de mon côté. Un seul rouge de gate, dans l'export :
+Les deux itérations (modèle checklist déclaration/moteur, puis fix `cellStateLabel` + station 4) sont importées
+par le miroir direct, **toutes gates vertes** : lint, tsc, 394 tests unitaires, 64 e2e (parcours complet compris),
+pixel-parity 25/25, 745 tests Rust.
 
-## tsc — verbatim
+Le câblage app+backend est LIVRÉ avec : `onDeclareCoverage` persiste la coche dans le profil
+(`declare_coverage`), la colonne moteur émet `pending`/`contradicted` depuis la vraie dérivation (une attestation
+vaut déclaration ; `contradicted` = un dry-run frais a re-lu la zone et l'a refusée) ;
+`onMarkZoneAbsent`/`onMarkZonePresent` persistent la marque par capture (`mark_zone_absent`), et le dry-run ne
+prend plus un shot comme oracle d'une zone qui y est absente.
 
-```
-apps/web/src/ui/screens/CoverageMatrix.tsx:203:46 - error TS2551: Property 'cellStateLabel' does not exist on
-type 'CoverageStrings'. Did you mean 'stateLabel'?
+## Verdict sur `roomprofile-v3-field-fixes.md`
 
-203                     label={cellLabel(cell, t.cellStateLabel)}
-```
+- **C ✓** — zone « absente de cette capture » (rail + barre de gestes + canvas grisé).
+- **J ✓** — seuil de 3 px, poignées au survol, flèches / Maj+flèches au clavier.
+- **B renforcé** — rail de zones groupées : chaque ROI est atteignable même invisible sur la capture.
+- **H (Provenance room/monitor) : rendu inutile côté type ?** Non — toujours ouvert : `Provenance` garde un seul
+  `clamped` libellé « clamp moniteur ». Reste aussi : **E** (layouts « surface d'abord », station 2 + établi),
+  **F** (épine scrollable), **G suite** (flèches précédent/suivant entre stations).
 
-`CoverageMatrix.tsx` référence `t.cellStateLabel` mais `CoverageStrings` (i18n.ts) ne déclare que `stateLabel` —
-la clé n'a jamais été ajoutée. À corriger à la source, deux options au choix :
-
-1. Si l'intention était un jeu de libellés COURTS propre aux cellules (distinct des chips/aside) : ajouter
-   `cellStateLabel: Record<string, string>` à `CoverageStrings` + ses valeurs en/fr (toutes les valeurs de
-   `CellState`, `pending` et `contradicted` compris).
-2. Sinon : revenir à `t.stateLabel` dans `CoverageMatrix.tsx:203`.
-
-Livraison : mets à jour les fichiers concernés dans `_handoff/tatami-ui-package/` et bump `manifest.version` —
-je re-mirrore et je relance les gates. Le reste du drop (fixtures, TourStation, RoomProfile, CSS) est propre
-(lint vert, aucune autre erreur).
+Coche C et J dans le fichier ; prochaine cible suggérée : **E + F** (les deux gros restants), puis G et H.
+On re-valide l'ensemble sur build Windows réel à la prochaine session.
