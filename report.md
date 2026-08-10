@@ -1,33 +1,26 @@
-# Itération courante — drop v2026-08-10 IMPORTÉ ✓ · nouveau mode de livraison (plus de zip)
+# Itération courante — drop v2026-08-11 (checklist déclaration/engine) : UN rouge tsc à corriger à la source
 
-L'alerte précédente est résolue : le workspace n'avait pas régressé, seul l'artefact `_handoff/tatami-ds.zip`
-était périmé (généré au 2026-07-31, avant les écrans v3). Il est **retiré du circuit** — désormais publier =
-tenir **`_handoff/tatami-ui-package/`** à jour avec `manifest.version` daté du drop. L'app mirrore ce dossier
-directement depuis le workspace, reconstruit l'archive localement et importe par son rail habituel. Aucun zip à
-générer, aucun téléchargement humain. `manifest.version` non bumpé = « pas de nouveau drop ».
+Le drop est récupéré par miroir direct et importé. Le modèle déclaration joueur / verdict engine est bien reçu —
+le câblage app+backend (`onDeclareCoverage`, persistance des déclarations, états `pending`/`contradicted` dans la
+dérivation de couverture) est en cours de mon côté. Un seul rouge de gate, dans l'export :
 
-## Verdict du drop v2026-08-10
+## tsc — verbatim
 
-Importé, **gates vertes** (lint, tsc, 393 tests unitaires, 64 e2e, pixel-parity 25/25). Livré et vérifié sur la
-surface réelle :
+```
+apps/web/src/ui/screens/CoverageMatrix.tsx:203:46 - error TS2551: Property 'cellStateLabel' does not exist on
+type 'CoverageStrings'. Did you mean 'stateLabel'?
 
-- **A ✓** — station 3 : frame live rendue + capture sélectionnée en médaillon (`MonitorSurface`).
-- **B ✓** — station 4 : sélection de zone + poignées, `ZoneBar` (Confirmer / Test — clic à blanc), choix de la
-  capture de fond. Les 4 gestes de la station y sont réalisables.
-- **D ✓** — `ShotStrip` partagé avec vignettes d'images.
-- **G partiel** — « Interrompre » (retour au menu) dans le bandeau du wizard ✓ ; les flèches
-  précédent/suivant entre stations restent à faire.
-- **K ✓** — copy métrologie « ~10 s ».
+203                     label={cellLabel(cell, t.cellStateLabel)}
+```
 
-## Reste ouvert dans `roomprofile-v3-field-fixes.md` (ordre suggéré)
+`CoverageMatrix.tsx` référence `t.cellStateLabel` mais `CoverageStrings` (i18n.ts) ne déclare que `stateLabel` —
+la clé n'a jamais été ajoutée. À corriger à la source, deux options au choix :
 
-- **C** — zone « absente de cette capture » (`onMarkZoneAbsent` proposé).
-- **E** — layouts « surface d'abord » (station 2 + établi, image pleine largeur non rognée).
-- **F** — épine scrollable (« 18 gestes » coupé à 9).
-- **G suite** — flèches précédent/suivant entre stations.
-- **H** — `Provenance` : scinder `clamped` en `roomClamped` (« clamp room ») / `monitorClamped`.
-- **I** — badges de résultats sans valeur ; chevauchement de la ligne MAX.
-- **J** — canvas : seuil de ~3 px avant le move (sélectionner ≠ déplacer), poignées visibles au survol.
+1. Si l'intention était un jeu de libellés COURTS propre aux cellules (distinct des chips/aside) : ajouter
+   `cellStateLabel: Record<string, string>` à `CoverageStrings` + ses valeurs en/fr (toutes les valeurs de
+   `CellState`, `pending` et `contradicted` compris).
+2. Sinon : revenir à `t.stateLabel` dans `CoverageMatrix.tsx:203`.
 
-Coche les sections livrées dans le fichier au fil des drops ; on re-valide sur build Windows réel à la prochaine
-session.
+Livraison : mets à jour les fichiers concernés dans `_handoff/tatami-ui-package/` et bump `manifest.version` —
+je re-mirrore et je relance les gates. Le reste du drop (fixtures, TourStation, RoomProfile, CSS) est propre
+(lint vert, aucune autre erreur).
