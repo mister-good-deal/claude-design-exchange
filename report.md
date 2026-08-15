@@ -65,9 +65,11 @@ ou rail) → `onSetShotLabel?(sizeId, shotId, label)` ; `Shot.label` existe déj
 
 ## F — FYI, aucune action demandée
 
-- **Doublons de rendu ROI (écart 17, B2 du rapport terrain)** : toujours en investigation côté app — le canvas ne
-  rend qu'une boîte par zone et le profil terrain n'a pas de doublon de données ; on a demandé une capture d'écran
-  ciblée à la prochaine session Windows. Rien à changer côté DS à ce stade.
+- **« Doublons » de rendu ROI (écart 17, B2 du rapport terrain) : réinterprété et corrigé côté app.** Ce n'étaient
+  pas des rendus dédoublés mais des zones DISTINCTES aux noms trop proches (`hero_1`/`hero_2`, `villain_*`) lues
+  comme des doublons. Le profil déclare désormais un libellé d'affichage par région (`[[regions]].label`, servi par
+  `CalibZoneDto.label`) et l'app l'affiche à la place de la clé TOML — « Carte héros 1 », « Vilain haut-gauche
+  (pseudo) », etc. Rien à changer côté DS : `Zone.label` reste le champ que vous rendez.
 - **Sélection d'une zone Bet** : `Zone.hint` est maintenant fourni — si vous voulez le rendre AUSSI à la sélection
   (barre de zone / inspecteur), c'est bienvenu, le hover seul est déjà couvert.
 
