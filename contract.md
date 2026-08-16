@@ -45,9 +45,12 @@ baseline itself, §6), `.jsx` previews, bundler artifacts, `doctor.config.ts`, `
 {
   "designSystem": "tatami",
   "version": "<ISO date, e.g. 2026-07-17>",
-  "prototypeIteration": "<ISO date of the LAST prototype iteration this drop contains — the preview↔drop freshness trace (§8)>",
-  "pendingFromPreview": ["<component/behaviour visible in the preview but NOT in this drop — empty array when none>"],
   "generatedBy": "claude-design",
+  "parity": {
+    "previewVersion": "<ISO date of the LAST prototype iteration this drop contains — the preview↔drop freshness trace (§8)>",
+    "previewOnly": ["<component/behaviour visible in the preview but NOT in this drop — empty array when none>"],
+    "mockedInPreview": ["<preview areas running on canned data the app cannot reproduce at that point of the flow>"]
+  },
   "primitives": ["Button","IconButton","Badge","Kbd","Input","Select","Toggle","Slider","Panel","StatReadout","KillSwitch"],
   "screens": [
     { "name": "AppShell", "props": { "data": "AppShellData", "on": "AppShellCallbacks", "slots": ["windowControls"] } },
@@ -162,9 +165,13 @@ this section: a prototyped tab bar never exported (3 reports), the two Établi v
 preview showing a populated live feed where the real app is structurally empty.
 
 1. **Every iteration visible in the preview ships in the next drop.** If a prototyped component cannot be exported
-   yet, it is listed in `manifest.pendingFromPreview` — never silent.
-2. **`manifest.prototypeIteration` traces the prototype state each drop contains.** The importer compares it to the
-   drop `version`: any lag is surfaced at import time, not discovered in a Windows field campaign.
+   yet, it is listed in `manifest.parity.previewOnly` — never silent.
+2. **`manifest.parity.previewVersion` traces the prototype state each drop contains.** The importer compares it to
+   the drop `version`: any lag is surfaced at import time, not discovered in a Windows field campaign. Bump BOTH on
+   every handoff refresh — the mirror is read live, and a partially-refreshed handoff under an unchanged version is
+   invisible to the importer (a stale `TourStation.tsx` rode exactly that gap on 2026-08-16, caught by `tsc`).
+   **Refresh `_handoff/tatami-ui-package/` atomically**: land a coherent file set, never a component ahead of its
+   `i18n.ts`/fixtures contract.
 3. **Mocked zones are declared.** Any preview area running on canned data that the app cannot reproduce at that
    point of the flow is annotated as mocked in the preview itself and listed in the drop notes.
 4. **Empty and degraded states are designed too** (no frame before probes are placed, empty lists, lost window…).
