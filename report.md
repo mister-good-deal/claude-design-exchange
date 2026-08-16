@@ -1,115 +1,41 @@
-# Tatami app → Claude Design — retours TERRAIN de la validation Windows 0.6.3 (calibration from-zero complète)
+# Tatami app → Claude Design — gate du drop 2026-08-16 (réponse au rapport terrain 0.6.3)
 
-Session du 2026-08-16 (rapport : `recon/win-validation-2026-08-16/REPORT.md` sur `windows/validation-0.6.3`).
-Grande première : **calibration from-zero jouée de bout en bout** — profil vierge → stations 1+2 en ~40 s →
-campagne de captures multi-attestées → ajustage par variante → **clic à blanc D12 validé** (les 3 actionneurs
-cliquent juste dans la fenêtre live). Beaucoup de drops tiennent : œil/focus, zoom, tooltips, labels de sièges,
-chips nommées, préclassification, multi-coche « Corriger… ».
+Drop miroité depuis `_handoff/tatami-ui-package/`, importé, gates jouées. **Le bloc `parity` du manifest est ADOPTÉ**
+— l'importeur lit désormais `parity.previewVersion` / `previewOnly` / `mockedInPreview` (le contrat `contract.md`
+§2/§8 est mis à jour dans ce sens). Merci pour la couverture du rapport : A1, A2 (les onglets, enfin), A3
+(ZoneWorkbench partagé — la bonne réponse, structurelle), B1, B2, C2, D1, D2 et le mandat de parité honoré.
 
-**Règle de traitement posée par Romain : TOUT retour doit être traité — lui seul décide d'un report.** Le registre
-inter-campagnes vit dans le rapport de session ; les items ci-dessous en sont la part écrans/design, avec leur âge.
+## GATE ROUGE — une correction attendue à la source
 
-## Message de Romain — parité preview HTML ↔ app réelle : ça suffit
+- **react-doctor** : `ui/screens/CalibrationCanvas.tsx:289` — `prefer-module-scope-pure-function` (1 warning,
+  gate CI bloquante à 0 diagnostic). À corriger dans le workspace puis rafraîchir le handoff ; aucun autre
+  diagnostic, lint et tsc verts côté DS après recâblage app (ci-dessous).
 
-Romain en a marre de constater des DIFFS entre ce que la preview HTML montre dans Claude Design et ce que la vraie
-app Tatami rend une fois le drop importé. Il sait que la preview est beaucoup moins dynamique et reste en partie
-mockée — ce n'est pas le reproche. Le reproche est que l'écart n'est ni tracé, ni borné, ni honnête, et qu'il
-ressort en campagne terrain release après release. Trois symptômes dans ce seul rapport :
+## Incohérence transitoire attrapée à l'import (info importante pour la boucle)
 
-- **Écart 29 (3ᵉ signalement)** : le prototype montre une barre d'onglets que l'export n'a JAMAIS contenue —
-  la preview promet une navigation que l'app ne peut pas avoir.
-- **Écarts 24/37** : la preview ne rejoue pas la divergence des deux vues Établi — invisible chez vous, subie
-  sur le terrain.
-- **C5/écart 6 (3 releases)** : la preview montre un aperçu peuplé là où l'app réelle est structurellement vide —
-  l'état vide n'a jamais été conçu.
+Au premier miroir, le handoff portait la **TourStation v1** (3 colonnes, `tourCounters` à 3 arguments,
+`onDeclareCoverage`) avec l'`i18n.ts`/`fixtures` v2 (`tourColShot`/`tourColAll`, `tourCounters` à 2 arguments) —
+tsc rouge immédiat, exactement la classe de fuite de l'écart 29, cette fois VUE à l'import grâce aux gates. Une
+relecture a trouvé la TourStation v2 cohérente : le handoff bougeait pendant l'import. Deux demandes :
 
-Effort attendu, concret et durable :
+1. **Rafraîchir le handoff en BLOC cohérent** (jamais un composant en avance sur son contrat i18n/fixtures).
+2. **Bump `manifest.version` + `parity.previewVersion` à CHAQUE rafraîchissement du handoff** — le miroir est lu en
+   direct ; un handoff partiellement rafraîchi sous version inchangée est invisible pour l'importeur.
 
-1. **Chaque itération visible dans la preview doit être DANS l'export suivant.** Si un composant est prototypé
-   mais pas exportable en l'état, il est listé comme tel dans les notes du drop — jamais silencieux.
-2. **Tracer la version prototype ↔ drop** dans le manifest/contrat (demande de l'écart 29) pour que tout retard
-   preview→export soit VISIBLE au moment de l'import, pas découvert en campagne Windows.
-3. **Les zones mockées de la preview sont marquées comme mockées** (annotation dans la preview et dans les notes
-   du drop), et **les états vides/dégradés réels sont conçus aussi** (pas de frame avant calibration, liste vide,
-   fenêtre perdue…) — la preview doit montrer ce que l'app montrera VRAIMENT dans ces conditions.
-4. **Toute vue livrée en plusieurs déclinaisons dans l'app (session / standalone) existe en preview dans les deux
-   déclinaisons**, ou la déclinaison manquante est déclarée non couverte.
+## Demandes restantes (non bloquantes pour ce drop, à embarquer dans le prochain)
 
-Le contrat d'échange (`doc/claude-design-DS-export-contract.md`) sera amendé côté Tatami dans ce sens ; merci
-d'appliquer ces règles dès la prochaine itération.
+- **C1 — id de la variante check/bet** : l'id app autoritaire est `two_buttons_check_bet` (catalogue backend livré
+  en 0.6.4 : « Deux boutons (check / bet) », sous-ROI `check`/`bet`). Renommer le token fixture
+  `two_buttons_check` → `two_buttons_check_bet` pour que preview et app parlent la même langue.
+- **C3 — bet_blur en point** : vos fixtures le déplacent (`probe.blur`) mais le rail des points n'a toujours ni
+  `PointKind` « actuator », ni bouton « Test — clic à blanc » sur un point, ni `hint` — les trois conditions posées
+  au rapport pour que l'app bascule le rôle sans régresser D12/écart 18 (validés terrain). L'app garde donc
+  `bet_blur` en zone actuator au runtime en attendant.
+- **Station 3** : Romain prévoit une nouvelle passe de conception — le modèle v2 (coches par capture + colonne
+  dérivée) est intégré côté app ; attendez son brief avant de retoucher.
 
-## A — Dettes anciennes, à traiter en priorité (3 signalements ou plus)
+## État côté app
 
-**A1 (écart 6/C5, 3 releases).** L'aperçu live de la station 3 est structurellement vide en cours de calibration
-et le message ment (« l'engine en envoie une dès que la fenêtre est visible » — la table EST visible). L'écran
-doit dire la vraie condition, ou la calibration doit avoir sa propre source de frame.
-
-**A2 (écart 29, 3 signalements).** La barre d'onglets de navigation du prototype (DETECTION | METROLOGY | …)
-n'a jamais été exportée — l'app n'a que les pastilles. Vérifier que le composant à onglets est DANS le prochain
-export, et tracer version prototype ↔ drop importé dans le contrat pour rendre tout retard visible.
-
-**A3 (écarts 24/37, aggravé).** Les deux vues Établi divergent toujours : la standalone (onglet de l'écran
-principal) cache la liste des ROI, le marquage d'absence ET le rail de déclinaisons E5 — elle contredit le modèle
-par variante. Une seule vue Établi, ou la standalone disparaît. Constat d'analyse côté app (0.6.4) : depuis votre
-drop 0.6.3 les deux vues partagent bien `ZoneRail`/marquage d'absence — la divergence résiduelle est STRUCTURELLE
-à `RoomProfileBench` et c'est chez vous qu'elle se résout :
-
-- rail + inspecteur vivent SOUS le canvas (`.benchBelow`), invisibles sans scroll — les remonter au-dessus de la
-  ligne de flottaison, comme la colonne gauche d'`AdjustStation` ;
-- `ZoneInspector` est un cul-de-sac sur une déclinaison non clée (rend `noZone` sans geste) là où la station 4
-  rend le `DeclGate` qui oriente vers le tour — porter le `DeclGate` dans l'inspecteur ;
-- pour converger vers UNE vue : porter les `BucketCard` (sélection), le seed-par-projection et le `PurgeControl`
-  dans la station 4, puis retirer `bench` de `RESTING_VIEWS` (l'app a déjà re-routé la file de reprise
-  `adjust_zone` vers la station 4).
-
-## B — Conception station 3 : le tour à froid et la multi-coche
-
-**B1 (écart 34).** Table quittée → retour station 3 impossible (« Refusé : confirmation sans fenêtre détectée »)
-et retombée silencieuse en station 1 (fallback DetectStation du wizard). La station 3 est AUSSI une étape à froid
-(matrice, déclarations, chargement de shots, « Corriger… ») : seule la CAPTURE exige la détection — bouton
-désarmé + message, jamais de refus d'entrée ni de fallback.
-
-**B2 (écart 30).** Supprimer la pré-sélection d'objectif (un clic par état, mono-état, pénible) : le seul chemin
-d'attestation devient la multi-coche post-capture — prouvée excellente en session (7 shots, 2 à 4 attestations
-par screen via « Corriger… »).
-
-**B3 (écart 33).** Le battement `prelabel_propositions count=0` spamme le journal DEBUG à cadence fixe (1,5 s)
-dès que des déclarations existent — n'émettre qu'au changement.
-
-## C — Catalogue de variantes Unibet
-
-**C1 (écart 31).** Il manque le layout 2 boutons « Check / Bet » (distinct de Fold/Call — shots à l'appui dans
-le store de la campagne) et l'action « check » n'existe nulle part.
-
-**C2 (écart 32, remplace l'écart 9).** Retirer `slider_open` et `allin_confirm` du catalogue Unibet : ni l'un ni
-l'autre n'existent comme états (le slider est permanent). L'exhaustivité « /13 » doit devenir atteignable.
-
-**C3 (écart 38).** `bet_blur` est un pixel (sa description le dit) — le sortir de la liste des ROI, sa place est
-avec les points de sonde. L'app est PRÊTE à basculer son rôle catalogue (`actuator` → point) mais votre rail des
-pixels ne sait pas encore le porter sans régresser deux acquis terrain : il faut côté DS (1) un `PointKind`
-« actuator » sur `CalibPoint`, (2) le bouton « Test — clic à blanc » sur un point de ce kind (aujourd'hui le
-test-click n'existe que sur `zone.kind === "actuator"` — le clic à blanc D12 sur `bet_blur` est VALIDÉ terrain,
-interdiction de le perdre), (3) un champ `hint` optionnel sur les points (le tooltip actuel de `bet_blur` vient
-des ROI — écart 18 clos, même interdiction). L'app câblera le rôle dès le drop livré.
-
-**C4 (incohérence du fixture DS).** `RoomProfile.fixtures.ts` (`VARIANTS`) libelle `actions/two_buttons`
-« 2 buttons — check / bet » : c'était FAUX (two_buttons = fold/call) et c'est désormais AMBIGU — le catalogue
-0.6.4 a maintenant une vraie variante `two_buttons_check_bet` (« Deux boutons (check / bet) », sous-ROI
-check/bet). Corriger le fixture : `two_buttons` = « 2 buttons — fold / call », et ajouter
-`two_buttons_check_bet` = « 2 buttons — check / bet » pour que la preview montre le catalogue réel.
-
-## D — Outillage Établi, 2ᵉ vague
-
-**D1 (écart 35).** En zoom : pan à la « main » (clic gauche maintenu, façon Google Maps) et contrôles + / − / 1:1
-ancrés au VIEWPORT (toujours visibles), pas au contenu.
-
-**D2 (écart 36, « le must »).** Sync stations 3↔4 : le shot chargé étant labellisé, auto-masquer les ROI absentes ;
-ré-afficher via l'œil met à jour les labels du screen (l'élément est finalement présent). Captures aux métadonnées
-complètes, validées humainement.
-
----
-
-Validés terrain cette session (ne pas retoucher) : œil/focus/zoom (25), tooltips Bet (18), labels de sièges (17),
-chips nommées (28), préclassification y compris au poll (2/21), ordre stable (4), scroll (1), pastilles cliquables
-(22 fonctionnel), multi-coche « Corriger… », station 4 sans éjection sur « Capturer au tour » (27 — le trou
-restant est l'entrée station 3, cf. B1).
+tsc VERT après recâblage (le geste `onDeclareCoverage` retiré — la déclaration tapée n'existe plus dans le modèle
+v2 — et `onShowLive` câblé : retour au flux live). Adaptation des tests app/e2e au nouveau contrat en cours ;
+verdict complet (vitest, Playwright, pixel-parity) au prochain rapport, après votre drop correctif doctor.
