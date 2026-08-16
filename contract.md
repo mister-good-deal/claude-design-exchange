@@ -45,6 +45,8 @@ baseline itself, §6), `.jsx` previews, bundler artifacts, `doctor.config.ts`, `
 {
   "designSystem": "tatami",
   "version": "<ISO date, e.g. 2026-07-17>",
+  "prototypeIteration": "<ISO date of the LAST prototype iteration this drop contains — the preview↔drop freshness trace (§8)>",
+  "pendingFromPreview": ["<component/behaviour visible in the preview but NOT in this drop — empty array when none>"],
   "generatedBy": "claude-design",
   "primitives": ["Button","IconButton","Badge","Kbd","Input","Select","Toggle","Slider","Panel","StatReadout","KillSwitch"],
   "screens": [
@@ -152,12 +154,35 @@ harness can click the rail) and the `app.css` globals (border-box reset — pari
 2. `color-mix(in srgb, var(--roi) N%, transparent)` → **works** (renders in webkit2gtk 2.52, Tauri's engine). Keep it.
 3. `lucide-react` → **is a dependency**. Use it.
 
+## 8 — Preview ↔ app parity (rule set after the 0.6.3 field campaign)
+
+What the preview shows and what the app renders after import MUST stop diverging silently. The preview being less
+dynamic and partly mocked is accepted — the divergence being untracked is not. Three field-verified leaks motivated
+this section: a prototyped tab bar never exported (3 reports), the two Établi views diverging invisibly, and a
+preview showing a populated live feed where the real app is structurally empty.
+
+1. **Every iteration visible in the preview ships in the next drop.** If a prototyped component cannot be exported
+   yet, it is listed in `manifest.pendingFromPreview` — never silent.
+2. **`manifest.prototypeIteration` traces the prototype state each drop contains.** The importer compares it to the
+   drop `version`: any lag is surfaced at import time, not discovered in a Windows field campaign.
+3. **Mocked zones are declared.** Any preview area running on canned data that the app cannot reproduce at that
+   point of the flow is annotated as mocked in the preview itself and listed in the drop notes.
+4. **Empty and degraded states are designed too** (no frame before probes are placed, empty lists, lost window…).
+   The preview must show what the app will REALLY show in those conditions — a fixture that fakes a populated state
+   the app cannot reach is a contract violation, not a nicety.
+5. **A view delivered in several declinations in the app (in-session / standalone) exists in the preview in ALL its
+   declinations**, or the missing one is declared in `pendingFromPreview`.
+
 ## Delivery loop
 
 1. Read `report.md` on the exchange repo (verdict + verbatim errors + gaps of the previous iteration).
-2. Apply the fixes at source, run `tsc` + the lint-bundle check, zip per §1/§2.
-3. Hand the zip to Romain for download — `pnpm import-ds --latest` picks it up, runs the gates, and pushes the next
-   `report.md` to the exchange. No copy-paste anywhere.
+2. Apply the fixes at source, run `tsc` + the lint-bundle check.
+3. **Publish by keeping `_handoff/tatami-ui-package/` current in the workspace** (§1/§2 layout, `manifest.version`
+   bumped to the drop date). No zip, no download, no human hop: the app side mirrors that folder directly from the
+   workspace (DesignSync file reads), rebuilds the archive locally, runs `pnpm import-ds <path>` and its gates, and
+   pushes the next `report.md` to the exchange. The `_handoff/tatami-ds.zip` artifact is RETIRED — a stale copy of
+   it once regressed the whole v3 surface; never point anyone at it again. `manifest.version` is the freshness
+   check the importer trusts: an unbumped version reads as « no new drop ».
 
 ### Standing requests live in their own exchange files
 
