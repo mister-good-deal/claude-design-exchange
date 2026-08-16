@@ -50,7 +50,17 @@ export, et tracer version prototype ↔ drop importé dans le contrat pour rendr
 
 **A3 (écarts 24/37, aggravé).** Les deux vues Établi divergent toujours : la standalone (onglet de l'écran
 principal) cache la liste des ROI, le marquage d'absence ET le rail de déclinaisons E5 — elle contredit le modèle
-par variante. Une seule vue Établi, ou la standalone disparaît.
+par variante. Une seule vue Établi, ou la standalone disparaît. Constat d'analyse côté app (0.6.4) : depuis votre
+drop 0.6.3 les deux vues partagent bien `ZoneRail`/marquage d'absence — la divergence résiduelle est STRUCTURELLE
+à `RoomProfileBench` et c'est chez vous qu'elle se résout :
+
+- rail + inspecteur vivent SOUS le canvas (`.benchBelow`), invisibles sans scroll — les remonter au-dessus de la
+  ligne de flottaison, comme la colonne gauche d'`AdjustStation` ;
+- `ZoneInspector` est un cul-de-sac sur une déclinaison non clée (rend `noZone` sans geste) là où la station 4
+  rend le `DeclGate` qui oriente vers le tour — porter le `DeclGate` dans l'inspecteur ;
+- pour converger vers UNE vue : porter les `BucketCard` (sélection), le seed-par-projection et le `PurgeControl`
+  dans la station 4, puis retirer `bench` de `RESTING_VIEWS` (l'app a déjà re-routé la file de reprise
+  `adjust_zone` vers la station 4).
 
 ## B — Conception station 3 : le tour à froid et la multi-coche
 
@@ -75,7 +85,18 @@ le store de la campagne) et l'action « check » n'existe nulle part.
 l'autre n'existent comme états (le slider est permanent). L'exhaustivité « /13 » doit devenir atteignable.
 
 **C3 (écart 38).** `bet_blur` est un pixel (sa description le dit) — le sortir de la liste des ROI, sa place est
-avec les points de sonde.
+avec les points de sonde. L'app est PRÊTE à basculer son rôle catalogue (`actuator` → point) mais votre rail des
+pixels ne sait pas encore le porter sans régresser deux acquis terrain : il faut côté DS (1) un `PointKind`
+« actuator » sur `CalibPoint`, (2) le bouton « Test — clic à blanc » sur un point de ce kind (aujourd'hui le
+test-click n'existe que sur `zone.kind === "actuator"` — le clic à blanc D12 sur `bet_blur` est VALIDÉ terrain,
+interdiction de le perdre), (3) un champ `hint` optionnel sur les points (le tooltip actuel de `bet_blur` vient
+des ROI — écart 18 clos, même interdiction). L'app câblera le rôle dès le drop livré.
+
+**C4 (incohérence du fixture DS).** `RoomProfile.fixtures.ts` (`VARIANTS`) libelle `actions/two_buttons`
+« 2 buttons — check / bet » : c'était FAUX (two_buttons = fold/call) et c'est désormais AMBIGU — le catalogue
+0.6.4 a maintenant une vraie variante `two_buttons_check_bet` (« Deux boutons (check / bet) », sous-ROI
+check/bet). Corriger le fixture : `two_buttons` = « 2 buttons — fold / call », et ajouter
+`two_buttons_check_bet` = « 2 buttons — check / bet » pour que la preview montre le catalogue réel.
 
 ## D — Outillage Établi, 2ᵉ vague
 
