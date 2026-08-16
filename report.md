@@ -1,52 +1,48 @@
-# Tatami app → Claude Design — gate du drop 2026-08-16.3 (refactor station 3)
+# Tatami app → Claude Design — gate du drop 2026-08-16.4 : TOUT VERT
 
-Drop importé et câblé. **Le refactor est juste** : deux colonnes sur UNE donnée partagée avec la station 4, la
-droite dérivée donc cochée par construction, la station complète quand elle est pleine, plus aucune validation
-« engine » là où aucune ROI n'existe encore. La suppression de `CorrectDialog` est la bonne conséquence — le modal
-refaisait le geste de la colonne de gauche sur le même champ. L'app ne l'importait pas : **tsc et lint sont passés
-du premier coup**, ce qui est exactement ce que le contrat « presentational-with-props » doit produire.
+`pnpm import-ds` sort **« DS import GREEN — drop-in clean »** pour la première fois de la série. Les quatre points
+du rapport précédent sont traités à la source, sans une seule retouche à la main côté app.
 
 | Gate | Verdict |
 |---|---|
+| react-doctor | ✅ **No issues found!** |
 | tsc | ✅ |
 | ESLint | ✅ |
-| ds-sync | ✅ 82 fichiers (−1 : `CorrectDialog` supprimé) |
+| ds-sync | ✅ 82 fichiers |
 | vitest | ✅ 412 / 412 |
 | Playwright e2e | ✅ 64 / 64 |
 | pixel-parity | ✅ 25 / 25 |
-| react-doctor | ❌ 1 warning — inchangé, voir ci-dessous |
+| workspace Rust | ✅ |
 
-La trace de parité fonctionne : `version` == `parity.previewVersion`, aucun retard signalé à l'import, zones
-mockées affichées. Merci — c'est exactement l'effet recherché par le §8.
+**La branche 0.6.4 redevient mergeable.** C'était la dernière marche.
 
-## 1. GATE ROUGE — toujours la même, non traitée par ce drop
+## Ce qui mérite d'être dit
 
-`ui/screens/CalibrationCanvas.tsx:289` — react-doctor `prefer-module-scope-pure-function` (1 warning). Ce drop
-répondait à la demande station 3, pas au rapport de gate précédent : le défaut est donc intact. **C'est la seule
-chose qui empêche la branche 0.6.4 de partir en CI** (la gate `quality` est bloquante à 0 diagnostic). À corriger
-dans le workspace puis rafraîchir le handoff — c'est la dernière marche.
+**La correction de la course est meilleure que ce que je proposais.** J'avais suggéré « un état local optimiste » ;
+vous avez livré un overlay qui porte `base` — la valeur de props dont il a été calculé — et qui se périme **par
+comparaison au rendu** dès que `Shot.variantIds` bouge. Résultat : pas d'effet de synchro de props, pas de seconde
+source de vérité, et le cas de rejet applicatif est couvert gratuitement (la valeur revient en arrière, l'overlay
+tombe). C'est la bonne forme, et elle passe react-doctor sans rien contourner.
 
-## 2. Une COURSE dans le geste de coche (trouvée en écrivant le test du REPLACE)
+J'ai durci le test app en **non-régression** : les trois décochages sont désormais enchaînés *sans* attendre le
+refetch, et j'assert la monotonie des REPLACE successifs (`[b4, dealt]` → `[dealt]` → `[]`). C'est exactement le
+scénario qui produisait la résurrection avant votre correctif.
 
-`onCorrectLabels` reçoit `toggledId(loaded.variantIds ?? [], variantId)` — l'ensemble complet, recalculé **depuis
-les props relues**. Il n'y a pas d'état local optimiste : tant que le refetch de la coche précédente n'a pas
-atterri, `loaded.variantIds` est périmé et le clic suivant **ressuscite ce qui vient d'être retiré**. Constaté
-noir sur blanc en décochant trois variantes à la suite (trois REPLACE postés : `[b4, dealt]`, puis
-`[slider_open, dealt]` — le slider revenu — puis `[b4]`).
+**Le fix doctor est le bon diagnostic**, pas un contournement : le handler ne capturait effectivement rien.
 
-Un humain qui coche posément ne le verra pas (le refetch est local et rapide) ; un joueur qui coche vite une
-scène à quatre variantes, si. Deux pistes, à votre main :
+## C3 — reçu, et le chemin est enfin ouvert
 
-- côté DS : tenir un état local optimiste des ticks de la capture chargée, réconcilié à l'arrivée des props ;
-- côté app : rendre `onCorrectLabels` optimiste avant refetch.
+`PointKind` « actuator », `CalibPoint.hint`, `CalibPoint.test { at, ok }` et `onTestPoint` : les trois conditions
+que j'avais posées pour sortir `bet_blur` des ROI **sans perdre le clic à blanc D12 ni les tooltips (écart 18)**,
+tous deux validés terrain, sont réunies. Le distinguo « jamais testé » vs résultat daté est exactement ce qu'il
+faut : le DS ne fabrique aucun verdict, l'app écrit le sien.
 
-Dites-moi laquelle vous préférez — je n'ai rien changé unilatéralement, la sémantique REPLACE elle-même est
-correcte et je ne voulais pas dupliquer l'état sans votre avis.
+Côté app le câblage restant n'est pas cosmétique — il touche le modèle Rust (`bet_blur` doit passer des ROI aux
+points, avec migration à l'écriture et tolérance en LECTURE pour ne pas mettre les profils terrain en quarantaine)
+et la commande `test_click`. C'est planifié comme un lot à part, à l'arbitrage de Romain ; **rien n'est attendu de
+vous là-dessus**.
 
-## 3. Rappels des demandes encore ouvertes
+## Rien d'ouvert de mon côté
 
-- **C1** : renommer le token fixture `two_buttons_check` → **`two_buttons_check_bet`** (l'id du catalogue app fait
-  foi, livré en 0.6.4 : « Deux boutons (check / bet) », sous-ROI `check`/`bet`).
-- **C3 / bet_blur** : pour que l'app puisse sortir `bet_blur` des ROI, le rail des points a toujours besoin d'un
-  `PointKind` « actuator », du bouton « Test — clic à blanc » sur un point, et d'un `hint` — sans les trois, on
-  perd D12 et l'écart 18, tous deux validés terrain.
+Aucune demande en attente. Le prochain rapport partira de la prochaine campagne Windows ou d'une nouvelle demande
+de Romain.
