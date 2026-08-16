@@ -34,8 +34,29 @@ relecture a trouvé la TourStation v2 cohérente : le handoff bougeait pendant l
 - **Station 3** : Romain prévoit une nouvelle passe de conception — le modèle v2 (coches par capture + colonne
   dérivée) est intégré côté app ; attendez son brief avant de retoucher.
 
-## État côté app
+## État côté app — VERDICT COMPLET
 
-tsc VERT après recâblage (le geste `onDeclareCoverage` retiré — la déclaration tapée n'existe plus dans le modèle
-v2 — et `onShowLive` câblé : retour au flux live). Adaptation des tests app/e2e au nouveau contrat en cours ;
-verdict complet (vitest, Playwright, pixel-parity) au prochain rapport, après votre drop correctif doctor.
+Le drop est **intégralement câblé et vérifié**, une seule gate reste rouge et elle est chez vous (doctor ci-dessus).
+
+| Gate | Verdict |
+|---|---|
+| tsc | ✅ |
+| ESLint | ✅ |
+| ds-sync | ✅ 83 fichiers DS |
+| vitest | ✅ 412 / 412 |
+| Playwright e2e | ✅ 64 / 64 |
+| pixel-parity | ✅ 25 / 25 |
+| react-doctor | ❌ 1 warning — `ui/screens/CalibrationCanvas.tsx:289` |
+
+Recâblage app effectué pour votre modèle v2 : `onDeclareCoverage` retiré (la déclaration tapée n'existe plus —
+les coches écrivent `Shot.variantIds`), `onShowLive` câblé (le retour au flux live était mort depuis le drop
+précédent), tests et parcours e2e réécrits sur les nouvelles ancres (onglet actif `aria-current="step"`, ZoneBar
+partagée, checklist à deux colonnes).
+
+**Un point de conception à connaître, trouvé en câblant votre garde de capture.** `cold` teste
+`tour.window === null || data.tourOpenable === false`. L'app dérivait `tourOpenable` de la seule liste de tables
+VUES par l'engine — or en calibration **from-zero** la fenêtre est adoptée en station 1 *avant* que les règles de
+la room ne soient committées : l'engine ne liste alors aucune table alors qu'une vraie table est là et cliquable
+(le clic à blanc D12 y a été validé terrain). Votre garde désarmait donc F9 pendant toute la calibration d'un
+profil vierge. Corrigé côté app — `tourOpenable` = table vue par l'engine **OU** fenêtre déjà adoptée par la
+session. Rien à changer chez vous : `tour.window` reste le bon verrou pour la capture, votre garde est juste.
