@@ -1,89 +1,47 @@
-# Tatami app → Claude Design — retours TERRAIN de la validation Windows 0.6.4
+# Drop 2026-08-18 — rapport de gate (app Tatami)
 
-Session du 2026-08-18 (rapport : `recon/win-validation-2026-08-18/REPORT.md` sur `windows/validation-0.6.4`).
-**Le drop 0.6.4 tient ses promesses sur l'essentiel** — merci : la barre d'onglets est enfin dans l'app (écart 29,
-3 signalements, la clause de parité §8 a fonctionné du premier coup), la station 3 v2 est validée telle quelle
-(deux colonnes, plus de « Corriger… », plus de pré-sélection), l'ouverture à froid marche, le message d'aperçu
-live dit enfin la vérité (écart 6, 3 releases), le zoom/pan ancré est parfait, le catalogue affiche `/12` avec
-check/bet, et `bet_blur` vit désormais au rail des pixels avec ses tooltips.
+**Verdict : importé et câblé, toutes gates vertes** — tsc, lint, react-doctor « No issues found! », vitest 417/417,
+Playwright 64/64, **pixel-parity 25/25**, ds-sync 82 fichiers, cargo fmt/clippy/test (270 desktop). Le drop répond à
+tout le rapport terrain 0.6.4 : la sync 3↔4 dérive enfin (écart 36), l'outil glyphes montre toute la capture
+(écart 49), le rail des pixels est lisible, groupé et laisse écarter un pixel absent (45/46b/47), les variantes du
+joueur ont leur section (42), le mur d'abonnement a un état de restauration (39), et l'Établi n'a plus qu'UNE
+adresse (24/37, clos par suppression). Merci — c'est un drop qui referme, pas qui déplace.
 
-Ce qui suit est ce que le terrain a trouvé APRÈS ces acquis. Rappel de la règle : tout retour est traité, seul
-Romain décide d'un report.
+## Un défaut d'export à corriger à la source
 
-## A — La sync 3↔4 annoncée n'existe pas dans le rendu (écart 36)
+**`GlowConfig` manque au paquet** : `ui/screens/GlowConfig.tsx`, `GlowConfig.fixtures.ts` et `GlowConfig.module.css`
+ne sont pas dans l'archive, alors que le `manifest.json` liste `GlowConfig` dans ses `screens` et que
+`ui/screens/index.ts` + `standalone.entry.tsx` de l'export lui-même l'importent. Comme la cible `ui/screens/` est en
+`replace-dir`, l'import a supprimé les trois fichiers et le typecheck est parti rouge sur l'export.
 
-Le drop annonce « ROI absentes et déclinaisons non attestées auto-masquées ». Sur le terrain, **rien n'est masqué
-automatiquement** : un screen labellisé « flop » affiche encore `board_4` et `board_5`, et les tentatives de
-masquage des boutons d'actions donnent un résultat incohérent.
+Chez nous : les trois fichiers ont été restaurés depuis le drop précédent (aucune main dans le code DS, le lockfile
+ds-sync les réintègre à leur hash d'origine). **À corriger au prochain export** : soit les fichiers reviennent au
+paquet, soit `GlowConfig` sort du manifest et de `index.ts`. Un `replace-dir` mérite un garde-fou côté génération —
+tout ce qu'un `index.ts` exporte doit être dans l'archive.
 
-Analyse code : `ZoneWorkbench` calcule `hiddenForCanvas(zones, ui.hidden, ui.focusOnly, ui.zoneId)` où `ui.hidden`
-est **exclusivement manuel** (toggle œil) — rien n'est dérivé des labels/attestations du shot chargé. De plus
-`case "selectShot"` ne réinitialise pas `hidden` : **les masquages d'un screen fuient sur le suivant**.
+## Ce que le câblage a demandé côté app (pour information)
 
-Attendu, en trois points :
-1. dérivation « variante attestée → sous-ROI visibles » (le shot porte `variantIds` ; `board/b3` ⇒ `board_4` et
-   `board_5` masquées) ;
-2. **recalcul à chaque chargement de screen** (pas de report de l'état précédent) ;
-3. le geste manuel reste prioritaire par-dessus la dérivation (« montrer » ré-écrit les labels, comme spécifié).
+- **`Zone.requires` est SERVI PAR LE BACKEND**, pas construit par l'app : la règle « `board_4` n'existe qu'à partir
+  du turn » vivait déjà dans la relecture de glyphes du moteur ; elle est désormais la seule définition et voyage
+  jusqu'au contrat. L'écran masque donc exactement ce que le moteur ne relit pas.
+- **Le rail des sondes est scopé** : `Probe.action` / `Probe.variant` nous ont fait remonter un vrai bug backend —
+  un profil migré (FR-092) ne porte plus de clé plate `probe.<action>`, la station 5 refusait donc TOUTE mesure sur
+  un profil terrain. La commande prend maintenant la déclinaison et vise `probe.<variant>.<action>`.
+- **`Shot.absentPointIds`** : le backend range les absences d'une capture dans UNE liste ; l'app la partage entre
+  ROIs et pixels d'après le catalogue. Rien à changer côté DS.
+- **`onDeclareVariant("custom", …)`** : la déclaration atterrit sur la zone `actions` — les autres zones à variantes
+  (board, cartes héros, timer) sont des états du moteur, ils ne varient pas d'une room à l'autre.
 
-## B — Station 5 : l'outil de glyphes doit tout montrer d'un coup (écart 49)
+## Deux points d'écran encore ouverts
 
-Aujourd'hui il faut sélectionner `board_1`, puis `board_2`… Attendu : **supprimer la selectbox de ROI** et afficher
-simultanément toutes les cartes du board présentes sur la capture, chacune dans sa box (idem cartes héros), en
-n'affichant **que ce que le screen montre** (un flop = 3 cartes). Même donnée que le point A — les deux se
-règlent ensemble.
-
-## C — Le rail des pixels est devenu illisible (écarts 45, 46b, 47)
-
-`bet_blur` au rail est un vrai gain, mais la vue déborde : ~16 pixels à poser d'un coup.
-
-- **C1 (45)** : les libellés sont tronqués par des ellipsis — « Fold · 3 boutons · … », « Fold · … », « Call ·
-  slider · … ». Le joueur ne peut pas identifier le pixel qu'il pose. Libellés lisibles en entier (largeur,
-  wrap, ou infobulle).
-- **C2 (46b)** : même une fois les variantes mortes filtrées (correctif app en cours, cf. C3), les sondes par
-  déclinaison restent nombreuses — il faut une hiérarchie : grouper par action, et/ou n'exposer que les
-  déclinaisons attestées par au moins une capture.
-- **C3 (47)** : un pixel absent de la capture chargée doit pouvoir être écarté, exactement comme une ROI
-  (« absente de cette capture »), et revenir par le même geste.
-
-*(La pollution par les sondes de variantes désactivées — « Fold · slider » alors que `slider_open` est
-désactivée — est côté app : `zone_catalog` ne filtre pas l'état. Corrigé chez nous, pas une demande DS.)*
-
-## D — Divers écran
-
-- **D1 (42)** : une variante personnalisée ajoutée par le joueur se range dans le groupe **ACTIONS** comme si
-  elle appartenait au catalogue moteur. Attendu : une section « Personnalisé » (ou un libellé distinctif).
-- **D2 (39)** : quand la porte licence est injoignable, le bouton « J'ai déjà un abonnement » **ne fait rien** —
-  aucun message à l'écran. Un état d'échec de licence doit être conçu (message actionnable), pas un clic mort.
-- **D3 (24/37, rappel)** : la convergence de l'Établi standalone vers la station 4 (BucketCards, seed, purge,
-  DeclGate dans l'inspecteur, retrait de `bench`) reste commandée depuis le rapport 0.6.3 — non re-testée cette
-  session faute de temps.
-
-## E — Leçon transverse : un callback DS non câblé est silencieux
-
-Le bouton « Confirmer la suppression » de la station 3 ne faisait **rien** : le composant appelle
-`on.onDeleteShot?.(…)` en optional-call et l'app n'avait pas de handler — clic avalé, sans erreur ni log (câblé
-en session). Même famille que `liveSuspended` « livré, jamais câblé » de la 0.6.4. Piste commune app+DS : rendre
-obligatoires les callbacks du contrat qu'un écran utilise réellement, ou poser un garde-fou de développement qui
-journalise tout `on.X?.()` sans handler. Un drop parfait peut arriver inerte — et rien ne le dit.
-
-## F — Addendum app (0.6.5) : ce qui est corrigé chez nous, et ce que la garde a trouvé
-
-Corrigé côté app dans la 0.6.5, pour que le prochain drop se teste sur un socle sain : la **station 5 est
-désormais une étape à froid** (la pipette ne passe plus par la porte du tour — c'était le point de blocage des
-stations 5-6-7), les **variantes désactivées ont disparu de toutes les surfaces résolues** (catalogue de zones,
-sondes, rail des pixels : plus de « Fold · slider » sur une room sans slider — le point C3 côté app annoncé au
-paragraphe C), et la **porte licence dit enfin sa panne** (message actionnable + ligne de journal).
-
-Sur la leçon transverse du paragraphe E, nous avons posé la garde chez nous : un test relit les sources et échoue
-dès qu'un écran DS appelle un `on.onX` qu'aucun container ne fournit. Elle a trouvé **trois gestes que l'app ne
-peut pas honorer aujourd'hui** — ils sont rendus à l'écran et ne font rien :
-
-- `onSelectLocale` (écran Compte) : la langue est un choix de BUILD (`APP_LOCALE`), rien à commuter à chaud ;
-- `onResendCredential` (mur d'abonnement) : aucun endpoint de renvoi côté serveur de licence ;
-- `onReanchor` (overlay) : le glow suit la fenêtre, l'app n'expose pas d'ancrage manuel.
-
-Demande DS, dans la ligne du paragraphe E : **un contrôle dont le callback est absent ne doit pas être rendu**
-(ou doit être rendu désactivé avec son motif). Un lien mort est indiscernable d'une panne — c'est exactement ce
-qui a coûté une session sur l'écart 39. La réciproque reste souhaitable : rendre obligatoires, dans le contrat,
-les callbacks qu'un écran utilise réellement.
+1. **C1/C2 n'ont touché que la station 5.** Les écarts 45/46 ont été relevés sur le rail « pixels à poser » du CANVAS
+   (station 4) : ce sont ses puces qui affichaient « Fold · 3 boutons · … » tronqué, et c'est lui qui liste
+   maintenant ~16 pixels à plat — déclinaisons scopées comprises, puisqu'elles sont la géométrie que le moteur lit.
+   `PipetteTool` est lisible et groupé ; `CalibrationCanvas.UnplacedRail`, lui, est resté une file de puces.
+2. **`fire()` est la bonne réponse à la leçon E** — nous avons posé la garde symétrique côté app (un test échoue si
+   un écran appelle un `on.onX` qu'aucun container ne fournit). Elle a trouvé trois gestes que l'app **ne peut pas**
+   honorer aujourd'hui et qui sont pourtant rendus : `onSelectLocale` (la langue est un choix de build),
+   `onResendCredential` (aucun endpoint de renvoi), `onReanchor` (pas d'ancrage manuel de l'overlay). Demande
+   inchangée : **un contrôle dont le callback est absent ne devrait pas être rendu** (ou l'être désactivé, avec son
+   motif). Et oui — la version forte (callbacks essentiels non optionnels dans les types) nous intéresse : casser le
+   build vaut mieux que perdre une session terrain.
