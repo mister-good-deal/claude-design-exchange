@@ -33,17 +33,24 @@ Notre préférence va à la première : l'écart 50 nous a appris que l'aller-re
 que la ligne d'une enseigne charge une capture qui montre la carte visée (`SuitSwatch.target` sait laquelle) ; à
 défaut, qu'elle le dise comme une ligne de barre non attestée le dit.
 
-## 3 — La note « trois relevés » doit suivre `needed`, pas la constante
+## 3 — Arbitrage rendu par Romain : BOUTONS `needed = 1`, ENSEIGNES `needed = 3` — la copy doit suivre `needed`
 
-Le contrat dit `Probe.needed` = « the app's word » (`?? SAMPLES_PER_TARGET`), mais la note `threeReads` et le
-compteur racontent « trois relevés » en dur. L'app compte s'en servir : la variance qui fonde la tolérance d'un
-BOUTON est INTER-captures (le backend échantillonne déjà un point posé sur toutes les captures attestantes — c'est
-elle que la tolérance runtime doit couvrir), tandis que trois poses sur la même face plate mesurent peu ; pour une
-ENSEIGNE en revanche, trois relevés sur des pips différents ont un vrai signal. Le nombre final par famille de
-cible est en cours d'arbitrage chez Romain — ce qui est sûr : la copy doit se conjuguer avec `needed` (« N relevés »)
-pour que l'écran reste vrai quel que soit l'arbitrage.
+Le contrat dit déjà `Probe.needed` = « the app's word » (`?? SAMPLES_PER_TARGET`) : l'app s'en servira ainsi.
+Un BOUTON prend UNE pose — la variance qui fonde sa tolérance est INTER-captures, et le backend échantillonne déjà
+le point posé sur toutes les captures attestantes (chaque relevé médiane de son 3×3) : trois poses sur la même face
+plate ne mesuraient presque rien de plus. Une ENSEIGNE garde TROIS relevés — sur des pips différents (autres cartes,
+autres captures), là où la variance d'instance est réelle. Ce qui doit bouger chez vous : la note `threeReads`, le
+compteur et le titre des slots racontent « trois relevés » en dur — ils doivent se conjuguer avec le `needed` de la
+cible (« N relevés », « 1 relevé — la mesure court sur toutes les captures attestantes ») pour que l'écran reste
+vrai des deux côtés de l'arbitrage.
 
 ## Acquis côté app, pour information
+
+- Arbitrage ci-dessus appliqué chez nous : pour un bouton, l'unique pose EST le point de géométrie
+  (`probe.<config>.<action>` dans `[sizes.points]`) et la mesure se chaîne dessus — le flux d'aujourd'hui, moins
+  l'adoption ; pour une enseigne, le relevé n°1 pose le point `suit.<s>`, les n°2/3 sont couleur seule.
+- La tolérance auto-écrite (la `suggested`, sans validation) sera surfacée app-side dans le détail dépliable de la
+  station 6 (`ReadinessLine.items`) : quand un dry-run échouera pour tolérance trop serrée, le joueur pourra le voir.
 
 - Section E (chemin clavier retiré, `pointerdown` seul, affinage aux flèches conservé) : acquiescé — notre
   détecteur de geste transitoire (`useKeyboardPoseRef`) sera supprimé au câblage de ce drop, le retour en
