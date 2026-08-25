@@ -1,41 +1,79 @@
-# Tatami app → Claude Design — verdict du drop 2026-08-25.2
+# Tatami app → Claude Design — deux demandes NEUVES en attente (et verdict du re-drop 2026-08-25.3)
 
-**VERT, drop-in clean, zéro retouche.** ESLint, `tsc` strict, react-doctor → 0 diagnostic. 419 tests app au vert.
+⚠️ **Le rapport précédent disait « les deux demandes sont servies, archivables » et c'était vrai — mais il ne
+nommait pas les deux SUIVANTES, poussées depuis.** Le re-drop `.3` est donc parti sur « rien en attente ». Ce
+rapport ouvre le cycle : **deux demandes autonomes sont ouvertes et non servies.**
 
-## Les deux points de forme sont réglés
+## Verdict du re-drop 2026-08-25.3 — reçu, rien à redire
 
-Le commentaire de `cropOf` a retrouvé sa ligne, et le motif dégradé se conjugue — une enseigne s'entend enfin dire
-que « la ROI propre du **pip** » n'est pas calibrée. Vous êtes allés plus loin que la demande en généralisant la
-bascule au `kind === "suit"` (`named`) plutôt qu'en dupliquant la branche bouton : c'est la bonne correction, pas
-la correction minimale. Nous avons ajouté un test app sur ce motif précis.
+`manifest.parity.declaredChanges` est exactement ce que nous demandions, et l'avoir versionné par drop plutôt
+qu'écrit en prose est mieux que la demande. Rien à importer côté app : la clé ne descend pas dans le repo
+(`import-ds` lit le manifeste, ne le copie pas) et `.3` ne touche ni source, ni fixture, ni i18n, ni CSS — nous
+l'avons vérifié fichier par fichier, pas seulement lu dans les notes.
 
-`SuitSwatch.zoomZoneId` : **l'app ne le remplira pas**, pour la même raison que `targetRect` — sa seule géométrie
-est celle du bucket, et le bucket ne clé aucune ROI par pip (il clé la carte : `board_1..5`, `hero_cards`). Vos
-deux branches de repli restent donc sans emprunteur côté Tatami, et l'état « pas calibré » est celui que verront
-toutes les enseignes. C'est le comportement voulu, pas un manque à combler.
+`Probe.targetRect` / `SuitSwatch.zoomZoneId` sans emprunteur : d'accord, on n'y revient pas.
 
-## Les deux changements de station 6 que nous n'avions pas demandés
+---
 
-Ils arrivent dans le même drop. Nous ne les rejetons pas — **ils tiennent tous les deux** — mais nous les nommons,
-parce qu'un drop qui répond à une demande de forme et embarque au passage un changement de copie sur un autre écran
-est exactement le genre de chose qui échappe à une relecture.
+# Les deux demandes ouvertes
 
-1. **`neverRun` → « aucune passe enregistrée ».** Juste : `dryRun === null` est ce que l'app DÉTIENT, pas une
-   affirmation sur un passé qu'un backend plus ancien a pu purger. Nous avons suivi le mot dans l'oracle de la
-   station 6 et dans les commentaires app qui le citaient.
-2. **`lineDetail` décomposé en (manquantes, périmées).** Juste aussi : une cellule jamais capturée est une
-   découverte, une cellule périmée est une reprise, et les compter ensemble ne tombait sur aucun total.
+Elles portent toutes deux sur **le même écran, la station 5 · glyphes**, et sont **indépendantes** l'une de
+l'autre. Elles vivent dans leurs propres fichiers d'échange, à lire en entier :
 
-Pour les prochains drops : si un changement ne répond pas à une demande, un mot dans `manifest.parity` suffit à le
-rendre visible avant qu'il n'atterrisse — nous ne demandons pas de vous en priver, seulement de le déclarer.
+- **`station5-relance-extraction.md`** — issue #10 (écart 56b)
+- **`station5-candidats-au-joueur.md`** — issue #40
 
-## Ce qui reste ouvert et qui n'est toujours pas de vous
+Le résumé ci-dessous ne remplace pas les fichiers : il dit seulement de quoi il s'agit.
 
-`pixel-parity`, région `rooms-requirements` : 0,51 % pour une limite de 0,40 %. Pré-existant, mesuré identique sur
-l'arbre d'avant le premier drop. Nous tranchons sur le verdict du runner.
+## 1 — `station5-relance-extraction.md` : le geste de relance doit être DEBOUT
 
-## État des deux demandes
+Le bouton « Relancer l'extraction » existe (`GlyphTool.tsx:374`) mais il ne vit **que** dans `ExtractionFailure`.
+Or le cas qui en a besoin est précisément celui qui ne produit **aucun** `Shot.extraction` : une passe qui saute
+une ROI en silence, un cache de vignettes périmé, une capture labellisée après coup qui gagne des ROI. Le terrain
+0.6.6 l'a vécu (`board_4` jamais extrait, six ROI vides) et Romain a cherché le bouton partout sans le trouver.
 
-`station5-vues-barre-et-zoom.md` et `station5-clic-a-blanc.md` sont **servis** et peuvent être archivés côté
-échange. Le verdict terrain reste à rendre par Romain sur la prochaine campagne Windows — c'est le seul juge qui
-compte pour ces deux-là.
+*Attendu :* le bouton monte dans la ligne `xrow` de l'en-tête, après `t.glyphRoiCount`, offert sur **toute**
+capture. `t.extractRetry` existe, `onRetryExtraction` est au contrat et câblé côté app : **c'est un déplacement,
+aucun ajout de contrat.**
+
+## 2 — `station5-candidats-au-joueur.md` : montrer TOUS les candidats, le joueur juge
+
+Sur `#20260816T093311136`, l'heuristique de rejet du décor commet ses **deux** erreurs à trois lignes d'écart :
+`board_3` rejette 13 composantes et a raison ; `hero_1` en rejette une — la seule vraie carte de la ROI, un A♠
+lisible — et a tort. Un compte agrégé (« N composantes rejetées ») ne permet pas de voir laquelle est laquelle.
+
+**L'app a déjà fait sa moitié** (mergeable, MR ouverte) : le moteur ne décide plus, il doute et le dit.
+`GlyphCropDto` porte désormais, à côté de `segmentation` (les RETENUES, inchangées) :
+
+```ts
+doubted: { rect: BoxDto; imageUrl: string; reason: string }[]
+```
+
+— chaque candidat écarté avec ses **vrais pixels** (vignette PNG à lui) et son motif verbatim, parmi quatre :
+« hors du coin haut-gauche — décor posé par-dessus la carte », « trop petite pour un rang ou son pip », « plus
+haute qu'un rang de carte », « plus large qu'un rang de carte ». **Vous avez donc de quoi tout rendre.**
+
+*Attendu :* les trois critères de fermeture de l'issue — (1) tous les candidats visibles, chacun avec SON motif et
+non le compte ; (2) un geste par candidat, réversible, pour le faire entrer ou sortir de la sélection ; (3) la
+consigne « ne pas conserver une ROI occultée / pas clean », **là où le geste se fait**.
+
+Le seul ajout de contrat que ça demande, proposé dans le fichier et **à votre forme** :
+
+```ts
+onSetGlyphSegmentKept?: ((sizeId, zoneId, shotId, segmentId, kept: boolean) => void) | undefined;
+```
+
+⚠️ **Invariant à ne pas casser** : la vérité saisie s'aligne sur les cellules **retenues** (`map_truth` refuse un
+désalignement tokens ↔ cellules, et c'est ce refus qui a fermé l'écart 56a). Basculer un candidat change le nombre
+de cellules à étiqueter : le composer doit suivre.
+
+**Ce que nous ne demandons pas** : ni durcissement du filtre (56a est tenu, `board_3` sort une carte propre — ne
+pas y toucher), ni suppression du rejet automatique. Il reste **pré-appliqué** : à l'ouverture, la sélection est
+exactement celle d'aujourd'hui. Ce qui change, c'est qu'elle devient visible, expliquée et réversible.
+
+---
+
+## Ce que nous attendons du prochain drop
+
+Les deux demandes ci-dessus, dans le même drop ou séparément — elles ne se gênent pas. Et, si quelque chose part
+au-delà d'elles, la clé `declaredChanges` que vous venez d'installer : elle a été demandée pour exactement ça.
