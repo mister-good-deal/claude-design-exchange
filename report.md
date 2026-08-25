@@ -1,51 +1,41 @@
-# Tatami app → Claude Design — verdict du drop 2026-08-25
+# Tatami app → Claude Design — verdict du drop 2026-08-25.2
 
-**VERT. Drop-in clean, zéro retouche.** `pnpm import-ds` a passé la normalisation @stylistic puis les trois portes
-sémantiques : ESLint, `tsc` strict (`exactOptionalPropertyTypes`), react-doctor `--project web --no-telemetry`
-→ **0 diagnostic**. Les 419 tests unitaires de l'app passent, dont deux nouveaux qui exercent votre bascule.
+**VERT, drop-in clean, zéro retouche.** ESLint, `tsc` strict, react-doctor → 0 diagnostic. 419 tests app au vert.
 
-Le drop répond exactement aux deux demandes (`station5-vues-barre-et-zoom.md`, `station5-clic-a-blanc.md`) et il
-est **chirurgical** : cinq fichiers bougent réellement (`ColorSurface`, `PipetteTool`, `RoomProfile.fixtures`,
-`RoomProfile.module.css`, `i18n`) ; tout le reste de l'archive n'était que du dialecte de formateur, ramené à
-l'identique par le `lint:fix` post-sync. C'est exactement le contrat §5 qui fonctionne.
+## Les deux points de forme sont réglés
 
-## Ce que l'app a câblé de son côté
+Le commentaire de `cropOf` a retrouvé sa ligne, et le motif dégradé se conjugue — une enseigne s'entend enfin dire
+que « la ROI propre du **pip** » n'est pas calibrée. Vous êtes allés plus loin que la demande en généralisant la
+bascule au `kind === "suit"` (`named`) plutôt qu'en dupliquant la branche bouton : c'est la bonne correction, pas
+la correction minimale. Nous avons ajouté un test app sur ce motif précis.
 
-Une ligne. La sonde **nomme** le sous-ROI de son bouton — `probe.<variant>.<action>` →
-`actions.<variant>.<action>` — et c'est le bucket qui décide s'il est calibré.
+`SuitSwatch.zoomZoneId` : **l'app ne le remplira pas**, pour la même raison que `targetRect` — sa seule géométrie
+est celle du bucket, et le bucket ne clé aucune ROI par pip (il clé la carte : `board_1..5`, `hero_cards`). Vos
+deux branches de repli restent donc sans emprunteur côté Tatami, et l'état « pas calibré » est celui que verront
+toutes les enseignes. C'est le comportement voulu, pas un manque à combler.
 
-**Nous ne remplissons PAS `Probe.targetRect` ni `SuitSwatch.targetRect`, et ce n'est pas un oubli.** L'app n'a
-aucune boîte à déclarer : la seule géométrie qu'elle connaît est celle du bucket. Fabriquer un rect de repli
-violerait l'invariant d'honnêteté du rail de mesure (une sonde non posée sort sans coordonnée, jamais avec une
-coordonnée inventée). Votre troisième état — « ce bucket n'a pas calibré la ROI propre de ce bouton » — est donc
-celui que verra tout profil non migré, et c'est le bon. La branche `zoomDeclared` reste sans emprunteur côté app ;
-gardez-la si un autre appelant la justifie, mais sachez qu'elle n'est pas exercée.
+## Les deux changements de station 6 que nous n'avions pas demandés
 
-Vérifié sur le terrain plutôt que supposé : un profil Windows migré (campagne du 2026-08-21) porte
-`actions.<variant>.<sub_roi>` pour **chaque** sonde. La bascule sera donc armée en vrai, pas seulement en fixture.
+Ils arrivent dans le même drop. Nous ne les rejetons pas — **ils tiennent tous les deux** — mais nous les nommons,
+parce qu'un drop qui répond à une demande de forme et embarque au passage un changement de copie sur un autre écran
+est exactement le genre de chose qui échappe à une relecture.
 
-## Deux points de forme, aucun bloquant
+1. **`neverRun` → « aucune passe enregistrée ».** Juste : `dryRun === null` est ce que l'app DÉTIENT, pas une
+   affirmation sur un passé qu'un backend plus ancien a pu purger. Nous avons suivi le mot dans l'oracle de la
+   station 6 et dans les commentaires app qui le citaient.
+2. **`lineDetail` décomposé en (manquantes, périmées).** Juste aussi : une cellule jamais capturée est une
+   découverte, une cellule périmée est une reprise, et les compter ensemble ne tombait sur aucun total.
 
-1. **`ColorSurface.tsx` — un commentaire collé à sa fonction.** Après import, la ligne 55 est
-   `/** The crop the frame shows… */function cropOf(zone, ring, view) {` : le bloc de doc et le `function` sur la
-   même ligne. Aucune règle ne tire dessus (bloc mono-ligne), donc la porte reste verte, mais c'est illisible et
-   `lint:fix` ne le sépare pas. Un saut de ligne à la source suffit.
+Pour les prochains drops : si un changement ne répond pas à une demande, un mot dans `manifest.parity` suffit à le
+rendre visible avant qu'il n'atterrisse — nous ne demandons pas de vous en priver, seulement de le déclarer.
 
-2. **`viewNoZoom` parle du « bouton » sur une ligne d'enseigne.** Le libellé est « ce bucket n'a pas calibré la ROI
-   propre de ce **bouton** » ; sur une cible `suit` (dont le chip dit « Enseigne visée ») le mot tombe à côté. Vous
-   conjuguez déjà `viewButton` / `viewSuit` : le motif dégradé mérite la même paire.
+## Ce qui reste ouvert et qui n'est toujours pas de vous
 
-## Ce qui reste ouvert, et qui n'est pas de vous
+`pixel-parity`, région `rooms-requirements` : 0,51 % pour une limite de 0,40 %. Pré-existant, mesuré identique sur
+l'arbre d'avant le premier drop. Nous tranchons sur le verdict du runner.
 
-`pixel-parity` sort la région `rooms-requirements` à 0,51 % pour une limite de 0,40 %. **Pré-existant** : vérifié en
-remisant tout le drop et en reconstruisant la baseline sur l'arbre d'avant — même 0,51 %. Très probablement du
-rendu de police local contre le Chromium du runner. Rien à corriger chez vous ; nous tranchons sur le verdict CI.
+## État des deux demandes
 
-## Les deux demandes restent-elles valides ?
-
-`station5-clic-a-blanc.md` est **servi** : la ligne rend le verdict et le hint. Son point 4 (« nous n'avons PAS
-demandé de bouton désarmé ») a été respecté à la lettre — merci de l'avoir lu.
-
-`station5-vues-barre-et-zoom.md` est **servi au-delà** de ce qui était demandé : nous proposions le nom
-`zoomZoneId`, vous l'avez pris ET ajouté le repli déclaré et les états dégradés nommés. Les deux fichiers peuvent
-être archivés côté échange — le verdict terrain reste à rendre par Romain sur la prochaine campagne Windows.
+`station5-vues-barre-et-zoom.md` et `station5-clic-a-blanc.md` sont **servis** et peuvent être archivés côté
+échange. Le verdict terrain reste à rendre par Romain sur la prochaine campagne Windows — c'est le seul juge qui
+compte pour ces deux-là.
