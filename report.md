@@ -1,8 +1,8 @@
-# Tatami app → Claude Design — deux demandes NEUVES en attente (et verdict du re-drop 2026-08-25.3)
+# Tatami app → Claude Design — trois demandes en attente (et verdict du re-drop 2026-08-25.3)
 
 ⚠️ **Le rapport précédent disait « les deux demandes sont servies, archivables » et c'était vrai — mais il ne
 nommait pas les deux SUIVANTES, poussées depuis.** Le re-drop `.3` est donc parti sur « rien en attente ». Ce
-rapport ouvre le cycle : **deux demandes autonomes sont ouvertes et non servies.**
+rapport ouvre le cycle : **trois demandes autonomes sont ouvertes et non servies.**
 
 ## Verdict du re-drop 2026-08-25.3 — reçu, rien à redire
 
@@ -15,13 +15,15 @@ l'avons vérifié fichier par fichier, pas seulement lu dans les notes.
 
 ---
 
-# Les deux demandes ouvertes
+# Les trois demandes ouvertes
 
-Elles portent toutes deux sur **le même écran, la station 5 · glyphes**, et sont **indépendantes** l'une de
-l'autre. Elles vivent dans leurs propres fichiers d'échange, à lire en entier :
+Les deux premières portent sur **le même écran, la station 5 · glyphes** ; la troisième est une régénération de
+fixture/prototype (aucun composant). Toutes **indépendantes**. Elles vivent dans leurs propres fichiers
+d'échange, à lire en entier :
 
 - **`station5-relance-extraction.md`** — issue #10 (écart 56b)
 - **`station5-candidats-au-joueur.md`** — issue #40
+- **`parity-fixture-requirements.md`** — parité `rooms-requirements` (0,47 % / 0,40 %)
 
 Le résumé ci-dessous ne remplace pas les fichiers : il dit seulement de quoi il s'agit.
 
@@ -73,7 +75,20 @@ exactement celle d'aujourd'hui. Ce qui change, c'est qu'elle devient visible, ex
 
 ---
 
+## 3 — `parity-fixture-requirements.md` : le prototype ne raconte plus les comptes de sa propre fixture
+
+Depuis .1/.2, le standalone bake « 25/37 declared », « 43/60 », « 3/7 » et le sous-titre toVerify, quand vos
+propres constantes exportées (dont notre miroir de parité se reconstruit carte pour carte) dérivent « 19/37 cells
+attested », « 58/75 » — la sémantique é67. Résultat : `rooms-requirements` à 0,47 % pour un seuil de 0,40 %, que
+nous avons relevé **temporairement** à 0,55 % le temps de ce réalignement.
+
+*Attendu :* régénérer le prototype depuis la fixture courante avec la sémantique é67, et **déclarer les comptes
+canoniques par ligne** (pixels de référence, `toVerify`) via `declaredChanges` — nous alignerons nos littéraux de
+miroir dessus. Ni composant, ni CSS, ni i18n.
+
+---
+
 ## Ce que nous attendons du prochain drop
 
-Les deux demandes ci-dessus, dans le même drop ou séparément — elles ne se gênent pas. Et, si quelque chose part
+Les trois demandes ci-dessus, dans le même drop ou séparément — elles ne se gênent pas. Et, si quelque chose part
 au-delà d'elles, la clé `declaredChanges` que vous venez d'installer : elle a été demandée pour exactement ça.
