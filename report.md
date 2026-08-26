@@ -1,94 +1,255 @@
-# Tatami app → Claude Design — trois demandes en attente (et verdict du re-drop 2026-08-25.3)
+# Tatami app → Claude Design — VAGUE 0.6.8 (compilée par le coordinateur, 2026-08-26)
 
-⚠️ **Le rapport précédent disait « les deux demandes sont servies, archivables » et c'était vrai — mais il ne
-nommait pas les deux SUIVANTES, poussées depuis.** Le re-drop `.3` est donc parti sur « rien en attente ». Ce
-rapport ouvre le cycle : **trois demandes autonomes sont ouvertes et non servies.**
+Trois demandes issues de la campagne terrain 0.6.7 (2026-08-26), une par MR d'agent, agrégées ici en une vague.
+L'ordre de lecture est l'ordre ci-dessous : la demande A change le contrat et la géométrie des écrans que la
+demande B compte ensuite. Les fichiers sources committés : `doc/ds-report-rpv3-gabarit-carte.md` (MR !86),
+`doc/ds-report-rpv3-station5-liste-et-compteur.md` (!84), `doc/ds-report-rpv3-station6-decompte-lignes.md` (!85).
 
-## Verdict du re-drop 2026-08-25.3 — reçu, rien à redire
+**Retiré de la vague par le coordinateur** : la demande « replier la liste des candidats écartés » (issue #47) du
+fichier station 5 — la demande A supprime la découverte de composantes, donc la liste des candidats n'existe plus
+du tout. Ne pas la construire.
 
-`manifest.parity.declaredChanges` est exactement ce que nous demandions, et l'avoir versionné par drop plutôt
-qu'écrit en prose est mieux que la demande. Rien à importer côté app : la clé ne descend pas dans le repo
-(`import-ds` lit le manifeste, ne le copie pas) et `.3` ne touche ni source, ni fixture, ni i18n, ni CSS — nous
-l'avons vérifié fichier par fichier, pas seulement lu dans les notes.
-
-`Probe.targetRect` / `SuitSwatch.zoomZoneId` sans emprunteur : d'accord, on n'y revient pas.
+**Rappel de la dette 0.6.7** : le réalignement de la fixture `rooms-requirements`
+(`parity-fixture-requirements.md`, déjà sur cet exchange) reste attendu au prochain drop — le seuil pixel-parity
+est monté à 0,55 % temporairement et doit redescendre à 0,40 %.
 
 ---
 
-# Les trois demandes ouvertes
+# Demande A — Tatami app → Claude Design — RPv3 : gabarit de carte partagé, et la fin de la liste de candidats
 
-Les deux premières portent sur **le même écran, la station 5 · glyphes** ; la troisième est une régénération de
-fixture/prototype (aucun composant). Toutes **indépendantes**. Elles vivent dans leurs propres fichiers
-d'échange, à lire en entier :
 
-- **`station5-relance-extraction.md`** — issue #10 (écart 56b)
-- **`station5-candidats-au-joueur.md`** — issue #40
-- **`parity-fixture-requirements.md`** — parité `rooms-requirements` (0,47 % / 0,40 %)
+Trois issues terrain (#51, #46, #40) changent la géométrie des cartes et, avec elle, deux écrans : la **station 4**
+gagne une card, la **station 5** en perd un bloc entier. On a implémenté le markup app-side pour que le backend et
+le câblage ne restent pas en l'air — **c'est ton exemplaire qui fera foi** : rends-nous ces deux zones dans le
+prochain drop et on jette le nôtre.
 
-Le résumé ci-dessous ne remplace pas les fichiers : il dit seulement de quoi il s'agit.
+## Ce que le domaine a changé
 
-## 1 — `station5-relance-extraction.md` : le geste de relance doit être DEBOUT
+Une carte, à l'écran d'une room, c'est **toujours le même sprite**. La station 4 calibrait pourtant **un rect libre
+par slot** (`board_1`..`board_5`, `hero_1`, `hero_2`) : sept largeurs et sept hauteurs tracées à la main pour sept
+objets identiques. Chaque rect encodait sa propre imprécision, et les gabarits de glyphes extraits en héritaient.
 
-Le bouton « Relancer l'extraction » existe (`GlyphTool.tsx:374`) mais il ne vit **que** dans `ExtractionFailure`.
-Or le cas qui en a besoin est précisément celui qui ne produit **aucun** `Shot.extraction` : une passe qui saute
-une ROI en silence, un cache de vignettes périmé, une capture labellisée après coup qui gagne des ROI. Le terrain
-0.6.6 l'a vécu (`board_4` jamais extrait, six ROI vides) et Romain a cherché le bouton partout sans le trouver.
+Désormais :
 
-*Attendu :* le bouton monte dans la ligne `xrow` de l'en-tête, après `t.glyphRoiCount`, offert sur **toute**
-capture. `t.extractRetry` existe, `onRetryExtraction` est au contrat et câblé côté app : **c'est un déplacement,
-aucun ajout de contrat.**
+1. **Une taille par FAMILLE** (`board`, `hero`) et par bucket — le *gabarit de carte*. Les sept slots en dérivent
+   leur rect ; **poser un slot, c'est déplacer une ancre**, plus jamais le redimensionner.
+2. **Une sous-ROI de rang**, en fractions du gabarit (indépendante du bucket : le sprite est homothétique). Elle
+   cadre le rang **sans son pip** — le pip change de forme par enseigne, l'inclure ferait 52 gabarits au lieu de 13.
+3. L'extraction devient **top-down** : on croppe cette sous-ROI, on binarise (Otsu), on recadre à l'encre. **Plus
+   aucune découverte de composantes sur une ROI carte**, donc plus aucun décor promu candidat (le terrain a vu
+   *onze candidats pour une seule carte* : jeton de mise, badge du pot, bandes de feutre).
 
-## 2 — `station5-candidats-au-joueur.md` : montrer TOUS les candidats, le joueur juge
+La mesure qui fonde le 3 : sur les 75 crops réels committés, le taux de lecture correcte (rang **et** enseigne)
+passe de **69 % à 88 %** — les rangs 6 et 8, à 0 % sous l'ancien seuil fixe, sont à 100 %.
 
-Sur `#20260816T093311136`, l'heuristique de rejet du décor commet ses **deux** erreurs à trois lignes d'écart :
-`board_3` rejette 13 composantes et a raison ; `hero_1` en rejette une — la seule vraie carte de la ROI, un A♠
-lisible — et a tort. Un compte agrégé (« N composantes rejetées ») ne permet pas de voir laquelle est laquelle.
+## Demande 1 — station 4 : la card « Gabarit de carte »
 
-**L'app a déjà fait sa moitié** (mergeable, MR ouverte) : le moteur ne décide plus, il doute et le dit.
-`GlyphCropDto` porte désormais, à côté de `segmentation` (les RETENUES, inchangées) :
+Une petite card dans la colonne de gauche de la station 4, **sous le rail des buckets**. Elle porte trois lignes :
+
+| ligne | contenu |
+|---|---|
+| `Board` | largeur % + hauteur % de UNE carte du board |
+| `Héros` | largeur % + hauteur % de UNE carte héros |
+| `Sous-ROI de rang (% du gabarit)` | gauche % · haut % · droite % · bas % |
+
+…et **une phrase qui dit l'invariant** : « les slots cartes ci-dessous ne portent plus que leur POSITION ».
+
+Ce qu'on a mis en place côté app (à remplacer par ton rendu) :
+
+- composant `CardTemplateCard` dans `ui/screens/AdjustStation.tsx`, classes `.cardTpl`, `.cardTplRow`,
+  `.cardTplField` dans `RoomProfile.module.css` ;
+- la colonne gauche de la station 4 est devenue un conteneur `.benchSide` (rail des buckets **+** la card) ;
+- champs `Input` numériques, **committés au blur / Entrée** — jamais à la frappe (chaque commit réécrit la
+  géométrie de sept ROIs et invalide les dry-runs du bucket).
+
+Contrat (déjà dans `RoomProfile.fixtures.ts`) :
 
 ```ts
-doubted: { rect: BoxDto; imageUrl: string; reason: string }[]
+export type CardFamily = "board" | "hero";
+export type CardTemplateMap = Partial<Record<CardFamily, { w: number; h: number }>>;
+
+// sur SizeBucket
+cardTemplates?: CardTemplateMap | undefined;
+
+// sur RoomProfileData
+cardRankSubRoi?: { x0: number; y0: number; x1: number; y1: number } | undefined;
+
+// callbacks (tous deux dans RoomProfileWiring — ce ne sont PAS des offres :
+// sans eux la géométrie des cartes n'a aucun éditeur)
+onSetCardTemplate?: ((sizeId: string, family: CardFamily, size: { w: number; h: number }) => void) | undefined;
+onSetCardRankSubRoi?: ((rect: { x0: number; y0: number; x1: number; y1: number }) => void) | undefined;
 ```
 
-— chaque candidat écarté avec ses **vrais pixels** (vignette PNG à lui) et son motif verbatim, parmi quatre :
-« hors du coin haut-gauche — décor posé par-dessus la carte », « trop petite pour un rang ou son pip », « plus
-haute qu'un rang de carte », « plus large qu'un rang de carte ». **Vous avez donc de quoi tout rendre.**
+**La question qu'on te pose** : le canvas doit-il cesser de rendre les poignées de redimensionnement sur une ROI
+carte ? Aujourd'hui elles sont rendues et **inertes** (l'app ignore la taille d'un glissé de poignée et ne garde
+que le coin haut-gauche) — ce qui est exactement le « rendu-et-inerte » que le contrat §3 proscrit. On penche pour
+**ne pas les rendre du tout** sur une ROI dont le catalogue dit `readKind === "card"`, avec la card ci-dessus comme
+seule adresse de la taille. C'est ta décision : on n'a pas voulu toucher `CalibrationCanvas` sans ton avis.
 
-*Attendu :* les trois critères de fermeture de l'issue — (1) tous les candidats visibles, chacun avec SON motif et
-non le compte ; (2) un geste par candidat, réversible, pour le faire entrer ou sortir de la sélection ; (3) la
-consigne « ne pas conserver une ROI occultée / pas clean », **là où le geste se fait**.
+## Demande 2 — station 5 : la liste d'écartés disparaît, la ROI se juge en entier
 
-Le seul ajout de contrat que ça demande, proposé dans le fichier et **à votre forme** :
+Ce qui **sort** de `GlyphTool.tsx` (composants supprimés côté app, à supprimer aussi chez toi) :
+
+- `Candidate`, `Candidates`, `splitCandidates`, `toggler` — et avec eux les classes `.candRow`, `.candidate`,
+  `.candReason`, `.doubted` ;
+- le champ `GlyphSegment.kept` et le champ `GlyphSegment.doubt` : le moteur ne doute plus, il ne découvre plus ;
+- les chaînes `candKeep`, `candDrop`, `candKeepAria`, `candDropAria`, `doubtedTitle`, `rejectedNote`,
+  `rejectedNoPixels`.
+
+Ce qui **entre** :
+
+- une ROI carte affiche **UNE cellule** — la sous-ROI de rang, les pixels exacts que le lecteur appariera. Une
+  ROI carte = une carte (les composants `cardSegments` / `cardCount` / `cardSlots` n'ont plus d'objet) ;
+- l'enseigne **ne consomme plus de cellule** : elle se lit à la COULEUR de l'encre du rang, dans ce même coin.
+  Saisir « K♦ » étiquette donc l'unique cellule ;
+- **le geste #40 change de grain** : ce n'est plus « écarter un candidat », c'est **« écarter cette ROI de la
+  récolte »** — occultée, pas clean. Un bouton par ROI, réversible, et la consigne d'occultation vit à côté de lui.
+
+Contrat :
 
 ```ts
-onSetGlyphSegmentKept?: ((sizeId, zoneId, shotId, segmentId, kept: boolean) => void) | undefined;
+// sur GlyphTruth — remplace l'ancien `rejected?: number` (un COMPTE de composantes)
+rejected?: boolean | undefined;   // le joueur a écarté CETTE ROI sur CETTE capture
+
+// sur Shot
+rejectedZoneIds?: string[] | undefined;
+
+// callback (dans RoomProfileWiring — ce n'est pas une offre : c'est le SEUL
+// jugement de lisibilité qui reste dans toute la chaîne)
+onRejectGlyphRoi?: ((sizeId: string, zoneId: string, shotId: string, rejected: boolean) => void) | undefined;
 ```
 
-⚠️ **Invariant à ne pas casser** : la vérité saisie s'aligne sur les cellules **retenues** (`map_truth` refuse un
-désalignement tokens ↔ cellules, et c'est ce refus qui a fermé l'écart 56a). Basculer un candidat change le nombre
-de cellules à étiqueter : le composer doit suivre.
+Ce qu'on a mis en place, à remplacer : composant `RejectRoi` dans `GlyphTool.tsx`, classe `.roiJudge`
+(`data-state="kept" | "rejected"`), chaînes `roiHarvestDrop`, `roiHarvestBack`, `roiDroppedNote` ; `occludedWarn`
+est conservée telle quelle et rendue **sur chaque ROI**, là où le geste se fait.
 
-**Ce que nous ne demandons pas** : ni durcissement du filtre (56a est tenu, `board_3` sort une carte propre — ne
-pas y toucher), ni suppression du rejet automatique. Il reste **pré-appliqué** : à l'ouverture, la sélection est
-exactement celle d'aujourd'hui. Ce qui change, c'est qu'elle devient visible, expliquée et réversible.
+## Ce qu'on te demande de ne PAS refaire
 
----
+Le backend, le câblage container et les fixtures sont faits et verts (typecheck, lint, doctor 0 diagnostic,
+428 tests unitaires, 64 e2e). Ce rapport ne demande que **le markup et le CSS** de ces deux zones : la card de la
+station 4, le bloc de jugement de la station 5, et l'arbitrage sur les poignées de redimensionnement.
 
-## 3 — `parity-fixture-requirements.md` : le prototype ne raconte plus les comptes de sa propre fixture
+Issues d'origine : #51 (gabarit partagé & sous-ROI), #46 (extraction top-down), #40 (le joueur juge la lisibilité).
 
-Depuis .1/.2, le standalone bake « 25/37 declared », « 43/60 », « 3/7 » et le sous-titre toVerify, quand vos
-propres constantes exportées (dont notre miroir de parité se reconstruit carte pour carte) dérivent « 19/37 cells
-attested », « 58/75 » — la sémantique é67. Résultat : `rooms-requirements` à 0,47 % pour un seuil de 0,40 %, que
-nous avons relevé **temporairement** à 0,55 % le temps de ce réalignement.
-
-*Attendu :* régénérer le prototype depuis la fixture courante avec la sémantique é67, et **déclarer les comptes
-canoniques par ligne** (pixels de référence, `toVerify`) via `declaredChanges` — nous alignerons nos littéraux de
-miroir dessus. Ni composant, ni CSS, ni i18n.
 
 ---
 
-## Ce que nous attendons du prochain drop
+# Demande B — station 5 : le compteur d'en-tête (issue #48)
 
-Les trois demandes ci-dessus, dans le même drop ou séparément — elles ne se gênent pas. Et, si quelque chose part
-au-delà d'elles, la clé `declaredChanges` que vous venez d'installer : elle a été demandée pour exactement ça.
+*(Du fichier station 5 : seule la section « compteur » reste — voir le retrait #47 ci-dessus. La garantie « le
+regroupement de lecture `readGroup` ne bouge pas » tient toujours.)*
+
+## 1. Le compteur d'en-tête compte les groupes de lecture, pas les cartes à identifier (#48)
+
+Sur la capture `#20260816T094521547` (board **b4** · `hero_cards` **dealt**), le panneau ouvre **six** boîtes —
+`board_1`, `board_2`, `board_3`, `board_4`, `hero_1`, `hero_2` — et l'en-tête annonce **« 2 ROI sur cette
+capture »**.
+
+L'origine est dans `GlyphTool.tsx` :
+
+```tsx
+const blocks = blocksOf(roisOnShot(data, measure, shot));
+…
+<span className={styles.fieldLabel}>{t.glyphRoiCount(blocks.length)}</span>
+```
+
+`roisOnShot` rend bien les six ROI que la capture montre ; `blocksOf` les replie ensuite en **lignes de lecture**
+(l'écart 57 : le board est une ligne, les cartes héros une autre), et c'est ce nombre-là — 2 — qui part au
+compteur. Le regroupement est un choix d'affichage juste ; le compteur n'aurait jamais dû rouler dessus.
+
+*Attendu :* le compteur annonce **le nombre de cartes que le joueur a à identifier sur cette capture**, c'est-à-dire
+exactement le nombre de boîtes que le panneau ouvre : deux cartes héros plus autant de cartes que le board en
+montre (3 au flop, 4 au turn, 5 à la river). Sur la capture ci-dessus : **6**.
+
+Formulation robuste, à votre main : compter les **slots de carte réellement rendus**, pas les ROI ni les blocs —
+la somme de `cardCount()` sur les ROI carte, 1 pour les autres. C'est le seul comptage qui reste vrai que la room
+pose les cartes héros en deux ROI d'une carte (cas d'`unibet.toml` : `board_1..5`, `hero_1`, `hero_2`) ou en une
+ROI de deux cartes ; les deux formes existent dans les profils.
+
+*Sur le libellé :* « N ROI sur cette capture » (`glyphRoiCount`, fr + en) ne nomme plus ce qui est compté. Un
+joueur ne voit pas des « ROI », il voit des cartes à saisir. Une reformulation du type « 6 cartes à identifier sur
+cette capture » dit ce qu'il lui reste à faire ; le mot exact est à vous, et il doit rester honnête si un jour la
+capture mêle des ROI carte et des ROI de valeur (le pot n'est pas une carte).
+
+*Ce qui ne bouge pas :* `readGroup` reste purement présentationnel et le rendu groupé (le board sur une ligne) est
+le bon — c'est le compteur seul qui doit cesser d'en dépendre. Rien à changer côté app : `data.zones`,
+`Zone.requires`, `Shot.absentZoneIds` et `measure.glyphZoneIds` portent déjà la dérivation exacte.
+
+
+
+---
+
+# Demande C — Station 6 — `lineDetail` invite à additionner ce qui ne s'additionne pas
+
+
+**Une chaîne, deux langues, aucun changement de contrat.** Le terrain 0.6.7 (issue #50) a relevé une incohérence de
+comptes là où l'arithmétique est juste : c'est la FORME du libellé qui la fabrique. Le correctif est entièrement dans
+`roomProfileV3.lineDetail` (`ui/screens/i18n.ts`), donc chez vous.
+
+## Ce que le joueur voit
+
+Ligne « Variantes attestées par bucket » du score agrégé, sur un profil en cours de calibration :
+
+```text
+Variantes attestées par bucket        12/26        14 À JOUER + 5 À REJOUER — DÉPLIER
+```
+
+Verdict terrain, verbatim : « le décompte n'est pas celui que tu indiques, j'ai 12/26 avec 14 + 5 à rejouer donc les
+totaux ne sont pas vraiment cohérents ». Le joueur a conclu à un bug de dérivation et a cessé de faire confiance au
+score — alors que les quatre nombres affichés sont exacts.
+
+## Pourquoi la forme ment alors que les nombres sont vrais
+
+`meta` (app-side) rend `done/total` de la ligne ; `lineDetail(missing, stale)` (DS) décompose les trous de la ligne.
+L'invariant de la dérivation partagée (`derive_coverage`, écart 67, livré en 0.6.7) est :
+
+```text
+done   = cellules attestées          = 12   ← les 5 « à rejouer » SONT dedans (attestées, évidence périmée)
+missing = cellules jamais capturées  = 14
+total  = done + missing              = 26
+stale  ⊆ done                        = 5    ← une cellule périmée compte des deux côtés
+```
+
+Le `+` de `A + B` est le seul opérateur affiché de la ligne : l'œil l'applique, obtient 19 trous, puis 12 + 19 = 31,
+et conclut à 31 ≠ 26. La juxtaposition suggère deux ensembles disjoints là où `stale` est un **sous-ensemble de
+`done`**, jamais un addend de `missing`.
+
+Les deux autres écrans qui consomment la même dérivation restent, eux, lisibles : la vue Couverture rend cellule par
+cellule (7 capturé + 5 périmé + 14 manquant = 26) et le compteur de la station 3 rend « 12 / 26 couvertes ». **Seule
+la station 6 introduit l'opérateur** — c'est bien un problème de libellé, pas de dérivation.
+
+## Ce qu'on vous demande
+
+Reformuler `lineDetail` pour que `stale` se lise comme une **part de `meta`**, jamais comme un second terme à côté de
+`missing`. Critère de fermeture de l'issue : *un lecteur qui additionne les chiffres affichés retombe sur le total*.
+
+Notre proposition, si elle vous va (la ligne complète se lit alors de gauche à droite sans opérateur) :
+
+```ts
+lineDetail: (missing, stale) => (stale > 0
+    ? `dont ${stale} à rejouer · ${missing} restent à jouer — déplier`
+    : `${missing} restent à jouer — déplier`),
+```
+
+```text
+Variantes attestées par bucket        12/26        DONT 5 À REJOUER · 14 RESTENT À JOUER — DÉPLIER
+```
+
+`dont` ancre les 5 dans le `12/26` qui précède immédiatement ; `·` sépare deux natures au lieu de les additionner ;
+12 + 14 = 26 est la seule addition que la ligne propose encore. En anglais, le même ancrage :
+`${stale} of them to replay · ${missing} left to play — unfold`.
+
+Une séparation visuelle des deux natures (deux `fieldLabel`, ou une pastille `stale` distincte du compte des manques)
+répondrait tout aussi bien au critère — c'est votre arbitrage, on câble ce que le drop porte.
+
+**Deux garde-fous** : la chaîne sert les 7 lignes du score, pas seulement « variantes » (la ligne « Templates de
+glyphes » l'affiche avec `stale = 0`, la branche sans rejeu doit donc rester naturelle) ; et le vocabulaire de la file
+de reprise dit « jouer » un geste — d'où « restent à jouer » plutôt que « restent à capturer », qui serait faux pour
+la ligne des glyphes comme pour celle des dry-runs.
+
+---
+
+**État côté app :** rien à câbler de notre part, `lineDetail` ne prend aucune donnée nouvelle — la MR de ce lot ne
+porte que le correctif de l'issue #49 (les codes de glyphes nommés en clair dans le dépliage, table app-side). #50
+reste ouverte tant que ce drop n'est pas arrivé.
+
