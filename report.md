@@ -1,58 +1,40 @@
-# Tatami app → Claude Design — gate du drop 2026-08-26.1 (vague 0.6.8) : UN défaut de syntaxe, tout le reste est vert
+# Tatami app → Claude Design — gate du drop 2026-08-26.2 : react-doctor, 2 warnings, un seul endroit
 
-Le drop couvre la vague entière (gabarit de carte, fin des candidats, compteur, mot du score, dette de parité) et
-il est **fonctionnellement bon** — on a tout vérifié en scratch. Un seul défaut bloque l'import committable, et il
-est **à la source** : un commentaire cassé dans `ui/screens/RoomProfile.fixtures.ts`. Re-drop de ce fichier corrigé
-et la vague est fermée.
+Le re-drop répare le commentaire de `RoomProfile.fixtures.ts` ✅ et le nouveau layout du « Gabarit de carte »
+(bande sous les deux rails, aperçu pleine hauteur) passe **toutes** les gates fonctionnelles :
 
-## Le défaut (bloquant tsc + lint)
+- tsc ✅ · eslint ✅ · vitest **428/428** ✅ · Playwright e2e **64/64** ✅ · **pixel-parity 25/25 @ 0,40 %** ✅
+- Les renommages absorbés côté app sans rien vous demander : « Seeder depuis le bucket le plus proche »,
+  bords de sous-ROI « gauche % / haut % / droite % / bas % ».
 
-`ui/screens/RoomProfile.fixtures.ts`, bloc `STATIONS`, entrée `tour` (~l. 1735) :
+**Un seul rouge : react-doctor** (gate bloquante, zéro warning toléré, aucune suppression possible) :
 
-```ts
-    /* Parity — the é67 word again: the spine's panel and the app count cells the captures ATTEST. */
-       ATTEST. « declared » was the tour's old vocabulary and it made the two views disagree. */    { id: "tour", status: "current", meta: `${COVERAGE_COUNTS.attested}/${COVERAGE_COUNTS.total} cells attested` },
+```
+⚠ Performance: JSX element passed as a prop ×2  (jsx-no-jsx-as-prop)
+  src/ui/screens/AdjustStation.tsx:169-170
 ```
 
-Le commentaire est **dupliqué et auto-fermé** : la première ligne se termine par `*/`, la seconde répète la fin de
-la phrase, porte un second `*/` orphelin, et **l'entrée `{ id: "tour", … }` est piégée derrière** — le fichier ne
-parse plus (7 erreurs tsc en cascade, 485 erreurs lint dans le fichier faute de parse).
+C'est le montage du nouveau layout :
 
-**Attribution vérifiée** : le texte cassé est présent tel quel dans l'archive brute (avant toute passe de
-formatage de notre côté) — ce n'est pas notre `lint:fix` cette fois (leçon du `;` orphelin de 2026-08-19 retenue).
-
-Forme attendue (celle que votre propre convention `multiline-comment-style` produit) :
-
-```ts
-    /*
-     * Parity — the é67 word again: the spine's panel and the app count cells the captures
-     * ATTEST. « declared » was the tour's old vocabulary and it made the two views disagree.
-     */
-    { id: "tour", status: "current", meta: `${COVERAGE_COUNTS.attested}/${COVERAGE_COUNTS.total} cells attested` },
+```tsx
+<ZoneWorkbench
+    …
+    railLead={<BucketRail data={data} on={on} bucket={bucket} />}
+    railBelow={<CardTemplateTool data={data} on={on} bucket={bucket} />}
+/>
 ```
 
-## Vérifié en scratch avec cette seule correction — TOUT est vert
+`railLead` / `railBelow` reçoivent des ÉLÉMENTS JSX en props — le pattern que la règle interdit. Deux corrections
+canoniques, toutes deux **pixel-identiques**, à votre main :
 
-- tsc ✅ · eslint ✅ · react-doctor « No issues found! » ✅
-- vitest **428/428** ✅ · Playwright e2e **64/64** ✅
-- **pixel-parity 25/25 au seuil nominal 0,40 %** — la dette `rooms-requirements` (0,55 % temporaire) est SOLDÉE
-  par votre régénération dérivée ✅
-
-## Ce que l'app a câblé en face (dans la MR, prêt)
-
-- `Zone.cardFamily` servi par le mapping (dérivé du catalogue : `kind === "card"`, `hero*` → hero, sinon board).
-- `RoomProfileData.cardRankSubRoi` servi depuis le DTO (fractions → % du gabarit) et `onSetCardRankSubRoi`
-  reconverti en fractions au commit (miroir exact du chemin gabarit).
-- Miroir de parité (`prototype-roomprofile.ts`) aligné sur vos prédicats dérivés : attestées = `verified` seul,
-  géométrie par ROI du catalogue que le bucket clé, pixels de référence « couleur lue / clic posé » (11/20),
-  dry-runs « passe enregistrée = faite, stale ⊆ done » (2/3) et « validated = passed » (1/3) sous leurs deux mots,
-  `captured` traverse en DTO (le donut retrouve son « 8 captured · dry-run pending »).
-- Vos décisions sont prises telles quelles : poignées non rendues sur ROI carte (le canvas suit `readKind`),
-  villains sans `readKind` (déjà le cas dans les profils réels : ils sont `kind = "text"`).
+1. **`useMemo`** dans `AdjustStation` :
+   `const lead = useMemo(() => <BucketRail data={data} on={on} bucket={bucket} />, [data, on, bucket]);`
+   (idem pour la bande), puis `railLead={lead}`.
+2. **Slot `children`** (exempté par la règle) : `ZoneWorkbench` rend `{children}` là où il rend `railBelow`
+   aujourd'hui, et `AdjustStation` compose `<ZoneWorkbench …>{…}</ZoneWorkbench>` — plus aucun élément en prop.
+   Si `railLead` doit rester une prop pour d'autres écrans, la 1 suffit partout.
 
 ## Demande
 
-**Re-drop du seul `RoomProfile.fixtures.ts` corrigé** (ou de l'export complet régénéré, comme vous préférez —
-l'archive est énumérée, on réimporte tel quel). Rien d'autre : pas de changement de design demandé, la question
-des poignées est tranchée et adoptée, le point de forme `occludedWarn` répété par ROI est noté pour le verdict
-terrain à venir.
+Re-drop avec l'une des deux formes (ou la vôtre, tant que doctor est muet). Rien d'autre ne bloque : au prochain
+import vert on committe, la MR !86 merge et la vague 0.6.8 est fermée.
