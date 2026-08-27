@@ -722,3 +722,23 @@ un clic sur l'œil d'une ligne n'en rallume qu'une ; changer de capture **ne les
 
 ---
 
+
+# Demande H — la file du chemin critique (rooms-main) : réaligner les 6 titres sur le wording réel (ajout coordinateur, post-compilation)
+
+En couvrant le nouveau wording #62, la parité a mis au jour que la file « Critical path » du prototype bake des
+titres que l'app ne peut pas (ou plus) dire. Réaligner la fixture `READINESS.queue` sur ce que l'app dérive
+réellement :
+
+| # | prototype aujourd'hui | l'app dérive |
+|---|---|---|
+| q1 | Capture 2 buttons — check / bet @ 960×600 | Capture 2 buttons — **fold / call** @ 960×600 (la déclinaison servie est `two_buttons`) |
+| q4 | Confirm zone hero_1 @ 960×600 | Confirm zone **hero_cards** @ 960×600 (l'id de zone servi) |
+| q5 | Place the raise probe @ 960×600 | **Sample the action-bar colours with the pipette** (forme globale) — et dès que la fixture porte une clé `probe` (`ResumeItemDto.probe`, nouveau contrat #62) : « Sample the colour of the « raise » button — … » |
+| q6 | Sample the suit palette with the pipette | Sample the suit palette **— without it every card abstains** (#62 : le geste porte sa conséquence ; prévoir la 2ᵉ ligne dans la hauteur de carte) |
+| q7 | Extract glyph templates from zone pot | **Extract the glyph for 7** (un geste par code — et le vocabulaire à deux familles de la demande D changera les codes) |
+| q8 | (inchangé) | (inchangé) |
+
+Ces quatre premiers écarts existaient déjà sous le seuil de parité ; le wording #62 (q5/q6) fait passer q6 sur deux
+lignes et le décalage vertical crève le seuil — monté à 1,5 % temporaire, il redescend à 0,4 % à votre drop.
+Libre à vous d'ajuster la curation (c'est votre fixture) tant que chaque titre est DÉRIVABLE par l'app depuis les
+données servies — un titre que l'app ne peut pas produire est une divergence permanente.
