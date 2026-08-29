@@ -7,7 +7,7 @@ compilées par le coordinateur ; le contrat et le lint bundle de l'exchange ne b
 |---|---|---|---|
 | 1 | Station 3 : le contrôle de suppression reste ARMÉ après une suppression (perte de données) | #96 | **bloquant** — `TourStation.DeleteControl` : désarmer sur confirmation + `key={loaded.id}` |
 | 2 | Sélecteur de captures : boutons ‹ › + pas-à-pas clavier (stations 3, 4, 5) | #97 | markup + hotkeys DS en station 4 (désarmé sous sélection de zone) ; l'app câble déjà ← → en station 3 |
-| 3 | Station 3 : bandeau « L'engine voit : » — n'afficher que s'il porte quelque chose, ton d'information | #98 | conditionnel + tonalité ; le producteur app est réparé en parallèle (#104) |
+| 3 | Station 3 : **supprimer** le bandeau « L'engine voit : » et `LiveFrame` du contrat | #98 | décision Romain 2026-08-29 (#104) : les labels viennent du joueur seul, plus d'estimation engine ni de « live » — la demande détaillée ci-dessous (option 1) est REMPLACÉE par la suppression |
 | 4 | Station 4 : retirer la bande rouge « N pixels à poser », les non-posés en lignes fantômes du rail | #101 | retrait `UnplacedRail` + `PixelCategory` liste les non posés |
 | 5 | Station 3 : compteur « N tailles capturées » après un F9 multi-taille | #100 | contrat proposé `TourState.capturedSizes` (l'app le sert déjà : `lastCaptureBuckets`) |
 | 6 | Station 4 : le compteur `zones : N` du canvas compte la capture, pas le bucket (13 au lieu de 20) | #99 | `buildCanvas` passe `bucketZones` telles quelles, le masquage par `requires` fait déjà le dessin |
@@ -175,6 +175,10 @@ Romain sur la prochaine campagne Windows.
 ---
 
 # Tatami app → Claude Design — station 3 : le bandeau « L'engine voit : », permanent et vide
+
+> **Mise à jour du coordinateur (2026-08-29, décision de Romain, #104)** : ne PAS rendre le bandeau conditionnel — le **supprimer**, ainsi que `LiveFrame` / `TourState.live` du contrat et la chaîne `tourEngineSees`. Les labels d'une capture sont ceux que le joueur coche ; aucune estimation de l'engine n'est plus affichée, aucune notion de « live » ne subsiste (#94). Le cas FROID (« Capture désarmée — aucune fenêtre de table détectée ») reste en `warn`, séparé, comme décrit au point 3 ci-dessous. Le reste du fichier vaut pour le contexte.
+
+
 
 Campagne de validation Windows 0.6.10 (session 2026-08-29, branche `windows/validation-0.6.10`), station 3. Suivi
 côté app par l'issue #98.
