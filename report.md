@@ -1,6 +1,6 @@
 # Vague 0.6.11 — Tatami app → Claude Design (2026-08-29)
 
-Retours de la campagne de validation Windows 0.6.10 (session 2026-08-29, calibration from scratch). Cinq demandes,
+Retours de la campagne de validation Windows 0.6.10 (session 2026-08-29, calibration from scratch). Six demandes,
 compilées par le coordinateur ; le contrat et le lint bundle de l'exchange ne bougent pas. Ordre = priorité.
 
 | # | Demande | Issue | Nature |
@@ -10,6 +10,7 @@ compilées par le coordinateur ; le contrat et le lint bundle de l'exchange ne b
 | 3 | Station 3 : bandeau « L'engine voit : » — n'afficher que s'il porte quelque chose, ton d'information | #98 | conditionnel + tonalité ; le producteur app est réparé en parallèle (#104) |
 | 4 | Station 4 : retirer la bande rouge « N pixels à poser », les non-posés en lignes fantômes du rail | #101 | retrait `UnplacedRail` + `PixelCategory` liste les non posés |
 | 5 | Station 3 : compteur « N tailles capturées » après un F9 multi-taille | #100 | contrat proposé `TourState.capturedSizes` (l'app le sert déjà : `lastCaptureBuckets`) |
+| 6 | Station 4 : le compteur `zones : N` du canvas compte la capture, pas le bucket (13 au lieu de 20) | #99 | `buildCanvas` passe `bucketZones` telles quelles, le masquage par `requires` fait déjà le dessin |
 
 Le drop se valide comme d'habitude : `pnpm import-ds <zip>` → lint:fix → tsc + react-doctor ; un rouge d'import
 revient ici en rapport de gate. Côté app, le test « deux suppressions d'affilée » est posé en `it.fails` et se
@@ -354,6 +355,66 @@ Le compte n'est PAS affiché aujourd'hui : `apps/web/src/ui/` appartient à Clau
 Le e2e station 3 du compte affiché attend donc ce drop — la couverture actuelle du multi-taille est
 `premierLancement.test.tsx` (#100, les deux buckets peuplés par le vrai backend et servis à l'écran) et
 `RoomProfile.test.tsx` (#100, le bucket voisin offre sa capture fraîche après un seul F9).
+
+
+---
+
+# Tatami app → Claude Design — iteration request (RP v3) : le compteur `zones : N` de la station 4 ne compte pas le bucket
+
+Contexte : issue #99 (campagne de validation Windows 0.6.10, station 4, profil re-seedé du jour). Sur un profil
+VIERGE le rail annonçait `zones : 18` et aucune déclinaison scopée n'apparaissait — « un menu à plat comme y'a 10
+releases ». **La moitié app du défaut est corrigée dans la MR `fix/rpv3-lot-a`** (`roomProfileMapping.ts` : le
+repli plat legacy ne vaut plus que pour un bucket qui KEYE encore une clé plate ; un bucket qui ne keye rien est
+neuf, donc scopé). Le rail liste désormais les sept `actions.<déclinaison>.<sous-ROI>`, chacune œil éteint et
+taguée « autre capture », exactement comme `ZoneRail.railTag` le prescrit. Vérifié par le harnais de premier
+lancement sur la sortie littérale du backend (`apps/web/src/app/screens/premierLancement.test.tsx`).
+
+**Le compteur, lui, reste faux — et il est DS-owned.** C'est l'objet de cette demande.
+
+## Le défaut
+
+`ZoneWorkbench.buildCanvas` filtre les zones du bucket par la capture chargée avant de les passer au canvas :
+
+```ts
+zones: zonesOnShot(bucketZones, shot),
+```
+
+`zonesOnShot` SUPPRIME toute déclinaison que la capture courante n'atteste pas (`Shot.variantIds`). Le canvas rend
+ensuite son en-tête depuis cette liste amputée (`CalibrationCanvas.tsx` : `t.zoneCount(data.zones.length, adjusted)`).
+
+Sur le premier lancement, le bucket porte 20 ROI (11 régions du set actif, 7 déclinaisons d'action, 2 actionneurs)
+et l'unique capture n'atteste aucune déclinaison : les sept sortent du décompte, l'en-tête annonce **13** quand le
+rail juste à côté en liste 20. L'écran se contredit lui-même.
+
+Le total varie ensuite au fil des captures chargées — alors qu'il ne décrit pas la capture mais le TERRITOIRE à
+calibrer. Le retour terrain le dit ainsi : « le joueur perd la carte du territoire — rien à l'écran ne dit que
+`actions.two_buttons.fold` existe, ni qu'il faudra la calibrer ».
+
+## Demande — le canvas garde les déclinaisons non attestées, MASQUÉES, au lieu de les retirer de sa liste
+
+Dans `ZoneWorkbench.buildCanvas`, passer les zones du bucket telles quelles :
+
+```ts
+zones: bucketZones,
+```
+
+Le dessin ne change PAS : `hiddenZoneIds: hiddenForCanvas(bucketZones, shot, …)` couvre déjà ces lignes —
+`derivedHidden` les masque par `requiresMet`, chaque déclinaison scopée portant sa variante en `requires`
+(`actions.two_buttons.fold` → `actions/two_buttons`). Une déclinaison non attestée reste donc invisible SUR la
+capture ; elle cesse seulement d'être invisible DANS le compte.
+
+Conséquences attendues :
+
+1. `zones : N` devient le total du BUCKET, stable d'une capture à l'autre — `zones : 20 · ajustées 0` sur le
+   profil vierge du premier lancement, au lieu de 13.
+2. `zonesOnShot` n'a alors plus d'appelant. À supprimer de `RoomProfile.fixtures.ts` si le prototype n'en a pas
+   d'autre usage (l'app la ré-exporte, elle sortira du même coup de `knip`).
+3. Rien d'autre ne bouge : le rail, les tags « autre capture », le geste A3 « montrer la ROI corrige les
+   libellés », le mode focus et la légende restent identiques.
+
+Critère de recette : sur un bucket dont la capture chargée n'atteste aucune déclinaison d'action, l'en-tête du
+canvas annonce le même nombre de ROI que le rail en liste, et aucune de ces déclinaisons n'est dessinée sur la
+capture.
 
 
 ---
