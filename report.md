@@ -1,6 +1,6 @@
 # Vague 0.6.11 — Tatami app → Claude Design (2026-08-29)
 
-Retours de la campagne de validation Windows 0.6.10 (session 2026-08-29, calibration from scratch). Quatre demandes,
+Retours de la campagne de validation Windows 0.6.10 (session 2026-08-29, calibration from scratch). Cinq demandes,
 compilées par le coordinateur ; le contrat et le lint bundle de l'exchange ne bougent pas. Ordre = priorité.
 
 | # | Demande | Issue | Nature |
@@ -9,6 +9,7 @@ compilées par le coordinateur ; le contrat et le lint bundle de l'exchange ne b
 | 2 | Sélecteur de captures : boutons ‹ › + pas-à-pas clavier (stations 3, 4, 5) | #97 | markup + hotkeys DS en station 4 (désarmé sous sélection de zone) ; l'app câble déjà ← → en station 3 |
 | 3 | Station 3 : bandeau « L'engine voit : » — n'afficher que s'il porte quelque chose, ton d'information | #98 | conditionnel + tonalité ; le producteur app est réparé en parallèle (#104) |
 | 4 | Station 4 : retirer la bande rouge « N pixels à poser », les non-posés en lignes fantômes du rail | #101 | retrait `UnplacedRail` + `PixelCategory` liste les non posés |
+| 5 | Station 3 : compteur « N tailles capturées » après un F9 multi-taille | #100 | contrat proposé `TourState.capturedSizes` (l'app le sert déjà : `lastCaptureBuckets`) |
 
 Le drop se valide comme d'habitude : `pnpm import-ds <zip>` → lint:fix → tsc + react-doctor ; un rouge d'import
 revient ici en rapport de gate. Côté app, le test « deux suppressions d'affilée » est posé en `it.fails` et se
@@ -300,3 +301,59 @@ rendu par Romain sur la prochaine campagne Windows.
 
 ---
 
+# Tatami app → Claude Design — iteration request (0.6.11) : station 3, « N tailles capturées »
+
+Contexte : issue #100 (campagne Windows 0.6.10, station 3). Le terrain a pris 67 captures et les 67 sont tombées
+dans le MÊME bucket (`1048x720`) ; le second bucket du layout (`698x720`) n'a jamais rien reçu — la capture refuse
+une taille live différente du bucket (FR-044) et rien ne redimensionnait la fenêtre. Forme arbitrée par Romain :
+**un appui F9 capture la situation courante dans TOUTES les tailles déclarées par le layout** (resize → capture →
+resize → capture → retour à la taille d'origine). Une situation de poker ne se commande pas et ne se rejoue pas :
+c'est le seul geste qui couvre le second bucket.
+
+Le back-end le fait depuis cette MR. Ce qui manque est la seule chose que l'app ne peut pas écrire elle-même : la
+station 3 ne DIT pas combien de tailles le dernier appui a couvertes. Le joueur appuie une fois, quatre captures
+partent, et l'écran n'en montre qu'une (celle du bucket qu'il regarde).
+
+## Ce que l'app fournit déjà
+
+`CalibrationStateDto` (event `calibration-state`, `packages/contracts/src/bindings.ts`) porte un champ neuf :
+
+```ts
+lastCaptureBuckets: string[]   // ["1280x720", "1280x360"] — les buckets couverts par le DERNIER geste
+```
+
+- Il est remis à zéro à CHAQUE geste de capture — un clic du bouton « Capturer » y met exactement un bucket (le
+  bouton reste mono-taille : il capture ce que la station montre), un appui F9 y met une entrée par taille
+  réellement capturée, **la taille courante en premier**.
+- Une taille que la fenêtre refuse de rendre (non redimensionnable, écran trop petit, ratio forcé) n'y figure pas :
+  elle est journalisée en refus nommé côté engine. Le compte affiché est donc un compte de captures RÉELLES, jamais
+  une promesse.
+- `lastShotId` ne change pas de rôle (le signal de rafraîchissement de l'écran, rail #92) — il avance à chaque
+  capture stockée, donc N fois par appui F9, et la matrice de couverture se rafraîchit taille par taille.
+
+## Demande — station 3 (`TourStation.tsx`) : dire le compte du dernier geste
+
+1. **Un compteur, à côté du bouton « Capturer F9 »** : « N tailles capturées » quand le dernier geste en a couvert
+   plus d'une, rien (ou le silence actuel) quand il n'y en a qu'une — un compteur qui affiche « 1 tailles capturée »
+   après chaque clic du bouton serait du bruit. La formulation exacte est à vous ; ce qui compte est que le joueur
+   qui appuie UNE fois voie que son geste a couvert plusieurs tailles, alors que l'écran ne lui montre que le
+   bucket courant.
+2. **Contrat** : `TourState` (`RoomProfile.fixtures.ts`) gagne `capturedSizes?: string[] | undefined` — les
+   buckets couverts par le dernier geste, dans l'ordre, tels quels (`"1280x720"`). L'app les câble depuis
+   `calibrationState.lastCaptureBuckets` au drop suivant. Une liste vide ou absente = aucun geste depuis l'entrée
+   dans le mode ⇒ pas de compteur.
+3. **Fixtures** : une fixture station 3 avec deux buckets couverts (`["1152x770", "960x642"]`) pour que le gabarit
+   se voie, et une à zéro/un bucket pour l'état nominal.
+
+Hors périmètre de cette demande : la matrice de couverture (elle se rafraîchit déjà bucket par bucket, rail #92) et
+le bouton « Capturer », qui reste mono-taille.
+
+## Ce qui reste rouge tant que le drop n'est pas là
+
+Le compte n'est PAS affiché aujourd'hui : `apps/web/src/ui/` appartient à Claude Design et l'app ne s'y écrit pas.
+Le e2e station 3 du compte affiché attend donc ce drop — la couverture actuelle du multi-taille est
+`premierLancement.test.tsx` (#100, les deux buckets peuplés par le vrai backend et servis à l'écran) et
+`RoomProfile.test.tsx` (#100, le bucket voisin offre sa capture fraîche après un seul F9).
+
+
+---
