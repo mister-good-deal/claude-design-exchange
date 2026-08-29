@@ -1,496 +1,302 @@
-# Tatami app → Claude Design — VAGUE 0.6.10 (compilée par le coordinateur, 2026-08-28)
+# Vague 0.6.11 — Tatami app → Claude Design (2026-08-29)
 
-Quatre demandes issues de la campagne terrain 0.6.9 (2026-08-28). Le rapport de campagne a établi que les trois murs
-levés par la 0.6.9 sont justes dans le modèle et qu'aucun n'est franchissable À L'ÉCRAN : les demandes ci-dessous
-sont les surfaces qui manquent au joueur, chacune avec la donnée que l'app sert déjà.
+Retours de la campagne de validation Windows 0.6.10 (session 2026-08-29, calibration from scratch). Quatre demandes,
+compilées par le coordinateur ; le contrat et le lint bundle de l'exchange ne bougent pas. Ordre = priorité.
 
-- **A (#81)** est la plus lourde : au prélèvement d'une enseigne, le joueur doit pouvoir CHOISIR la carte (toutes
-  les cartes du bucket, par enseigne) — l'app sert la liste, il manque le sélecteur. Contrat proposé dans le fichier.
-- **B (#84)** est un pur défaut de rendu : l'action de chaque sonde est servie, elle n'est pas rendue dans la
-  catégorie « pixels de référence ».
-- **C (#85)** suit le modèle arrêté en commentaire de l'issue (3-max, index horaire depuis le héros).
-- **D (#94)** décrit l'écran de la station 3 tel qu'il existe APRÈS le correctif #92 (livré dans la même release) :
-  l'aperçu est la dernière capture, hot-loadée à chaque F9, plus d'incrustation « live ».
+| # | Demande | Issue | Nature |
+|---|---|---|---|
+| 1 | Station 3 : le contrôle de suppression reste ARMÉ après une suppression (perte de données) | #96 | **bloquant** — `TourStation.DeleteControl` : désarmer sur confirmation + `key={loaded.id}` |
+| 2 | Sélecteur de captures : boutons ‹ › + pas-à-pas clavier (stations 3, 4, 5) | #97 | markup + hotkeys DS en station 4 (désarmé sous sélection de zone) ; l'app câble déjà ← → en station 3 |
+| 3 | Station 3 : bandeau « L'engine voit : » — n'afficher que s'il porte quelque chose, ton d'information | #98 | conditionnel + tonalité ; le producteur app est réparé en parallèle (#104) |
+| 4 | Station 4 : retirer la bande rouge « N pixels à poser », les non-posés en lignes fantômes du rail | #101 | retrait `UnplacedRail` + `PixelCategory` liste les non posés |
 
-Ordre de lecture conseillé : A, puis B/C (station 4), puis D. Fichiers sources committés dans le repo app
-(`doc/ds-report-rpv3-*.md`), un par sujet.
+Le drop se valide comme d'habitude : `pnpm import-ds <zip>` → lint:fix → tsc + react-doctor ; un rouge d'import
+revient ici en rapport de gate. Côté app, le test « deux suppressions d'affilée » est posé en `it.fails` et se
+plaindra au drop : c'est le signal attendu.
 
 ---
 
-# Demande A — station 5, pipette : prélever une enseigne = choisir SA carte (issue #81 — lot C, MR !105)
+# Tatami app → Claude Design — le contrôle de suppression reste ARMÉ après la suppression
 
-Demande issue de la campagne terrain 0.6.9 (2026-08-28, branche `windows/validation-0.6.9`), suivie côté app par
-l'issue **#81**. Elle vit dans son propre fichier d'échange : elle survit à l'itération courante et n'a pas à être
-écrasée par le prochain `report.md`.
+Campagne de validation Windows 0.6.10 (session 2026-08-29, branche `windows/validation-0.6.10`), station 2 du
+parcours terrain — la **station 3 du wizard** dans le code (`TourStation.tsx`). Suivi côté app par l'issue #96.
+Perte de données silencieuse : c'est la demande bloquante de la vague.
 
-## Ce que le terrain a trouvé
+## Ce que le terrain a vécu
 
-Station 5, pipette v2. La palette des enseignes est bien proposée : quatre cibles « ♠ / ♥ / ♦ / ♣ », 0/3 relevés
-chacune, et une ligne « PALETTE DES ENSEIGNES — ♠♥♦♣ · 0/4 ». **Aucune n'est prélevable.** Verdict de Romain :
+> « Quand on supprime une capture, le bouton "Confirmer la suppression" apparaît correctement et supprime bien la
+> capture une fois qu'on clique dessus, mais ensuite l'état reste sur "Confirmer la suppression" au lieu de
+> repasser dans un état "supprimer la capture" ; et quand on re-clique sur le bouton ça supprime directement la
+> capture courante. »
 
-> « lorsque je clique sur la carte pour prélever la couleur d'un pique, j'ai une carte de carreau (bleu) qui
-> apparaît en plein écran, donc impossible de prélever la couleur d'un pique ici. Pareil pour toutes les
-> couleurs. »
+Le garde-fou à deux temps ne protège que la PREMIÈRE suppression. Après elle, le contrôle reste armé, il pointe
+désormais la capture **suivante** — celle que l'écran vient de charger à la place — et le clic suivant la détruit
+sans rien demander.
 
-Les quatre cibles pointaient la **même capture** (`#20260816T095004326`) et le **même cadrage** (47 × 67 px) :
-une seule carte offerte pour quatre enseignes. Trois cibles sur quatre étaient insatisfiables par construction,
-et la quatrième ne l'était que par hasard.
+## La cause, dans le composant
 
-## Le nœud, et pourquoi il n'est pas soluble côté app
+`DeleteControl` (`apps/web/src/ui/screens/TourStation.tsx:237`) porte un état local `armed` qu'aucun chemin de
+suppression ne remet à `false` :
 
-C'est l'œuf et la poule. **L'app ne PEUT pas présenter « une carte de pique »** : savoir qu'une carte est un pique
-demande la palette des enseignes, qui est précisément ce qu'on est en train de prélever. Le seul agent capable de
-reconnaître un pique à ce stade, c'est le joueur qui regarde l'écran.
+```tsx
+function DeleteControl({ label, aria, confirmLabel, cancelLabel, onDelete }: DeleteProps) {
+    const [armed, setArmed] = useState(false);
 
-La sortie est donc la navigation : la cible dit ce qu'elle CHERCHE, le joueur dit OÙ c'est.
+    if (!armed) return <Button … onClick={() => setArmed(true)}>{label}</Button>;
 
-## Ce que l'app sert déjà (câblage prêt, drop 0.6.10)
-
-Le container dérive et sert désormais **toutes les cartes prélevables du bucket** — chaque ROI de cartes que le
-bucket place × chaque capture qui la montre (`requires` × attestations de la capture, la même dérivation que le
-canvas et l'outil glyphes), captures les plus récentes d'abord. Chaque candidate porte :
-
-```ts
-interface SuitSurface {
-    zoneId: string;   // la ROI de la carte — « board_1 », « hero_2 »…
-    shotId: string;   // la capture qui la montre
-    rank: Rect;       // sa sous-ROI de RANG ([cards].rank_sub_roi), en % de la fenêtre
+    return (
+        <span className={styles.row}>
+            <Button … variant="danger" onClick={onDelete}>{confirmLabel}</Button>   {/* ← ne désarme pas */}
+            <Button … onClick={() => setArmed(false)}>{cancelLabel}</Button>        {/* ← seul reset */}
+        </span>
+    );
 }
 ```
 
-`SuitSwatch` est renseigné en conséquence, par enseigne et indépendamment des trois autres :
+Seul « Annuler » désarme. Le composant appartient à la STATION, pas à la capture : il survit à la capture qu'il
+vient de détruire, reste monté, reste armé.
 
-- `zoneId` / `shotId` → la carte et la capture COURANTES de cette enseigne ;
-- `targetRect` → **la sous-ROI de rang** de cette carte (voir le détail annexe plus bas) ;
-- `target` → la phrase que la cible affiche, composée par l'app.
+## Attendu — les deux gestes, pas l'un ou l'autre
 
-**Faute de markup, l'app expose la navigation sur le seul geste que le contrat DS offre aujourd'hui :
-`onSelectProbe` sur une cible DÉJÀ sélectionnée avance d'une carte**, et la phrase `target` le dit
-(« … · carte 3/12, re-cliquez la cible pour la suivante »). C'est fonctionnel, ce n'est pas découvrable.
+1. **Désarmer sur confirmation** : `onClick={() => { setArmed(false); onDelete(); }}`. Le geste est consommé par
+   la confirmation qui l'a autorisé.
+2. **Remonter le contrôle par capture** : `<DeleteControl key={loaded.id} … />` au point de montage
+   (`TourStation.tsx:500`). Une confirmation armée sur une capture ne vaut pas pour une autre — le changement de
+   capture au sélecteur (ou la navigation ‹ › de la demande jumelle, `ds-report-rpv3-selecteur-captures-navigation.md`)
+   doit ramener le contrôle au repos, exactement comme une suppression.
 
-## Attendu du DS
+Le point 1 seul laisserait un armement traverser un changement de capture ; le point 2 seul ferait dépendre la
+correction d'un remontage qui n'a lieu que si l'id change (supprimer la DERNIÈRE capture d'un bucket, par exemple,
+ne remonte rien). Les deux ensemble ferment le cas par construction.
 
-Un **sélecteur de carte dans la cible d'une enseigne** — visible sans être deviné :
+## Ce que le rail voisin fait déjà bien — à ne PAS toucher
 
-- **Précédente / suivante** sur la carte candidate, avec un rang lisible (« carte 3 / 12 ») ;
-- de préférence un **bandeau des candidates** (vignettes des ROI de cartes) plutôt que deux flèches aveugles :
-  le joueur cherche une carte d'une enseigne donnée, il la reconnaît d'un coup d'œil et n'a pas à défiler une par
-  une ;
-- l'**état est par enseigne** : ♠ et ♥ ne cherchent pas la même carte, et celle qui porte un pique n'est celle
-  d'aucune autre. Quatre curseurs indépendants, pas un curseur global ;
-- **rien ne présume de l'enseigne d'une carte.** La cible annonce ce qu'elle cherche (« ♠ »), jamais que la carte
-  cadrée en est une. Un libellé du genre « la carte de pique » serait faux tant que la palette n'existe pas ;
-- **la navigation ne perd aucun relevé** : les trois relevés d'une enseigne peuvent venir de trois cartes
-  différentes — c'est même souhaitable (trois pips, arbitrage 2026-08-22). Changer de carte ne vide rien.
+`ShotStrip` (`ShotStrip.tsx`, la bande de vignettes de la station 4, montée en `ZoneWorkbench.tsx:500`) porte son
+propre contrôle à deux temps, `ThumbDelete`, et lui **désarme sur confirmation** (`setArmedId(null)` avant
+`onDelete`), avec un armement adressé PAR capture (`armedId === s.id`). C'est le comportement demandé ici. L'issue
+#96 annonçait le défaut partagé avec `ZoneWorkbench.tsx:505` : après relecture, la station 4 est saine, seul
+`TourStation` est atteint. Aucune modification attendue sur `ShotStrip`.
 
-### Contrat proposé
+## Côté app : le test est écrit, il est rouge
 
-`SuitSwatch` gagne la liste et son curseur, et `RoomProfileCallbacks` le geste :
+`apps/web/src/app/screens/RoomProfile.test.tsx` — « station 3 : deux suppressions d'affilée exigent chacune leur
+confirmation (#96) » supprime deux captures de suite sur le bucket 960×600 (six captures fixture) et exige la
+double confirmation à chaque fois. Il échoue aujourd'hui exactement sur l'assertion utile : après la première
+confirmation, `Supprimer la capture …` n'est pas revenu. Il est porté par `it.fails` — vert tant que le drop n'est
+pas là, et il SE PLAINT le jour où il passe : c'est le signal de retirer le `.fails`, pas une gate rouge laissée à
+plaider.
 
-```ts
-export interface SuitSwatch {
-    // … existant …
+## Critère de fermeture (terrain)
 
-    /** #81 — les cartes candidates du bucket, dans l'ordre servi par l'app. */
-    cards?: { id: string; zoneId: string; shotId: string; shotLabel: string }[] | undefined;
+Supprimer deux captures d'affilée en station 3 demande deux fois « Confirmer la suppression » ; changer de capture
+avec une suppression armée ramène le bouton au repos. Verdict rendu par Romain sur la prochaine campagne Windows.
 
-    /** L'index de la carte courante DANS `cards` — propre à CETTE enseigne. */
-    cardIndex?: number | undefined;
-}
+---
 
-export interface RoomProfileCallbacks {
-    // … existant …
+# Tatami app → Claude Design — sélecteur de captures : deux boutons ‹ › et le pas-à-pas au clavier
 
-    /** Le joueur vise une autre carte pour cette enseigne (#81) — l'app déplace le curseur, rien d'autre. */
-    onSelectSuitCard?: (sizeId: string, suitId: string, index: number) => void;
-}
+Campagne de validation Windows 0.6.10 (session 2026-08-29, branche `windows/validation-0.6.10`), station 2 du
+parcours terrain — la **station 3 du wizard** dans le code. Suivi côté app par l'issue #97. La demande vaut pour
+toutes les surfaces qui travaillent sur une capture chargée (stations 3, 4, 5).
+
+## La demande de Romain
+
+> « Il serait bon de pouvoir changer de capture avec les raccourcis clavier flèche droite et flèche gauche (et les
+> mettre en boutons dans l'UI). »
+
+Changer de capture demande aujourd'hui d'ouvrir le sélecteur et d'y désigner une entrée. Or le geste est SÉRIEL :
+on parcourt les captures d'un bucket pour attester ce que chacune montre, comparer une géométrie de l'une à
+l'autre, ou chercher celle qui porte une enseigne donnée (#81). Un pas-à-pas précédent / suivant est ce qu'on fait
+réellement.
+
+## Ce que le DS doit rendre
+
+### 1. Deux boutons ‹ › à côté du sélecteur
+
+- **Station 3** — à côté du `Select` des captures (`TourStation.tsx:527`, la rangée `t.shotField`) : « ‹ » à
+  gauche, « › » à droite. Boutons `size="sm" variant="ghost"`, chacun avec son nom accessible (une chevron sans
+  texte n'est pas un fait) : proposition de clés `shotPrev` / `shotNext`, fr « Capture précédente » /
+  « Capture suivante », en « Previous shot » / « Next shot ».
+- **Station 4** — même paire, à côté de la bande de vignettes `ShotStrip` (`ZoneWorkbench.tsx:500`). Le composant
+  est partagé : les deux boutons y ont leur place, à la même adresse que la sélection.
+- Un bucket à moins de deux captures : les boutons sont `disabled`, jamais absents — une commande qui disparaît
+  fait douter de son existence.
+
+### 2. Bouclage en fin de liste : OUI
+
+C'était le point laissé ouvert par l'issue. **Valeur retenue : la liste boucle** (dernière → première, première →
+dernière). Deux raisons : un bucket de six captures se parcourt en rond pendant une attestation, et un bouton qui
+se désarme en bout de liste demande au joueur de savoir où il est dans une liste qu'il ne regarde pas. À
+contredire par Romain si le terrain le dément — le comportement est écrit ici pour qu'il ait quelque chose à
+contredire.
+
+### 3. Le point de départ : la DERNIÈRE prise
+
+Quand l'app ne nomme aucune capture (`TourState.activeShotId` absent), la station charge déjà la dernière prise
+(`latestShot`, #94). Le premier pas part donc d'ELLE : « ‹ » va à l'avant-dernière, « › » boucle sur la première.
+C'est ce que le câblage app-side implémente ; les boutons doivent lire la même capture chargée, jamais un index
+local.
+
+### 4. Une suppression armée ne survit pas au changement de capture
+
+Le contrôle de suppression de la station 3 reste armé aujourd'hui (demande jumelle,
+`ds-report-rpv3-station3-suppression-armee.md`). Avec un pas-à-pas au clavier, un armement qui traverse une
+capture devient un piège à deux touches. Le `key={loaded.id}` demandé là-bas ferme aussi ce cas-ci.
+
+## Le raccourci clavier — ce qui est câblé, ce qui reste au DS
+
+**Câblé côté app (livré avec cette vague)** : flèches ← / → en **station 3**, bouclage compris, dans
+`RoomProfileContainer` (`useShotArrows`). Le raccourci est désarmé quand la frappe vient d'un champ de saisie
+(`INPUT` / `SELECT` / `TEXTAREA` / `contentEditable`) — le renommage de capture et le sélecteur lui-même gardent
+leurs propres flèches — et quand un modificateur est enfoncé. Test :
+« station 3 : les flèches ← / → parcourent les captures du bucket et bouclent en fin de liste ».
+
+**Ce que l'app ne PEUT pas câbler** : la capture chargée des stations 4 et 5 n'est pas une donnée de l'app. Elle
+vit dans l'état local du DS (`WorkbenchUI.shotId`, `ZoneWorkbench.tsx:95`), que rien ne remonte au container. Le
+pas-à-pas y est donc à la charge du DS, avec **une contrainte non négociable en station 4** :
+
+> les flèches y déplacent la ROI (ou le pixel de référence) SÉLECTIONNÉE d'un pixel — `onNudge` sur `RoiBox` et
+> `PointDot`. Le raccourci de capture doit rester DÉSARMÉ dès qu'une zone ou un pixel est sélectionné
+> (`ui.zoneId !== null || ui.pointId !== null`), et ne s'armer que hors sélection. Les boutons ‹ ›, eux, restent
+> actifs en permanence : ils ne se disputent aucune touche.
+
+Si le DS préfère armer les flèches en station 4 même sous sélection, la seule forme acceptable est un
+modificateur (`Alt` + flèches) — jamais un partage silencieux : un affinage au pixel qui saute de capture est une
+perte de travail, pas une gêne.
+
+## Critère de fermeture (terrain)
+
+Depuis la station 3 comme depuis la station 4, ‹ et › changent de capture, les flèches font la même chose au
+clavier, la liste boucle, et en station 4 une ROI sélectionnée continue de se déplacer au pixel. Verdict rendu par
+Romain sur la prochaine campagne Windows.
+
+---
+
+# Tatami app → Claude Design — station 3 : le bandeau « L'engine voit : », permanent et vide
+
+Campagne de validation Windows 0.6.10 (session 2026-08-29, branche `windows/validation-0.6.10`), station 3. Suivi
+côté app par l'issue #98.
+
+## Ce que le terrain a vécu
+
+> « J'ai une alerte orange `L'engine voit :` qui ne sert à rien et qui est vide. Soit il ne doit y avoir aucune
+> alerte parce que l'engine ne voit rien, soit tout simplement on retire cette alerte qui est inutile pour moi. »
+
+Le bandeau occupe une bande pleine largeur, en couleur d'alerte, juste au-dessus du bouton « Capturer F9 » — et il
+n'a jamais rien à dire, sur profil terrain comme sur profil vierge.
+
+```tsx
+<p className={`${styles.callout} ${styles.grow}`} data-tone={!cold && live?.good === true ? "act" : "warn"}>
+    {cold ? t.tourCaptureCold : t.tourEngineSees(seen)}
+</p>
 ```
+`TourStation.tsx:510` — `seen = seenLabels(data.variants, live?.variantIds ?? [])` (ligne 380).
 
-L'app câble `onSelectSuitCard` le jour du drop et retire le repli « re-clic = carte suivante ».
+## Ce que l'app y sert — vérifié avant de demander
 
-## Détail annexe, déjà tranché côté app
+L'issue laissait deux sorties, à trancher sur la question « ce champ a-t-il un producteur ? ». Réponse : **oui,
+et il est réel** — mais l'app le jette en route.
 
-Le bandeau annonçait « ce bucket n'a pas calibré la ROI propre du pip — la carte est le seul cadrage », et le zoom
-s'ouvrait sur le **rang** : il fallait défiler pour atteindre le pip. Or, depuis #46, **l'enseigne se lit à la
-couleur de l'encre du RANG** — le pip n'est même plus dans le crop des glyphes.
+- Le contenu du bandeau, ce sont les cellules qu'une capture attesterait : `LiveFrame.variantIds`, projeté par
+  `liveFrameOf` (`RoomProfileContainer.tsx:263`) depuis `PrelabelDto.wouldAttest`.
+- `prelabel_preview` (`apps/desktop/src-tauri/src/ipc/commands.rs:1433`, `prelabel.rs`) est un producteur RÉEL
+  sous Windows : sondes couleur du bucket + lectures des régions, filtrées par fraîcheur. La station le sonde
+  toutes les 1,5 s pendant tout le tour.
+- Mais `liveFrameOf` sort sur `if (!live) return undefined;`, et `CalibrationStateDto.live` vaut
+  **`None` inconditionnellement** dans le back : `calibration_mode.rs:189`, `to_dto` — sur toutes les plateformes,
+  Windows comprise. Les pré-labels n'atteignent donc JAMAIS le DS, et `seen` est la chaîne vide par construction.
 
-La cible assume donc ce qu'elle prélève : elle cadre la **sous-ROI de rang** (`[cards].rank_sub_roi`, la géométrie
-que le runtime relit) via `targetRect`, et sa phrase dit « l'encre du rang de « board » sur <capture> ». La
-bascule « Enseigne visée » est armée, et le mot `viewNoZoomSuit` (« la ROI propre du pip ») ne s'affiche plus.
+Le bandeau n'est donc pas vide « parce que l'engine ne voit rien » : il est vide parce qu'une jonction app-side
+laisse tomber ce que l'engine voit. C'est un défaut d'app, pas de DS — il est rapporté au coordinateur pour son
+issue propre (il emporte un second effet, hors de cette demande : `onCaptureShot` reçoit `live?.variantIds ?? []`,
+donc sous Windows la capture F9 ne poste aucun pré-label, seul l'objectif armé est attesté).
 
-**Reste au DS** : le mot de la bascule parle encore du *pip*. `viewSuit` (« Enseigne visée ») convient ; c'est
-`viewNoZoomSuit` qui est désormais mort pour ce chemin, et `zoomDeclared` qui ne se conjugue qu'au bouton
-(« la ROI propre du bouton n'est pas calibrée ici »). Si une enseigne doit un jour porter ce mot, il lui faut sa
-conjugaison — sinon les deux peuvent partir.
+## Attendu, côté DS
+
+**Option 1 de l'issue — le bandeau ne s'affiche que lorsqu'il porte quelque chose, et perd la couleur d'alerte.**
+
+1. **Rien à dire ⇒ rien à l'écran.** `seen === ""` : pas de `<p>` du tout, pas de bande vide, pas de bande à
+   hauteur réservée. Aujourd'hui, l'écran satisfait donc Romain sans rien perdre — le bandeau disparaît jusqu'au
+   jour où l'app le nourrit.
+2. **Couleur d'INFORMATION, jamais d'alerte.** Une lecture d'engine est un renseignement, pas un refus.
+   `data-tone` doit sortir du couple `warn`/`act` de cette bande : une note neutre (la classe `note` de l'écran,
+   ou un `callout` de tonalité informative) est le bon registre. L'orange est réservé aux refus et aux
+   avertissements de cet écran (« Bucket seedé depuis 1048×540 », « Refusé … ») : un bandeau d'alerte permanent
+   et vide use ce signal, et le joueur apprend à ne plus regarder la bande — il manquera le jour où elle porte un
+   vrai message.
+3. **Le cas FROID garde sa bande d'avertissement.** `cold` (`t.tourCaptureCold` : « Capture désarmée — aucune
+   fenêtre de table détectée ») est un vrai refus, il reste en `warn` et reste permanent tant qu'il vaut. Ce sont
+   deux messages différents qui partagent aujourd'hui un `<p>` et une tonalité : à séparer.
 
 ## Ce qui n'est PAS demandé
 
-- Aucune reconnaissance d'enseigne côté app ou DS : impossible avant la palette, et le prétendre serait le bug.
-- Aucun changement du modèle de mesure : trois relevés par enseigne, la médiane est retenue, l'écriture de la
-  palette reste atomique aux quatre couleurs.
+Supprimer le champ du contrat. `LiveFrame.variantIds` a un producteur backend réel et un consommateur utile en fin
+de calibration — c'est la jonction app qui est à réparer, et elle le sera. Un champ retiré du contrat serait à
+remettre au prochain drop.
 
+## Critère de fermeture (terrain)
 
----
-
-# Demande B — station 4 : un pixel de référence se nomme par son ACTION (issue #84 — lot F, mergé)
-
-Demande issue de la campagne de validation Windows 0.6.9 (session 2026-08-28, branche `windows/validation-0.6.9`),
-station 4. Suivie côté app par l'issue **#84**. Fichier d'échange propre : il survit à l'itération courante.
-
-Même rail que `doc/ds-report-rpv3-sondes-dans-le-rail-roi.md` (#63) : la catégorie « pixels de référence » qu'il
-demandait **existe et fonctionne** — « le masquage des pixels de références est bon ». Ce qui suit ne remet rien
-en cause de ce drop, il n'en corrige que les libellés.
-
-## Ce que le terrain a vécu
-
-Sur un bucket calibré, le rail de gauche affiche, dans cet ordre :
-
-```
-PIXELS DE RÉFÉRENCE
-  Pixel neutre     SANS COULEUR
-  2 boutons        SANS COULEUR
-  2 boutons        SANS COULEUR
-  check / bet      SANS COULEUR
-  3 boutons        SANS COULEUR
-  3 boutons        SANS COULEUR
-  3 boutons        SANS COULEUR
-```
-
-Verdict de Romain : « leur label est "faux", ou en tout cas ne permet pas de les différencier dans la liste. Ils
-indiquent tous "2 boutons" ou "3 boutons" quasiment. Il faut leur donner un label différenciant pour un humain. »
-
-Deux lignes « 2 boutons » strictement identiques, trois lignes « 3 boutons » strictement identiques. Chaque ligne
-porte un œil, un focus et une couleur — mais rien ne dit laquelle montrer, laquelle masquer, laquelle est celle
-qu'on cherche. Sept pixels tous distincts, quatre libellés pour les nommer.
-
-## Vérification faite côté app avant d'écrire : le défaut est au rendu
-
-L'app **sert déjà** l'action de chaque pixel. Ce n'est pas une donnée à ajouter au contrat.
-
-Les sept points du profil livré sortent de `calibPointsOf` (`apps/web/src/app/screens/roomProfileMapping.ts`)
-exactement ainsi :
-
-| `id` | `action` | `label` | `variant.label` | `kind` |
-|---|---|---|---|---|
-| `bet_blur` | — | `Pixel neutre` | — | `actuator` |
-| `probe.two_buttons.fold` | `Fold` | `2 boutons` | Deux boutons (fold / call) | `probe` |
-| `probe.two_buttons.call` | `Call` | `2 boutons` | Deux boutons (fold / call) | `probe` |
-| `probe.two_buttons_check_bet.check` | `Check` | `check / bet` | Deux boutons (check / bet) | `probe` |
-| `probe.three_buttons.fold` | `Fold` | `3 boutons` | Trois boutons (fold / call / raise) | `probe` |
-| `probe.three_buttons.call` | `Call` | `3 boutons` | Trois boutons (fold / call / raise) | `probe` |
-| `probe.three_buttons.raise` | `Raise` | `3 boutons` | Trois boutons (fold / call / raise) | `probe` |
-
-La colonne `action` est renseignée depuis le drop 2026-08-19 et sa raison d'être est écrite dans le contrat DS
-lui-même (`CalibPoint.action`, `RoomProfile.fixtures.ts`) :
-
-> « the ACTION this pixel serves, app-supplied display label. The canvas rail **groups by it** instead of queueing
-> sixteen flat chips, which is what makes a row's own label short enough to read in full. »
-
-Le libellé court est donc **intentionnel** : il a été conçu comme le nom d'une ligne **à l'intérieur** d'un groupe
-qui, lui, porte l'action. La demande #63 a ensuite créé une seconde liste de ces mêmes points — la catégorie
-« pixels de référence » du rail ROI — et celle-ci les rend **à plat**, une ligne par point, `action` non lue. Le
-libellé court se retrouve seul à porter l'identité, ce qu'il n'a jamais eu à faire.
-
-Les deux rendus coexistent aujourd'hui dans l'écran :
-
-- le rail de POSE du canvas (« N pixels à poser ») **groupe par action** — on y lit « Fold », puis « 2 boutons » /
-  « 3 boutons » dessous ;
-- la catégorie « PIXELS DE RÉFÉRENCE » du rail ROI **ne groupe pas** — d'où les doublons ci-dessus.
-
-**Rien à câbler côté app.** La donnée est servie, sur le même objet, sur la même liste de points.
-
-## Ce que Romain demande
-
-Un libellé qui nomme **l'action ET sa déclinaison**, dans la langue de l'écran : « Fold · deux boutons »,
-« Call · deux boutons », « Check · deux boutons (check/bet) », « Fold · trois boutons »…
-
-Contrainte de vocabulaire attachée : **la station 6 nomme déjà ses manques de cette façon** (« il manque Fold,
-Call, Raise »). Les deux écrans parlent des mêmes pixels ; ils doivent employer les mêmes mots. Un joueur qui lit
-« il manque Fold » en station 6 doit pouvoir chercher « Fold » en station 4 et le trouver.
-
-## Les deux sorties possibles, et notre lecture
-
-**(a) Grouper la catégorie par action**, comme le rail de pose le fait déjà : sous-titres `Fold` / `Call` /
-`Raise` / `Check`, et sous chacun les déclinaisons (« 2 boutons », « 3 boutons »). Le pixel neutre, qui n'a pas
-d'action, tombe dans le groupe de repli du rail.
-
-**(b) Composer le libellé de ligne** : `action · déclinaison` sur une seule ligne, la catégorie restant plate.
-
-Notre lecture : **(b)**, et voici pourquoi malgré (a) qui semble plus cohérent avec le rail de pose.
-
-La catégorie du rail ROI est une **liste de calques à éteindre**, pas une file de gestes à accomplir. Elle vit à
-côté des catégories de ROI (SHARED, HERO, VILLAIN…) qui sont plates, et elle porte un œil de groupe qui commande
-tout le bloc. Y insérer un second niveau de groupes crée deux œils de groupe emboîtés (celui de la catégorie,
-celui de l'action) — donc un troisième régime de visibilité à définir alors que #63 vient d'en installer un.
-Sept lignes ne justifient pas ça. La ligne composée règle le défaut sans toucher à la mécanique d'œil.
-
-Si le design préfère (a), il faut alors répondre explicitement à : l'œil du sous-groupe existe-t-il, et que fait
-l'œil de la catégorie sur un sous-groupe éteint ?
-
-## Ce que l'app sert déjà, et qui suffit dans les deux cas
-
-Sur chaque `CalibPoint` de la catégorie :
-
-- `action` — `"Fold"`, `"Call"`, `"Raise"`, `"Check"` ; **absent** sur le pixel neutre (`bet_blur`) et sur toute
-  sonde non scopée, qui n'ont pas de déclinaison à distinguer ;
-- `label` — la déclinaison seule (`"2 boutons"`, `"check / bet"`), ou le nom complet du point quand il n'a pas
-  d'action (`"Pixel neutre"`, `"Fold"` pour une sonde plate `probe.fold`) ;
-- `variant` — `{ id, label }` avec le libellé LONG de la déclinaison (« Deux boutons (check / bet) »), utile en
-  `title`/tooltip si la ligne composée doit rester courte ;
-- `color`, `at`, `hint`, `test` — inchangés.
-
-Une règle de repli à respecter, elle est déjà celle du rail de pose : **`action` peut être absent**. Le libellé
-doit alors être `label` seul, jamais « undefined · 2 boutons » ni une action fabriquée.
-
-## Critère de clôture
-
-À l'ouverture de la station 4 sur le profil livré, les sept lignes de « PIXELS DE RÉFÉRENCE » portent **sept
-libellés deux à deux différents**, chacun nommant une action reconnaissable dans le vocabulaire de la station 6.
-Aucune ligne ne se lit « 2 boutons » ou « 3 boutons » toute seule. Le pixel neutre reste « Pixel neutre » — il
-n'a pas d'action, et on ne lui en invente pas.
-
+Station 3 sur un profil vierge : aucune bande orange sous le moniteur tant que l'engine n'a rien à dire ; table
+fermée, la bande « Capture désarmée » reste et reste orange. Verdict rendu par Romain sur la prochaine campagne
+Windows.
 
 ---
 
-# Demande C — station 4 : nommer les vilains par index horaire depuis le héros (issue #85 — lot F, modèle en commentaire d'issue)
+# Tatami app → Claude Design — station 4 : retirer la bande rouge « N pixels à poser »
 
-Demande issue de la campagne de validation Windows 0.6.9 (session 2026-08-28, branche `windows/validation-0.6.9`),
-station 4. Suivie côté app par l'issue **#85**, dont le modèle est arrêté en commentaire avant cette demande.
-Fichier d'échange propre : il survit à l'itération courante.
-
-Périmètre **3-max (Spin)** — méthode arrêtée avec Romain en fin de campagne : la passe de vérification finale de
-la 0.6.x se fera sur un jeu de captures complet en Spin 3-max. Les autres tailles de table ne sont pas au
-programme de ce drop.
+Campagne de validation Windows 0.6.10 (session 2026-08-29, branche `windows/validation-0.6.10`), station 4. Suivi
+côté app par l'issue #101. Demande DS pure : aucun câblage app-side n'est en jeu.
 
 ## Ce que le terrain a vécu
 
-Le rail « VILLAIN » de la station 4 offre quatre zones, aux noms positionnels :
-
-```
-VILLAIN
-  Vilain haut-gauche (pseudo)
-  Vilain haut-droit (pseudo)
-  Vilain milieu-gauche (pseudo)
-  Vilain haut-gauche (slot large)
-```
-
-Verdict de Romain, sur une capture de table **6-max** : « j'ai 4 ROI pour 5 joueurs (je suis en 6-max sur la
-capture) et une ROI "slot large" dont je ne sais pas à quoi elle correspond ».
-
-Convention demandée :
-
-> « Pour différencier les positions, on peut plutôt définir une convention avec héros à l'index 0 et un incrément
-> de 1 dans le sens horaire de la table pour les positions des vilains. Donc ici Vilain 1, Vilain 2, …, Vilain 5. »
-
-## Ce que la lecture du code a établi, et qui change la demande
-
-**Le compte n'est pas « 4 pour 5 » : c'est « 3 sièges + 1 fuite ».**
-
-`villain_top_left_big` n'est pas un quatrième siège. C'est la **même ancre** que `villain_top_left`, calibrée pour
-une géométrie de slot différente — elle porte `set = "big"` au profil (jeu de régions nommé, adaptation d'aspect).
-Elle apparaît dans le rail parce que le catalogue servi à l'écran **aplatit tous les jeux de régions** : le DTO de
-zone ne porte aucun champ `set`. Une ROI d'un jeu qu'on ne calibre pas se retrouve offerte à la calibration, sans
-rien qui la distingue — d'où « je ne sais pas à quoi elle correspond ».
-
-**Et le nombre de joueurs est déjà servi, mais lu par personne.** `[room].players` est déclaré au profil (le
-profil livré dit `players = 3`), validé côté moteur (borne `[2, 10]`, défaut 3 « le format spin historique ») et
-transporté jusqu'à l'écran dans la charge de calibration. Aucun consommateur côté app. Le nombre de ROI de siège
-n'est dérivé de rien : il est la liste des régions `villain_*` que le TOML se trouve déclarer.
-
-C'est le motif de fond de la campagne (#93) : le contrat existe, la couche du dessus ne le lit pas.
-
-## Ce que Romain demande
-
-1. **Le compte** : autant de ROI de pseudo vilain que d'adversaires, soit `players − 1`. En 3-max, **deux**.
-2. **La désignation** : `Vilain 1` … `Vilain N`, index relatif au héros (héros = 0), incrément dans le sens
-   horaire de la table — celui dans lequel tourne le bouton. `Vilain 1` est le voisin immédiat du héros dans ce
-   sens.
-3. **Plus de nom positionnel à l'écran** : ni « haut-gauche », ni « haut-droit », ni « milieu-gauche », ni « slot
-   large ». Un placement à l'écran dépend du nombre de joueurs, de la disposition de la table et de la taille de
-   fenêtre ; il ne peut pas servir d'identité.
-
-## Pourquoi la désignation positionnelle est un défaut de fond, pas un défaut de mot
-
-Le rail est l'endroit où le joueur associe **une boîte sur sa capture** à **un adversaire de la partie**. Un nom
-positionnel décrit la boîte ; il ne dit rien de l'adversaire. Sur une autre table du même profil — même room,
-même taille de fenêtre, autre disposition — « haut-gauche » désigne un autre joueur, et le rail n'a aucun moyen
-de le signaler.
-
-L'index horaire depuis le héros est la seule ancre qui ne dépende ni du rendu, ni du nombre de joueurs, ni de la
-fenêtre. C'est d'ailleurs déjà celle du moteur : une position de table y est un décalage depuis le héros, pas un
-coin d'écran. Le rail est le dernier endroit du produit à parler en coins d'écran.
-
-Note : le prototype DS **parle déjà cette langue** — les sièges y sont `v1` / `v2`, libellés « Villain 1 » /
-« Villain 2 ». C'est l'app qui sert des noms positionnels, parce que le profil livré en déclare. Le drop demandé
-est donc moins une refonte qu'un alignement, plus les deux points d'écran ci-dessous.
-
-## Les deux points qui demandent une décision d'écran
-
-**1. Un groupe par siège, ou un groupe « VILLAIN » à N lignes ?**
-
-Le prototype pose aujourd'hui un **groupe par siège** (« Villain 1 », « Villain 2 »), ce qui suppose que chaque
-siège porte plusieurs ROI (pseudo, tapis, cartes…). Le profil terrain n'en a **qu'une par siège** — le pseudo — et
-#89 (ROI de tapis du héros) montre que les autres arriveront par le héros d'abord.
-
-Notre lecture : **un seul groupe `VILLAIN`, une ligne par siège** tant qu'un siège n'a qu'une ROI, et le passage
-au groupe-par-siège le jour où il en a deux. Un groupe d'une ligne est un titre pour rien, répété N fois.
-Le regroupement dérivé côté app appuie cette lecture : le groupe d'affichage est le préfixe de l'id, donc
-`villain_1` et `villain_2` tombent dans le même groupe `villain` **sans rien changer au dérivateur**.
-
-**2. Que fait l'écran quand le profil déclare un compte et livre un autre ?**
-
-C'est exactement l'état du profil livré aujourd'hui : `players = 3` (donc deux vilains attendus) et trois régions
-`villain_*` déclarées, plus une du jeu `big`. Dès que le rail dérive son compte de `players`, l'écart devient
-visible — et il faut savoir quoi en faire.
-
-Notre lecture : le rail montre **`players − 1` lignes**, et une région `villain_*` déclarée au-delà du compte est
-rendue comme un **surplus nommé** (elle existe au TOML, donc elle ne disparaît pas — l'invariant d'honnêteté du
-rail : on ne fait pas disparaître une géométrie posée), sous un intitulé qui dit ce qu'elle est. Jamais un
-silence : une ROI qu'on ne comprend pas est le défaut qu'on corrige.
-
-Côté app, la ROI `_big` ne devrait pas atteindre l'écran du tout — voir « ce qui reste à faire côté app ».
-
-## Ce que l'app sert déjà, et ce qui reste à faire côté app
-
-**Déjà servi, sans nouveau contrat :**
-
-- `players` — le nombre de joueurs de la room, dans la charge de calibration. Il suffit de le lire.
-- Le libellé d'affichage de chaque zone, tel que le profil le déclare (`Zone.label`) : le renommage des sièges
-  est un changement de profil, pas de contrat.
-- Le groupe d'affichage, dérivé du préfixe d'id — `villain_1` → groupe `villain`, comme aujourd'hui.
-
-**Reste à faire côté app, hors de ce drop (issue #85, arbitrage de Romain en attente) :**
-
-- renommer les régions du profil en `villain_1` / `villain_2` avec leurs libellés ;
-- cesser de servir au catalogue les régions d'un jeu de régions non actif, pour que `_big` sorte de l'écran ;
-- lire `players` pour en dériver le compte attendu.
-
-Ces trois points ne sont pas des prérequis à la maquette : ils changent ce que l'app **envoie**, pas ce que
-l'écran **rend**. La maquette peut être faite contre deux sièges nommés « Vilain 1 » / « Vilain 2 ».
-
-## Critère de clôture
-
-Sur un profil 3-max, la station 4 offre **exactement deux** ROI de pseudo vilain, nommées « Vilain 1 » et
-« Vilain 2 », et **aucune** ROI dont le joueur ne puisse dire à quel adversaire elle correspond. Aucun libellé de
-siège ne mentionne une position à l'écran. Le jour où un profil déclare `players = 6`, le rail en offre cinq sans
-qu'une ligne de vocabulaire ait à changer.
-
-
----
-
-# Demande D — station 3 : l'aperçu montre une capture, jamais un « live » (issue #94 — lot F ; décrit l'écran APRÈS #92)
-
-Demande issue de la campagne de validation Windows 0.6.9 (session 2026-08-28, branche `windows/validation-0.6.9`),
-station 3. Suivie côté app par l'issue **#94**. Fichier d'échange propre : il survit à l'itération courante.
-
-**À lire APRÈS #92**, qui est corrigé en parallèle dans la même release : #92 rend visible ce que le backend
-produit déjà (les captures prises, ce que l'engine voit) ; cette demande-ci change le **modèle d'affichage** de
-l'aperçu. Tout ce qui suit décrit l'écran **une fois #92 livré** — sans quoi la demande décrirait un écran qui
-n'existe plus au moment du drop.
-
-## Ce que le terrain a vécu
-
-Le sélecteur de captures propose une entrée « **— live —** », **sélectionnée par défaut**, qui n'affiche **rien** —
-table ouverte, détectée, `glow_spec` émis en continu, deux PNG de 453 ko réellement écrits sur le disque. La zone
-d'aperçu porte à la place : « Pas de flux live avant calibration — capturez au F9 avec la vraie table visible. »
-
-Verdict de Romain : « Ce n'est pas normal qu'une capture avec l'option "live" n'affiche rien alors qu'une table
-tourne. »
-
-L'explication technique est correcte et documentée : **l'engine n'émet aucune frame pendant la calibration**, et
-le message a déjà été corrigé une fois en 0.6.4 (écart 6/C5) — il a remplacé « la promesse mensongère d'une frame
-à venir ». Mais le correctif s'est arrêté au texte. **L'option « live » est restée dans le sélecteur**, elle en est
-restée la valeur par défaut, et elle ne peut, par construction, rien montrer.
-
-On explique au joueur pourquoi le mode qu'on lui propose ne marche pas, au lieu de ne pas le lui proposer.
-
-## La décision de Romain
-
-Deux sorties étaient possibles, il tranche :
-
-> « Soit on supprime ce mode live de rendu et on attend une capture pour l'afficher, soit on diffuse le flux live
-> dans la capture et on laisse les captures se faire au fil de l'eau lorsque le joueur les demande. Je pense
-> plutôt pour l'option 1 qui paraît plus simple. »
-
-**Option 1 retenue.** Plus de mode live dans le rendu de la station 3.
-
-Et l'exigence qui va avec :
-
-> « Note qu'il faudra qu'à chaque capture celle-ci s'affiche dans la preview, donc soit hot-loadée. »
-
-## L'écran demandé
-
-1. **La zone d'aperçu montre une capture, et rien d'autre.** Celle choisie au sélecteur ; à défaut, la dernière
-   prise.
-2. **Le sélecteur n'offre plus « — live — »**, ni comme entrée, ni comme valeur par défaut. Sa valeur par défaut
-   est une capture réelle du bucket.
-3. **F9 hot-load.** Une capture prise devient **immédiatement** l'aperçu affiché, sans geste ni navigation. C'est
-   la contrepartie de la suppression du mode live : si l'aperçu ne montre plus qu'une capture, la boucle « F9 → je
-   vois ce que je viens de prendre » doit être instantanée.
-4. **L'incrustation « live » disparaît elle aussi.** L'aperçu porte aujourd'hui, quand une capture est chargée, une
-   vignette en incrustation légendée « live · … ». Elle est alimentée par la même source vide et ne montre donc
-   rien non plus. Un mode qu'on retire se retire partout.
-5. **Le bouton « Repasser au live » disparaît.** Il n'a plus de destination.
-
-## L'état vide, qui est le vrai sujet de conception
-
-Tant qu'aucune capture n'existe, la zone d'aperçu **n'a rien à montrer et c'est normal** — c'est l'état d'entrée
-de toute première calibration. Le message actuel garde son sens **à cet endroit**, mais change de rôle : d'excuse
-d'un mode défaillant, il devient l'**état vide d'un aperçu** et la consigne du geste suivant.
-
-À reformuler, pas à supprimer. Le mot « live » n'a plus rien à y faire : il nommait le mode qu'on retire. Ce que
-l'état vide doit dire, c'est « aucune capture pour l'instant — ouvrez la table et appuyez sur F9 », avec le
-raccourci rendu comme un raccourci (la touche F9 est déjà rendue en `Kbd` sur le bouton de capture de la même
-colonne — l'état vide doit renvoyer au même geste, avec le même signe).
-
-Deux états vides distincts à ne pas confondre, et c'est le point d'arbitrage :
-
-- **aucune capture dans le bucket** — le cas ci-dessus, l'invitation à capturer ;
-- **une capture sélectionnée dont l'image n'est pas servie** — cas déjà rendu (« pas d'image pour cette
-  capture »), qui reste ce qu'il est : une anomalie, pas une invitation.
-
-Les deux se ressemblent à l'écran aujourd'hui parce que l'un des deux était masqué par le mode live. Une fois le
-live retiré, ils deviennent les deux seuls états non nominaux de la zone, et ils doivent se distinguer d'un coup
-d'œil : le premier appelle un geste, le second signale un défaut.
-
-## Ce que ça change pour le reste de la station, et qui ne bouge pas
-
-La colonne d'exhaustivité (variantes × captures) et les coches ne changent pas : elles travaillaient déjà sur « la
-capture chargée », jamais sur le live — le message « Chargez ou prenez une capture pour cocher ce qu'elle montre »
-le dit déjà. Ce qui change, c'est que **« la capture chargée » cesse d'être un état optionnel** : après la
-première capture du bucket, il y en a toujours une.
-
-Le champ « L'engine voit : … » reste. Il n'est pas un rendu du live : c'est le prélabel — ce qu'une capture
-attesterait si on la prenait maintenant. C'est précisément l'information qui remplace utilement un flux d'images,
-et #92 lui rend son contenu.
-
-Le sélecteur reste ce qu'il est à cette station (une liste, pas le rail à miniatures demandé pour la station 4
-dans `doc/ds-report-rpv3-selecteur-captures-miniatures.md`) — hors périmètre ici, on ne change que ce qu'il
-propose.
-
-## Ce que l'app sert déjà
-
-Rien à ajouter au contrat côté données :
-
-- la liste des captures du bucket avec, pour chacune, son id, son libellé, son horodatage et l'URL de son image ;
-- la capture sélectionnée, et le geste de sélection ;
-- le geste de capture F9 et le prélabel de ce que l'engine attesterait.
-
-Ce qui disparaît côté contrat, c'est l'**entrée vide** du sélecteur (la valeur « aucune capture sélectionnée =
-live ») et le geste « repasser au live ». Le champ de frame live du modèle reste servi mais n'est plus rendu ;
-l'app cessera de l'alimenter le jour où il n'a plus aucun consommateur.
-
-**Le hot-load est câblé côté app** (issue #92, même release) : après une capture, l'écran reçoit la liste à jour
-et la nouvelle capture comme sélection courante. Le DS n'a pas de logique de rafraîchissement à porter — il rend
-la capture sélectionnée qu'on lui donne.
-
-## Critère de clôture
-
-Sur un profil vierge, table ouverte : la station 3 montre un aperçu vide **qui invite à capturer**, et le
-sélecteur ne propose aucune entrée « live ». Un appui sur F9 fait apparaître la capture prise dans l'aperçu
-**sans aucun autre geste**. Un second F9 la remplace par la nouvelle. Le mot « live » n'apparaît plus nulle part
-dans la zone d'aperçu ni dans le sélecteur.
-
+> « La barre "11 pixels à poser" rouge en dessous du screenshot ne sert plus à rien, il faut l'enlever. Les pixels
+> à poser vont apparaître dans les ROI dans la barre de gauche, et la station suivante servira à les positionner. »
+
+La bande, c'est `UnplacedRail` (`apps/web/src/ui/screens/CalibrationCanvas.tsx:300`, montée ligne 821) : titre
+`t.unplacedTitle(n)` = « N pixels à poser », pleine largeur sous le canvas, en couleur de refus
+(`.unplaced` : `--alert-line` / `--alert-bg`, `.unplacedTitle` : `--alert-text`).
+
+## Pourquoi elle est devenue redondante — deux changements récents
+
+1. **#63 (livré en 0.6.10)** a donné aux pixels de sondes leur propre catégorie dans le rail ROI de gauche —
+   « PIXELS DE RÉFÉRENCE », une ligne par sonde, masquable. Ce que la bande énumère est désormais listé là, au
+   même endroit que toutes les autres zones.
+2. **La station 5 (pipette) est l'écran du prélèvement** : elle présente les cibles, compte les relevés, et porte
+   déjà le geste de pose — chaque ligne sans position offre « Poser sur la capture » (`PipetteTool.tsx:545`,
+   `onPlacePoint`), qui amène en station 4 avec le pixel ARMÉ. La station 4 place des géométries ; elle n'a pas à
+   tenir le compte d'un travail qui se fait ailleurs.
+
+La bande dit donc, en rouge et en permanence, ce que le rail dit déjà et ce que la station suivante fera — le même
+coût de signal que le bandeau vide de #98 (`ds-report-rpv3-station3-bandeau-engine-voit.md`) : une couleur d'alerte
+qu'on apprend à ne plus voir.
+
+## Attendu
+
+**Retirer `UnplacedRail`** de la station 4 (composant, styles `.unplaced*`, clé `unplacedTitle`) — le rail ROI et
+la station 5 gardent le compte là où il sert.
+
+Une seule précaution : la bande n'était pas qu'un compteur, elle était aussi **l'adresse d'armement** — cliquer un
+trou arme le pixel, et le clic suivant sur la capture le pose (`onArm` → `onSelectPoint`). Le geste doit garder une
+adresse dans la station, et la demande de Romain la nomme : **le rail de gauche**.
+
+- La catégorie « PIXELS DE RÉFÉRENCE » (`ZoneRail.tsx`, `PixelCategory`) ne liste aujourd'hui que les pixels
+  POSÉS — `placedPoints(bucket.points)` (`ZoneWorkbench.tsx:151`, filtre `p.at !== undefined`). Attendu : elle
+  liste aussi les **non posés**, en ligne fantôme — pastille vide au lieu de la couleur échantillonnée, mention
+  « à poser » à la place du code couleur, et pas d'œil (il n'y a rien à masquer). Les sélectionner ARME la pose,
+  exactement comme le trou de la bande le faisait.
+- Le reste du protocole de pose ne bouge pas : la consigne armée (`t.placeHint`, la ligne au-dessus du canvas) et
+  la surface de pose (`placeSurface`) restent — ce sont elles qui disent au joueur ce que son prochain clic va
+  faire.
+
+Si le DS préfère que la station 4 ne montre **aucun** pixel non posé, c'est acceptable aussi : la station 5 reste
+alors la seule adresse d'armement, et elle est complète. Ce qui ne l'est pas : retirer la bande en laissant
+l'armement sans adresse.
+
+## Critère de fermeture (terrain)
+
+Station 4 : plus aucune bande rouge sous le canvas ; les pixels restant à poser se lisent dans le rail de gauche
+et s'arment depuis là (ou depuis la station 5), et la pose au clic sur la capture fonctionne comme avant. Verdict
+rendu par Romain sur la prochaine campagne Windows.
 
 ---
 
