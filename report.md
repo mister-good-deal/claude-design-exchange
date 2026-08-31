@@ -11,7 +11,7 @@ arbitré au terrain) — l'app le sert et le persiste déjà, il ne manque que l
 Le badge « à calibrer » (#109) n'a PAS de nouvelle demande : la variante `toCalibrate` du drop 2026-08-30 suffit,
 seul le seuil du vert a changé côté app.
 
-| 2 | Station 4 : valider / invalider une ROI en un geste (arrivée pré-placée) | #116 | ✓/↩ sur la ligne du rail + inspecteur ; `onInvalidateZone?` au contrat ; `k / N` = les validées |
+| 2 | Station 4 : valider / dé-valider une ROI en un geste — le seed AUTO-VALIDE, le joueur dé-valide les mal placées | #116 | ✓/↩ sur la ligne du rail + inspecteur ; `onInvalidateZone?` au contrat ; un bucket seedé arrive à `N / N` (vert), redescend en orange à la première dé-validation |
 ---
 
 # Tatami app → Claude Design — demande d'itération (0.6.13) : champ « délai avant capture » dans la station 3
@@ -82,11 +82,12 @@ Suivi côté app par l'issue #116 (note de Romain du 2026-09-01, prolongement de
 existe (seed par projection, zones `projected` ; confirmation par zone `projected → adjusted` sans bouger la
 géométrie) ; ce qui manque est ENTIÈREMENT à l'écran.
 
-## Ce que le joueur vivra
+## Ce que le joueur vivra (ajusté par Romain le 2026-09-01)
 
-Il ouvre une taille jamais calibrée alors qu'une autre l'est déjà : toutes les ROI arrivent DÉJÀ placées, en
-`projected` (le cadre « projeté » existant), badge orange `0 / N ROI placées`. Son travail n'est plus de poser
-22 cadres, mais de PASSER EN REVUE : valider celles qui tombent juste, ajuster ou invalider les autres.
+Il presse « Seeder depuis le bucket le plus proche » : toutes les ROI arrivent placées ET VALIDÉES (`adjusted`),
+badge vert `N / N`. Son travail est de PASSER EN REVUE et de DÉ-VALIDER (`adjusted → projected`) les ROI que la
+proportion a mal placées — le badge redescend en orange `k / N` — puis de les ajuster ou re-valider. Pas de
+pré-placement automatique : le bouton reste le seul déclencheur.
 
 ## Demande
 
@@ -97,19 +98,19 @@ Il ouvre une taille jamais calibrée alors qu'une autre l'est déjà : toutes le
 2. **Invalider en un geste** : l'inverse (`adjusted → projected`) sur une zone déjà validée — « celle-ci est à
    revoir » — même adresse (rail + inspecteur), la géométrie ne bouge pas. Nouveau au contrat :
    `onInvalidateZone?: (sizeId: string, zoneId: string) => void` (la validation passe par le canal existant).
-3. **Le compteur dit la revue** : `k / N` compte les VALIDÉES — un bucket entièrement pré-placé mais non revu
-   affiche `0 / N` (cohérent #109 : le vert n'arrive qu'à N / N validées).
+3. **Le compteur dit la revue** : `k / N` compte les VALIDÉES — après un seed il vaut `N / N` (vert), et il
+   redescend à la première dé-validation (cohérent #109 : le vert = N / N validées, dans les deux sens).
 4. Aria et libellés : « Valider <zone> » / « Invalider <zone> » ; pas de couleur d'alerte — c'est un geste de
    travail, pas un avertissement.
 
 ## Ce qui n'est PAS demandé
 
-Le déclenchement automatique du pré-placement (côté app/backend, G1 en cours sur #116) ; le bouton « Seeder depuis
-le bucket le plus proche » reste tel quel.
+L'auto-validation au seed (côté backend, G1 du lot #116) ; le bouton « Seeder depuis le bucket le plus proche »
+reste tel quel.
 
 ## Critère de recette
 
-Sur un bucket pré-placé : valider une ROI au clic depuis le rail → `1 / N` ; l'invalider → retour `0 / N`, cadre
-re-projeté ; ajuster par drag une autre → elle compte aussi. Verdict terrain par Romain.
+Après un seed : badge vert `N / N` ; dé-valider une ROI depuis le rail → orange `N−1 / N`, cadre re-projeté,
+géométrie intacte ; la re-valider au clic ou par drag → `N / N`. Verdict terrain par Romain.
 
 ---
