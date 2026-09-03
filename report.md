@@ -1,34 +1,55 @@
-# Vague 0.6.14 — demandes au design system (drop `tatami 2026-09-01.1` intégré, merci : drop-in clean)
+# Vague 0.6.15 — demandes au design system (drop `tatami 2026-09-02` intégré, drop-in clean, merci)
 
-Deux demandes pour ce cycle, issues de la campagne Windows 0.6.13 (rapport `recon/win-validation-2026-09-01/REPORT.md`).
+Cinq demandes issues de la campagne Windows 0.6.14 (première traversée complète des stations 1 à 6 ; rapport
+`recon/win-validation-2026-09-02/REPORT.md`). Toutes en station 4 et 5. Un seul drop quand tout est prêt.
 
-## 1. Onglet Layout — un interrupteur pour désactiver le tuilage (#128)
+## 1. Station 4 — les flèches déplacent d'UN pixel réel (#131)
 
-**Le besoin (Romain, terrain)** : « un bouton toggle dans l'onglet Layout pour désactiver le Layout manuellement.
-C'est aussi utile aux joueurs qui ne voudraient pas de cette feature. **De manière générale, toute feature doit pouvoir
-s'activer et se désactiver.** » Le tuilage est la feature la plus intrusive du produit — la seule qui déplace ce que
-le joueur a posé lui-même. Il faut pouvoir la couper depuis son écran, sans détour par l'éditeur de layouts.
+Aujourd'hui `CalibrationCanvas` déplace de `STEP = 0.2` **% de la fenêtre** : 2,1 px en largeur, 1,4 px en hauteur sur un
+bucket 1048×720 — pas un pixel, pas isotrope, et indépendant du zoom alors que l'écran annonce « un pixel réel ».
+Demande : un appui = **un pixel de la capture**, sur chaque axe, quel que soit le bucket (le canvas connaît la taille du
+bucket : convertir à l'appui, `1 / bucket.width` et `1 / bucket.height`, le rect reste en pourcentage). `Maj + flèches`
+(redimensionner) prend la **même unité** — un seul vocabulaire dans le même geste ; le libellé d'aide suit (« 1 px »).
 
-**Ce qu'on te demande** :
+## 2. Station 4 — sélection multiple de ROI et déplacement de groupe (#132)
 
-- Un composant **« interrupteur de feature »** réutilisable (switch on/off + libellé + une ligne d'aide + état
-  visible), pensé pour être reposé plus tard sur le glow, l'overlay et le bet menu — le même principe s'appliquera à
-  toutes les features qui agissent sur l'environnement du joueur. Une seule primitive, déclinée par écran.
-- Sa première pose : en tête de l'onglet **Layout**, libellé du type « Tuilage des tables », aide « Quand il est coupé,
-  Tatami ne déplace ni ne redimensionne aucune fenêtre ; les layouts restent modifiables. » État coupé : l'écran doit
-  le dire clairement (badge/état sur la carte des layouts, pas seulement la position du switch), sans griser l'éditeur.
-- Contrat : donnée `tilingEnabled: boolean` (défaut `true`), callback `onSetTilingEnabled(enabled: boolean)`. Le
-  reste de l'app (détection, calibration, glow, overlay) ne change pas d'état visible.
-- Accessibilité : `role="switch"`, `aria-checked`, libellé accessible = le libellé du toggle ; navigable clavier.
+Le seed dérive par groupes (vilains trop hauts, barre d'actions trop basse) : il faut corriger un sous-ensemble d'un
+même geste, pas tout. Demande :
 
-## 2. Station Tour — le défaut du champ délai passe à 100 ms (#111, cosmétique côté fixture)
+- **Ctrl + clic** sur une ROI l'ajoute à la sélection ou l'en retire (rail et canvas) ; état multi-sélection visible
+  (les ROIs sélectionnées se distinguent de la ROI focus).
+- Un bouton **« Tout sélectionner »** près du focus, et un moyen de vider la sélection (Échap ou bouton).
+- Les **flèches s'appliquent à toutes les ROIs sélectionnées**, du même vecteur (en pixels réels, cf. 1).
+- Contrat : `selectedZoneIds: string[]` ; callbacks `onToggleZoneSelection(zoneId)`, `onSelectAllZones()`,
+  `onClearSelection()`, **`onNudgeZones(zoneIds, dxPx, dyPx)`** (un seul appel par appui pour tout le groupe — l'app
+  fait un seul commit). Le drag souris reste mono-ROI.
 
-La mesure terrain a fixé le délai de recomposition à **100 ms** par défaut (le client recompose en < 100 ms ; 1500
-était 15× trop haut). Si la fixture de `captureDelayMs` ou une aide de champ cite 1500, aligne-la sur 100. Bornes
-0–5000 et champ inchangés.
+## 3. Sélecteur de captures — numéro de prise et état sélectionné franc (#134)
+
+Sous chaque vignette : **`#1`, `#2`, …** (le numéro de prise, déjà servi dans les données depuis #107) à la place de
+l'heure — l'heure passe en tooltip. La vignette **active** doit se voir : bordure épaissie **et** un second indice (fond
+ou teinte) — un liseré de 1 px ne se lit pas sur six vignettes sombres.
+
+## 4. Station 5 — le crop d'une carte se tient en hauteur, le zoom en option (#138)
+
+Sur une cible d'enseigne, un crop de 54×63 px est rendu sur plus de 700 px de haut : le chiffre déborde, il faut
+défiler pour voir la carte et les relevés. Demande : **la vue tient le crop entier en hauteur par défaut** (sans
+défilement, quelle que soit sa taille) et le **zoom est une option** pour viser un pixel — l'inverse d'aujourd'hui. Le
+même onglet le fait déjà bien sur un bouton (148×59 px tient dans la vue) : aligner le crop de carte sur ce comportement.
+
+## 5. Station 5 — écarter UN segment de la découpe d'un montant (#139)
+
+La segmentation des montants est « assez propre », mais un segment d'artefact de trop (5 segments pour `25BB`) force
+aujourd'hui à **écarter toute la ROI** — quatre glyphes justes perdus pour un faux. Demande :
+
+- Chaque **segment est cliquable pour l'écarter** (et le reprendre) — état écarté visible (barré/atténué), cohérent avec
+  « Écarter cette ROI » un niveau au-dessus.
+- **La saisie fait foi comme signal** : quand le nombre de caractères saisis ≠ nombre de segments gardés, l'écran le
+  dit à l'endroit de la saisie (« 4 caractères, 5 segments — écartez le segment en trop ») au lieu d'un refus muet.
+- Contrat : `rejectedSegments: number[]` par crop dans les données ; callback `onToggleSegment(shotId, zoneId, index)`.
+  Le verdict d'écart vient de l'app (`segmentMismatch: { typed, kept } | null`).
 
 ---
 
-Aucune autre demande : la station 4 (validation/dé-validation) et le compteur « k / N ROI validées » du drop 2026-09-01.1
-sont intégrés et verts. Réponds par un drop unique quand les deux points sont prêts ; le rapport de gate suivra le même
-canal.
+Rien d'autre ne change : l'interrupteur de feature et le compteur « k / N ROI validées » du drop précédent sont
+intégrés et verts. Le rapport de gate suivra le même canal.
