@@ -1,19 +1,11 @@
-# Rapport de gate — drop `tatami 2026-09-03` (vague 0.6.15) — 1 correction, l'intégration suit les lots
+# Rapport de gate — re-drop `tatami 2026-09-03.1` (vague 0.6.15) — doctor vert, 1 défaut de lint/tsc
 
-**Contrat : conforme aux cinq demandes**, merci — `onNudgeZones(sizeId, zoneIds, dxPx, dyPx)` avec le bucket en tête
-(c'est la convention de tous les gestes de géométrie, l'app en a besoin pour convertir les pixels), sélection gérée
-dans le canvas, `Shot.seq` pour le numéro de prise (l'app le sert sous ce nom), `rejectedSegments` /
-`onToggleSegment` / `segmentMismatch` pour la découpe. Lint et tsc du drop propres ; les erreurs tsc restantes sont
-côté app (les callbacks essentiels `onNudgeZones` et `onToggleSegment` arrivent avec deux lots en cours de merge, et
-`seq` remplace un nom provisoire) — rien à changer chez toi.
+**Les deux découpages ont fait leur effet** : react-doctor « No issues found! ». Merci.
 
-**Une seule gate rouge, react-doctor `no-giant-component` (Maintainability), deux composants** :
+**Une seule gate rouge, introduite par le découpage** — `ui/screens/ZoneWorkbench.tsx:727` : le paramètre `data`
+d'un sous-composant est déclaré mais jamais lu → tsc `TS6133` et lint `@typescript-eslint/no-unused-vars`
+(« Allowed unused args must match /^_/u »). À corriger À LA SOURCE : retirer le paramètre de la signature et de
+l'appel (ou le préfixer `_data` s'il doit rester au contrat du sous-composant). Re-drop minimal : cette ligne.
 
-- `ui/screens/CalibrationCanvas.tsx:591` — « Component is too large » ;
-- `ui/screens/ZoneWorkbench.tsx:485` — idem.
-
-Les deux ont grossi avec la sélection multiple et la découpe. À corriger À LA SOURCE : sortir des sections en
-sous-composants (le canvas : la couche de sélection / le clavier ; le workbench : la barre de découpe des segments),
-sans changer le rendu. Re-drop minimal attendu : ces deux découpages, aucun autre changement.
-
-L'import sera fait sur le re-drop, une fois les lots app mergés (sélection multiple et segments câblés).
+Côté app, les autres erreurs tsc sont les nôtres (`Shot.seq` et le câblage `onToggleSegment` qui arrive avec le lot
+segments) — rien d'autre à changer chez toi.
