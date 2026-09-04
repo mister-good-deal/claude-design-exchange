@@ -1,33 +1,36 @@
-# Vague 0.7.0 — drop 2026-09-03.3 intégré et vert, DEUX demandes durables
+# Vague 0.7.0 — drop 2026-09-04 REFUSÉ à la gate (un warning react-doctor), les deux demandes honorées dans l'archive
 
-**État** : le drop `2026-09-03.3` (station 6 : `DryRun.zones`, `DryRunRow` déplie les zones avec leur `detail`) est
-**intégré et vert** dans la 0.7.0 — lint, tsc, doctor, pixel-parity, sans une retouche à la main ; 4 fichiers DS ont
-réellement changé (`ValidateStation.tsx`, `RoomProfile.fixtures.ts`, `RoomProfile.module.css`, `i18n.ts`), aucun
-token, aucune page, aucune primitive. La demande station 6 est **honorée en entier** — le `<details>` sous la ligne
-du bucket est le bon choix (la ligne porte déjà un bouton). Merci.
+**État** : merci, le drop `2026-09-04` (93 fichiers) porte les deux surfaces demandées **en entier** — la carte
+« vue moteur » (`EngineView.{tsx,module.css,fixtures.ts}`, lecture seule, `legal: null`, « hors décision », « aucune
+main suivie » sans zéro de repli, les 30 clés `engineView.*` FR/EN, le slot `engineView` dans `AppShell`, l'entrée
+`engine` dans `standalone.entry.tsx`) et Room Profile (`displayUnit` non optionnel + `onSetDisplayUnit` en offre dans
+`TourStation`, `presence` dans `ZoneKind` et `PointKind`). La déviation `EngineViewData.locale: LocaleCode` non
+optionnel est acceptée. Rien n'a été retouché à la main : **le drop n'est pas importé**, une gate est rouge.
 
-Trois écarts au contrat, aucun bloquant, à corriger au prochain drop : (1) `version` `2026-09-03.3` ≠
-`parity.previewVersion` `2026-09-03` — §8 demande de bumper les deux à l'identique, sinon l'alarme de fraîcheur
-devient du bruit ; (2) l'archive porte `assets/`, `NOTES.md`, `README.md`, hors de la §1 et non déclarés dans
-`targets` (ignorés) ; (3) les `keepGlob` `ErrorBoundary.*` / `GlowConfig.*` visent `ui/` alors que ces fichiers
-sont app-owned (§4) — no-op, à retirer.
+## Le rouge, verbatim (`react-doctor --blocking warning`, exit 1)
 
-La 0.7.0 relie la Room Profile calibrée au moteur de jeu : à chaque frontière de main l'état est relu à l'écran, à
-chaque retour de l'action au héros les actions manquantes sont reconstruites et validées par le moteur, avec un
-niveau de confiance à trois états. Le cœur, le contrat IPC et le container sont livrés ; **deux surfaces te
-reviennent**, chacune dans son fichier durable à la racine de l'exchange :
+```
+  ⚠ Accessibility: Role used instead of HTML tag
+    → Replace `role` with the matching HTML element when one exists.
+    ui/screens/TourStation.tsx:385
+  All 1 issue  ·  Accessibility › 1 warning
+```
 
-1. **`engine-view-card.md`** — la carte « vue moteur » du cockpit : une carte par table suivie, badge de confiance,
-   street/pot/sièges, actions légales seulement en Autoritatif, « hors décision », « aucune main suivie » ; la forme
-   exacte des props et les 30 clés i18n `engineView.*` y sont ; c'est à toi de dire où la carte vit dans `AppShell`.
-2. **`roomprofile-display-unit-presence.md`** — Room Profile : (a) le couple `displayUnit` / `onSetDisplayUnit`
-   (même forme que `captureDelayMs` / `onSetCaptureDelay`, station 3, valeur servie, deux états jetons / BB, BB par
-   défaut) ; (b) cosmétique, non bloquant : un mot `presence` dans `ZoneKind` / `PointKind`. Pour information : la
-   matrice de couverture reçoit 4 déclinaisons de plus (états par siège), forme existante, rien à changer.
+C'est le `<span … role="group" aria-labelledby={UNIT_LABEL_ID}>` qui enveloppe les deux segments du sélecteur d'unité
+neuf (`DisplayUnitField`). Régression du drop : la même gate est verte avant import. Correctif à la source (§5 du
+contrat, jamais côté app) : un `<fieldset>` + `<legend>` pour le groupe, ou le motif `role="radiogroup"` /
+`role="radio"` que ce même export emploie déjà ailleurs sans déclencher la règle. Re-drop attendu avec
+`manifest.version` bumpé.
 
-**Ce qui se débloque à ton drop** : l'import de la carte et ses tests de parcours, la déclaration de l'unité par
-l'écran (la commande et la garde de dry-run sont déjà livrées). Un seul drop peut porter les deux surfaces ;
-`manifest.version` bumpé à la date, lint-bundle à 0, `tsc` vert, comme d'habitude.
+## Les trois écarts au contrat du rapport précédent, toujours présents
 
-Les demandes durables précédentes (`activation-brief.md`, `hotkeys-presets.md`, `roomprofile-v3-field-fixes.md`,
-`e5-variant-declinations.md`, `station5-*.md`) restent honorées ; rien de neuf de ce côté.
+1. `manifest.version` `2026-09-04` ≠ `parity.previewVersion` `2026-09-03` — §8 : les deux se bumpent à l'identique,
+   sinon l'alarme de fraîcheur de l'importeur devient du bruit.
+2. `assets/`, `NOTES.md`, `README.md` dans l'archive, hors §1 et non déclarés dans `targets` (ignorés).
+3. `keepGlob` `ErrorBoundary.*` / `GlowConfig.*` sur `ui/` et `ui/screens/` alors que ces fichiers sont app-owned
+   (§4) — no-op à retirer.
+
+## Demandes durables
+
+`engine-view-card.md` et `roomprofile-display-unit-presence.md` restent ouvertes jusqu'au re-drop vert ; elles
+seront closes dans le rapport de la gate qui l'intègre. Les demandes précédentes restent honorées.
