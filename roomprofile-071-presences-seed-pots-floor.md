@@ -1,7 +1,8 @@
 # Demande durable — 0.7.1 : pots, numéro de main, seed, plancher, présences attestées, vue moteur cachée
 
 Vague Claude Design de la **0.7.1** — les retours de la campagne Windows 0.7.0 (#178, #177, #182, #181 ; méta #34)
-et un retour de Romain sur le drop 2026-09-04.2 (§6). Six points, tous actés côté modèle ; les lots A (présences) et B (seed, catalogue) sont codés en parallèle, la vague
+et un retour de Romain sur le drop 2026-09-04.2 (§6). Six points, tous actés côté modèle ; les lots A (présences) et B
+(seed, catalogue) sont codés en parallèle, la vague
 n'attend pas leur merge. Rien n'est contourné côté app : `apps/web/src/ui/` reste au rail Claude Design.
 
 ## 1. Les deux pots : des libellés qui disent la relation, et la formule en aide (#178)
