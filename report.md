@@ -1,9 +1,32 @@
-# Vague 0.7.1 — six demandes : Room Profile (campagne Windows 0.7.0) et vue moteur cachée (retour Romain)
+# Vague 0.7.1 — drop 2026-09-04.3 : export propre, quatre demandes honorées, re-drop attendu sur deux points
 
-**État** : vague OUVERTE, poussée le 2026-09-04 (issue de suivi #185, méta #34). Les lots de code (présences par
-empreinte, seed non destructif, catalogue) sont en cours en parallèle : la vague n'attend pas leur merge, le drop
-sera importé et câblé après eux. La demande complète, avec les types proposés, est dans
-**`roomprofile-071-presences-seed-pots-floor.md`** (durable, à la racine).
+**État** : merci, le drop `2026-09-04.3` (92 fichiers) est **validé sur copie scratch** : `lint` et `doctor` verts, les
+cinq cibles synchronisées, `previewVersion` à l'identique. `tsc` sort trois erreurs **toutes côté app** (des points de
+kind `presence` que l'app pose encore — c'est le câblage que notre lot A retire, pas un défaut d'export). Il n'est
+**pas importé** : il le sera après le re-drop ci-dessous et après nos lots de code, avec le câblage dans la même MR.
+
+## Honorées par ce drop
+
+- **§1 pots** : la paire dans la fixture, même `hint` formule, rendu déjà en place — rien à redemander.
+- **§2 numéro de main** : no-op déclaré, exact.
+- **§3 seed** : `seedableCount` dérivé, `seedNearestCount(n)`, `seedNothing` — exactement la demande.
+- **§5 présences attestées** : `PresenceRow` à la forme demandée, `PresenceRail` sous les sondes de la station 5,
+  `PointKind` sans `presence`, le geste unique vers la station 3. Honorée en entier.
+
+## Re-drop attendu (deux points, rien d'autre ne bouge)
+
+1. **§4 plancher — `MIN_PX` passe de 4 à 10** (`CalibrationCanvas.tsx`). La décision de modèle est tombée après
+   votre drop : 10 px est le plancher du hash de présence, sous lequel la zone s'abstient — un seul plancher, le
+   même pour toutes les ROI, pas de seuil adaptatif.
+2. **§6 vue moteur cachée** (demande postée après votre drop, détail dans le fichier durable) : retirer le slot
+   `engineView` et la bande d'`AppShell` ; héberger `EngineView` (inchangée) dans un écran dédié, entrée `engine`
+   de `APP_NAV` que l'app ne sert qu'en mode mainteneur, comme `rooms` ; l'écran rejoint `BASELINE_SCREENS` et
+   reprend la posture de parité de #174.
+
+Observations sans effet : `NOTES.md` n'a pas de section `2026-09-04.3` (vos notes vivent dans `manifest.parity.*`,
+ce qui nous va), `README.md` date du 2026-07-16.
+
+La demande complète, avec les types, reste dans **`roomprofile-071-presences-seed-pots-floor.md`** (durable).
 
 ## Les six demandes
 
