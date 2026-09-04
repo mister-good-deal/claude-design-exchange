@@ -51,10 +51,11 @@ se seede intégralement, comme aujourd'hui.
 1048×720 et 14 × 14 sur 698×720 — **plus large que le jeton dealer** (~20 px) qu'on cadre. Les signaux ont une
 taille en pixels, pas en fraction de fenêtre.
 
-- Plancher **en pixels du bucket**, symétrique : proposition **4 px** de côté (`4 × 100 / data.w` en % sur x,
-  `4 × 100 / data.h` sur y — `pxUnit` fait déjà la conversion pour le clavier, #131). Au drag comme aux flèches.
-- Pas de plancher par kind côté canvas : l'app dit dans sa ligne de readiness qu'une présence sous ~10 px de côté
-  s'abstient (le hash 9×8 dégénère) — c'est une phrase servie, pas une contrainte de geste.
+- Plancher **en pixels du bucket**, symétrique : **10 px** de côté (`10 × 100 / data.w` en % sur x,
+  `10 × 100 / data.h` sur y — `pxUnit` fait déjà la conversion pour le clavier, #131). Au drag comme aux flèches.
+- Pourquoi 10 : c'est le plancher du **hash de présence** (décision G1 #181) — sous 10 px de côté le dHash 9×8
+  dégénère et la zone s'abstient, l'app le dit par une ligne rouge à la station 4. Un seul plancher, le même pour
+  toutes les ROI ; pas de plancher par kind, pas de seuil adaptatif.
 
 ## 5. Rail de la station 5 : les présences ne se prélèvent plus, elles s'attestent (#181)
 
