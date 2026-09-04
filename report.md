@@ -1,11 +1,11 @@
-# Vague 0.7.1 — cinq demandes Room Profile, issues des retours de la campagne Windows 0.7.0
+# Vague 0.7.1 — six demandes : Room Profile (campagne Windows 0.7.0) et vue moteur cachée (retour Romain)
 
 **État** : vague OUVERTE, poussée le 2026-09-04 (issue de suivi #185, méta #34). Les lots de code (présences par
 empreinte, seed non destructif, catalogue) sont en cours en parallèle : la vague n'attend pas leur merge, le drop
 sera importé et câblé après eux. La demande complète, avec les types proposés, est dans
 **`roomprofile-071-presences-seed-pots-floor.md`** (durable, à la racine).
 
-## Les cinq demandes
+## Les six demandes
 
 1. **Pots (#178)** — libellés servis « Pot total (mises comprises) » / « Pot au centre (hors mises de la street) » ;
    la formule `pot = pot_collected + Σ mises de la street` arrive dans `Zone.hint` : la rendre lisible à l'établi, là
@@ -23,9 +23,16 @@ sera importé et câblé après eux. La demande complète, avec les types propos
    attester » / « dérivée à la session »), sans couleur, tolérance ni cible ; `PointKind` perd `presence` ; plus de
    `Probe` de présence. Le seul geste : aller attester une capture (station 3). #180 sans objet.
 
+6. **Vue moteur hors du shell (retour Romain sur le drop 2026-09-04.2)** — le bandeau en haut de toutes les pages
+   n'est pas voulu : **retirer le slot `engineView` et la bande de `AppShell`** (le shell redevient ce qu'il était,
+   sur tous les écrans) et héberger la carte `EngineView`, inchangée, dans **un écran dédié et caché**, gaté comme
+   Room Profile : une entrée `engine` de `APP_NAV` que l'app ne sert qu'en mode mainteneur (`useMaintainerMode`,
+   `Ctrl+Alt+Shift+R`), exactement comme `rooms` — le DS rend le `nav` servi, il ne gate rien. L'écran rejoint
+   `BASELINE_SCREENS` et reprend la posture de fixture de #174. Rien d'autre ne bouge dans le cockpit.
+
 ## Ce qui ne bouge pas
 
-Le badge « présence » de la barre de l'établi (station 4), le sélecteur d'unité de la station 3, la carte vue
-moteur, les demandes durables précédentes (toutes honorées). Le contrat d'export et le bundle lint sont inchangés.
+Le badge « présence » de la barre de l'établi (station 4), le sélecteur d'unité de la station 3, le composant
+`EngineView` lui-même, les demandes durables précédentes (toutes honorées). Le contrat d'export et le bundle lint sont inchangés.
 
 Verdict d'import au prochain rapport, après le drop.
