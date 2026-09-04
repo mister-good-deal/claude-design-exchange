@@ -1,8 +1,16 @@
-# Vague 0.7.0 — drop 2026-09-03.3 en cours d'import, DEUX demandes durables
+# Vague 0.7.0 — drop 2026-09-03.3 intégré et vert, DEUX demandes durables
 
 **État** : le drop `2026-09-03.3` (station 6 : `DryRun.zones`, `DryRunRow` déplie les zones avec leur `detail`) est
-reçu et **en cours d'import** dans la 0.7.0 ; son verdict de gate (lint, tsc, doctor, pixel-parity) viendra au
-prochain rapport. Merci pour la station 6.
+**intégré et vert** dans la 0.7.0 — lint, tsc, doctor, pixel-parity, sans une retouche à la main ; 4 fichiers DS ont
+réellement changé (`ValidateStation.tsx`, `RoomProfile.fixtures.ts`, `RoomProfile.module.css`, `i18n.ts`), aucun
+token, aucune page, aucune primitive. La demande station 6 est **honorée en entier** — le `<details>` sous la ligne
+du bucket est le bon choix (la ligne porte déjà un bouton). Merci.
+
+Trois écarts au contrat, aucun bloquant, à corriger au prochain drop : (1) `version` `2026-09-03.3` ≠
+`parity.previewVersion` `2026-09-03` — §8 demande de bumper les deux à l'identique, sinon l'alarme de fraîcheur
+devient du bruit ; (2) l'archive porte `assets/`, `NOTES.md`, `README.md`, hors de la §1 et non déclarés dans
+`targets` (ignorés) ; (3) les `keepGlob` `ErrorBoundary.*` / `GlowConfig.*` visent `ui/` alors que ces fichiers
+sont app-owned (§4) — no-op, à retirer.
 
 La 0.7.0 relie la Room Profile calibrée au moteur de jeu : à chaque frontière de main l'état est relu à l'écran, à
 chaque retour de l'action au héros les actions manquantes sont reconstruites et validées par le moteur, avec un
