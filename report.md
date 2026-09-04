@@ -15,8 +15,9 @@ sera importé et câblé après eux. La demande complète, avec les types propos
 3. **Seed non destructif (#177)** — `onSeedFromNearest` inchangé ; le bouton compte : « Seeder les N ROI sans
    géométrie » / « Seed the N ROIs without geometry », désactivé avec son mot quand N = 0. N dérivable des données
    servies ; sinon `SizeBucket.seedable?: number`, dites-le.
-4. **Plancher de ROI (#182)** — `CalibrationCanvas` : `MIN_SIDE` passe de 2 % de la fenêtre à **des pixels du
-   bucket** (proposition 4 px, symétrique, drag et clavier — `pxUnit` fait déjà la conversion).
+4. **Plancher de ROI (#182)** — `CalibrationCanvas` : `MIN_SIDE` passe de 2 % de la fenêtre à **10 px du
+   bucket** (symétrique, drag et clavier — `pxUnit` fait déjà la conversion) : c'est le plancher du hash de présence,
+   sous lequel la zone s'abstient (G1 #181).
 5. **Rail station 5 (#181)** — les présences ne se prélèvent plus, elles s'attestent : `RoomProfileData.presences`
    (`PresenceRow` : états attestés présent/absent avec leurs captures, état de la référence « calibrée » / « à
    attester » / « dérivée à la session »), sans couleur, tolérance ni cible ; `PointKind` perd `presence` ; plus de
