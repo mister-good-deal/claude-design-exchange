@@ -1,29 +1,30 @@
-# Vague 0.7.0 — drop 2026-09-04.2 INTÉGRÉ et vert : les deux demandes durables sont closes
+# Vague 0.7.1 — cinq demandes Room Profile, issues des retours de la campagne Windows 0.7.0
 
-**État** : merci, le re-drop `2026-09-04.2` (91 fichiers) est **intégré dans la 0.7.0**, sans une retouche à la main :
-lint, tsc, doctor à zéro diagnostic, e2e et parité pixel verts. Le `role="group"` du sélecteur d'unité est réparé à la
-source (`radiogroup` / `radio`, le motif que le LayoutDesigner livre déjà). Les trois écarts au contrat du rapport
-précédent sont réglés : `manifest.version` = `parity.previewVersion`, `assets/` retiré, `keepGlob` app-owned retirés.
-Reste, sans effet : `NOTES.md` et `README.md` hors §1 (ignorés par l'import).
+**État** : vague OUVERTE, poussée le 2026-09-04 (issue de suivi #185, méta #34). Les lots de code (présences par
+empreinte, seed non destructif, catalogue) sont en cours en parallèle : la vague n'attend pas leur merge, le drop
+sera importé et câblé après eux. La demande complète, avec les types proposés, est dans
+**`roomprofile-071-presences-seed-pots-floor.md`** (durable, à la racine).
 
-## Demandes closes par ce drop
+## Les cinq demandes
 
-- **`engine-view-card.md` — honorée en entier.** `EngineView` en lecture seule, le niveau dit trois fois (mot,
-  tonalité, cadre), `legal: null` rendu en une ligne, « hors décision » qui met le corps en retrait, « aucune main
-  suivie » sans zéro de repli, les 30 clés `engineView.*` FR + EN, la bande réservée par le slot `engineView` dans
-  `AppShell` (zéro pixel tant que l'app y rend `null`), l'entrée `engine` de `standalone.entry.tsx`. La déviation
-  `EngineViewData.locale: LocaleCode` non optionnel est acceptée : l'app la fait traverser avec les données.
-- **`roomprofile-display-unit-presence.md` — honorée en entier.** `displayUnit` non optionnel + `onSetDisplayUnit?`
-  dans la rangée de la station 3 qui porte la pause de capture ; `presence` dans `ZoneKind` ET `PointKind`, avec son
-  mot sur la barre de l'établi, un point creux au rail et un cadre non rempli au canvas.
+1. **Pots (#178)** — libellés servis « Pot total (mises comprises) » / « Pot au centre (hors mises de la street) » ;
+   la formule `pot = pot_collected + Σ mises de la street` arrive dans `Zone.hint` : la rendre lisible à l'établi, là
+   où la ROI se pose, et présenter les deux pots comme une paire. Fixtures DS à aligner.
+2. **Numéro de main (#178)** — `hand_number_value` disparaît du catalogue : une seule zone « Frontière de main
+   (empreinte) ». Une entrée de moins dans `zones`, rien d'autre.
+3. **Seed non destructif (#177)** — `onSeedFromNearest` inchangé ; le bouton compte : « Seeder les N ROI sans
+   géométrie » / « Seed the N ROIs without geometry », désactivé avec son mot quand N = 0. N dérivable des données
+   servies ; sinon `SizeBucket.seedable?: number`, dites-le.
+4. **Plancher de ROI (#182)** — `CalibrationCanvas` : `MIN_SIDE` passe de 2 % de la fenêtre à **des pixels du
+   bucket** (proposition 4 px, symétrique, drag et clavier — `pxUnit` fait déjà la conversion).
+5. **Rail station 5 (#181)** — les présences ne se prélèvent plus, elles s'attestent : `RoomProfileData.presences`
+   (`PresenceRow` : états attestés présent/absent avec leurs captures, état de la référence « calibrée » / « à
+   attester » / « dérivée à la session »), sans couleur, tolérance ni cible ; `PointKind` perd `presence` ; plus de
+   `Probe` de présence. Le seul geste : aller attester une capture (station 3). #180 sans objet.
 
-Les deux fichiers restent à la racine de l'exchange comme trace ; ils ne demandent plus rien.
+## Ce qui ne bouge pas
 
-## Une suite, pas une demande
+Le badge « présence » de la barre de l'établi (station 4), le sélecteur d'unité de la station 3, la carte vue
+moteur, les demandes durables précédentes (toutes honorées). Le contrat d'export et le bundle lint sont inchangés.
 
-La bande « vue moteur » n'a pas encore de **posture de parité pixel** : ni le prototype ni l'app n'atteignent l'état
-« tables suivies » par le rail de parité, et la bande se rend sur tous les écrans dès qu'une table est suivie. On
-définira de notre côté la posture (deux tables, trois niveaux, « hors décision », « aucune main suivie ») ; si
-`standalone.entry.tsx` doit l'exposer, ce sera l'objet du prochain rapport, pas de celui-ci.
-
-Les demandes durables précédentes restent honorées. Prochaine vague : 0.8.x.
+Verdict d'import au prochain rapport, après le drop.
