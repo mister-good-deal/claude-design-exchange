@@ -1,7 +1,7 @@
-# Demande durable — Room Profile 0.7.1 : pots, numéro de main, seed, plancher, présences attestées
+# Demande durable — 0.7.1 : pots, numéro de main, seed, plancher, présences attestées, vue moteur cachée
 
-Vague Claude Design de la **0.7.1** — les retours de la campagne Windows 0.7.0 (#178, #177, #182, #181 ; méta #34).
-Cinq points, tous actés côté modèle ; les lots A (présences) et B (seed, catalogue) sont codés en parallèle, la vague
+Vague Claude Design de la **0.7.1** — les retours de la campagne Windows 0.7.0 (#178, #177, #182, #181 ; méta #34)
+et un retour de Romain sur le drop 2026-09-04.2 (§6). Six points, tous actés côté modèle ; les lots A (présences) et B (seed, catalogue) sont codés en parallèle, la vague
 n'attend pas leur merge. Rien n'est contourné côté app : `apps/web/src/ui/` reste au rail Claude Design.
 
 ## 1. Les deux pots : des libellés qui disent la relation, et la formule en aide (#178)
@@ -97,3 +97,32 @@ export interface PresenceRow {
 
 Clés i18n FR/EN à prévoir dans `ui/screens/i18n.ts` : le groupe, « présent / absent », « calibrée », « à attester »,
 « dérivée à la session », le libellé du seed avec compte, « rien à seeder ».
+
+## 6. La vue moteur quitte l'AppShell : un écran caché, gaté comme Room Profile (retour Romain)
+
+Le drop 2026-09-04.2 a livré la carte « vue moteur » comme un **bandeau en haut de toutes les pages** (slot
+`engineView` de `AppShell`, `styles.engineBand`). Romain n'en veut pas du tout : rien ne doit s'ajouter au cockpit
+de tous les écrans.
+
+Ce qu'on demande :
+
+- **Retirer le slot `engineView` et la bande de `AppShell`** — le shell redevient exactement ce qu'il était avant
+  le drop, sur tous les écrans, sans pixel de plus.
+- **Un écran dédié, caché**, qui héberge la carte `EngineView` (le composant lui-même ne change pas) : une entrée de
+  navigation supplémentaire, rendue **seulement quand l'app la fournit** — exactement le mécanisme de Room Profile.
+  Côté app, ce gating existe déjà : le **mode mainteneur** (`apps/web/src/app/useMaintainerMode.ts` — bascule
+  `Ctrl+Alt+Shift+R` dans le build Tauri, persistée ; toujours actif hors Tauri) filtre `AppShellData.nav` : l'entrée
+  `rooms` n'est servie qu'en mode mainteneur (`nav: maintainer ? APP_NAV : APP_NAV.filter(n => n.id !== "rooms")`).
+  Le nouvel écran suit la même règle : une entrée `{ id: "engine", label: "Engine view" / « Vue moteur », icon }`
+  dans `APP_NAV`, filtrée par l'app hors mode mainteneur comme `rooms` — le DS n'a rien à gater, il rend le `nav`
+  qu'on lui sert. Icône à choisir dans `NavIconName` (ou une de plus, à dire).
+- **L'écran** : la (les) carte(s) `EngineView` seules, une par table suivie, dans le host d'écran normal (children
+  de `AppShell`), avec l'état « aucune main suivie » qu'elle porte déjà. Pas de bandeau, pas de résumé ailleurs.
+- **Parité pixel** : l'écran caché rejoint `BASELINE_SCREENS` comme `rooms` (il est rendu en mode mainteneur, donc
+  dans les builds de parité) ; la posture de fixture demandée dans #174 devient celle de cet écran, ce qui règle
+  #174 par la même occasion.
+- Rien d'autre ne bouge dans le cockpit.
+
+Côté app, au prochain drop : le container ne monte plus `EngineViewContainer` dans le shell mais dans ce nouvel
+écran (`CurrentScreen` de `apps/web/src/app/AppShell.tsx`, `ScreenId` + `SCREEN_IDS`), sous le même `maintainer`
+que `rooms`.
