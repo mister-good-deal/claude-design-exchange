@@ -1,28 +1,25 @@
-# Vague 0.6.16 — clôture de la 0.6.x : drop 2026-09-03.2 intégré, UNE demande
+# Vague 0.7.0 — drop 2026-09-03.3 en cours d'import, DEUX demandes durables
 
-**État** : le re-drop `2026-09-03.2` est intégré et vert (lint, tsc, doctor, pixel-parity) — le défaut `ZoneWorkbench.tsx:727`
-signalé au rapport précédent était corrigé dans ce drop, rien n'est dû de ce côté. SC-001 est atteint au terrain le
-2026-09-03 : deux buckets relus sans erreur, profil écrit. Merci pour la station 4/5.
+**État** : le drop `2026-09-03.3` (station 6 : `DryRun.zones`, `DryRunRow` déplie les zones avec leur `detail`) est
+reçu et **en cours d'import** dans la 0.7.0 ; son verdict de gate (lint, tsc, doctor, pixel-parity) viendra au
+prochain rapport. Merci pour la station 6.
 
-## Une seule demande — station 6 : le détail du verdict de zone n'a nulle part où s'écrire
+La 0.7.0 relie la Room Profile calibrée au moteur de jeu : à chaque frontière de main l'état est relu à l'écran, à
+chaque retour de l'action au héros les actions manquantes sont reconstruites et validées par le moteur, avec un
+niveau de confiance à trois états. Le cœur, le contrat IPC et le container sont livrés ; **deux surfaces te
+reviennent**, chacune dans son fichier durable à la racine de l'exchange :
 
-Le backend compose déjà, pour chaque passe de dry-run, une phrase par zone : la zone en cause, le compte d'oracles,
-la carte lue et son score, et désormais la **divergence des jumelles** d'une prise multi-taille (« jumelles
-divergentes — la prise ne montre pas la même situation d'un bucket à l'autre, son attestation ne traverse plus :
-prise #9 : 4 carte(s) de board ici, 5 sur 698×720 »). Ce champ (`DryRunZoneResultDto.detail`) arrive au front et
-**est jeté à la frontière** : la ligne « Dry-runs » de la station 6 n'affiche que `« 2/3 · 16:41 »`.
+1. **`engine-view-card.md`** — la carte « vue moteur » du cockpit : une carte par table suivie, badge de confiance,
+   street/pot/sièges, actions légales seulement en Autoritatif, « hors décision », « aucune main suivie » ; la forme
+   exacte des props et les 30 clés i18n `engineView.*` y sont ; c'est à toi de dire où la carte vit dans `AppShell`.
+2. **`roomprofile-display-unit-presence.md`** — Room Profile : (a) le couple `displayUnit` / `onSetDisplayUnit`
+   (même forme que `captureDelayMs` / `onSetCaptureDelay`, station 3, valeur servie, deux états jetons / BB, BB par
+   défaut) ; (b) cosmétique, non bloquant : un mot `presence` dans `ZoneKind` / `PointKind`. Pour information : la
+   matrice de couverture reçoit 4 déclinaisons de plus (états par siège), forme existante, rien à changer.
 
-**Ce qu'on te demande** :
+**Ce qui se débloque à ton drop** : l'import de la carte et ses tests de parcours, la déclaration de l'unité par
+l'écran (la commande et la garde de dry-run sont déjà livrées). Un seul drop peut porter les deux surfaces ;
+`manifest.version` bumpé à la date, lint-bundle à 0, `tsc` vert, comme d'habitude.
 
-- Contrat : `DryRun` (`RoomProfile.fixtures.ts`) reçoit un tableau app-fourni
-  `zones?: readonly { zone: string; verdict: "ok" | "fail" | "abstain"; detail?: string }[]`.
-- Rendu : `DryRunRow` (panneau « Dry-runs ») **déplie les zones sous la ligne du bucket** — le motif `<details>`
-  natif déjà utilisé par `ReadinessRow` convient. Une zone `ok` sans `detail` n'a rien à montrer ; une zone avec un
-  `detail` le rend **verbatim**, même verte (une prise divergente reste divisée une fois chaque jumelle attestée à
-  part, le joueur doit continuer de le lire). Verdict rendu par une pastille ok / fail / abstain.
-- Aucun mot à inventer : les phrases viennent du back, comme `ReadinessLine.consequence`. Le libellé de l'entête
-  du dépli (« détail par zone », « 3 zones ») est ton choix.
-- Variante acceptable si tu préfères : une note sous la ligne (comme `dryInvalidatedBy`) plutôt qu'un dépli.
-
-Rien d'autre pour cette vague : c'est la dernière release 0.6.x, le reste est du nettoyage côté app. Le prochain
-cycle (alpha fermée) portera l'Overlay v2 — on t'écrira alors une vague dédiée.
+Les demandes durables précédentes (`activation-brief.md`, `hotkeys-presets.md`, `roomprofile-v3-field-fixes.md`,
+`e5-variant-declinations.md`, `station5-*.md`) restent honorées ; rien de neuf de ce côté.
