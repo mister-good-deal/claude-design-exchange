@@ -1,32 +1,27 @@
-# Vague 0.7.1 — drop 2026-09-04.3 : export propre, quatre demandes honorées, re-drop attendu sur deux points
+# Vague 0.7.1 — drop 2026-09-04.4 VALIDÉ : les six demandes honorées, export propre — vague CLOSE côté DS
 
-**État** : merci, le drop `2026-09-04.3` (92 fichiers) est **validé sur copie scratch** : `lint` et `doctor` verts, les
-cinq cibles synchronisées, `previewVersion` à l'identique. `tsc` sort trois erreurs **toutes côté app** (des points de
-kind `presence` que l'app pose encore — c'est le câblage que notre lot A retire, pas un défaut d'export). Il n'est
-**pas importé** : il le sera après le re-drop ci-dessous et après nos lots de code, avec le câblage dans la même MR.
+**État** : merci, le drop `2026-09-04.4` (92 fichiers) est **validé sur copie scratch** : `lint` et `doctor` verts,
+les cinq cibles synchronisées, `previewVersion` à l'identique. `tsc` sort cinq erreurs **toutes côté app** — deux
+`engineView=` que notre shell passe encore (§6, notre câblage) et trois points de kind `presence` que notre mapping
+pose encore (§5, notre lot A). Ce n'est pas un défaut d'export. Il n'est **pas encore importé** : il le sera après
+nos deux lots de code, avec le câblage dans la même MR. Aucun re-drop attendu.
 
-## Honorées par ce drop
+## Honorées par ce drop (les six)
 
-- **§1 pots** : la paire dans la fixture, même `hint` formule, rendu déjà en place — rien à redemander.
-- **§2 numéro de main** : no-op déclaré, exact.
-- **§3 seed** : `seedableCount` dérivé, `seedNearestCount(n)`, `seedNothing` — exactement la demande.
-- **§5 présences attestées** : `PresenceRow` à la forme demandée, `PresenceRail` sous les sondes de la station 5,
-  `PointKind` sans `presence`, le geste unique vers la station 3. Honorée en entier.
+- **§1 pots**, **§2 numéro de main**, **§3 seed**, **§5 présences attestées** — inchangées depuis le `.3`, exactes.
+- **§4 plancher** : `MIN_PX = 10`, symétrique, drag et flèches — exactement la révision.
+- **§6 vue moteur cachée** : slot et bande retirés d'`AppShell`, entrée `engine` (icône `cpu`) filtrée par l'app en
+  mode mainteneur comme `rooms`, `ENGINE_BASELINE_ID` conservé, posture de #174 reprise. Les deux déviations
+  déclarées (plus de `border-bottom`, grille `auto-fit` des cartes) sont **acceptées**.
 
-## Re-drop attendu (deux points, rien d'autre ne bouge)
+## Écarts au contrat, sans effet (à reprendre au prochain drop, pas avant)
 
-1. **§4 plancher — `MIN_PX` passe de 4 à 10** (`CalibrationCanvas.tsx`). La décision de modèle est tombée après
-   votre drop : 10 px est le plancher du hash de présence, sous lequel la zone s'abstient — un seul plancher, le
-   même pour toutes les ROI, pas de seuil adaptatif.
-2. **§6 vue moteur cachée** (demande postée après votre drop, détail dans le fichier durable) : retirer le slot
-   `engineView` et la bande d'`AppShell` ; héberger `EngineView` (inchangée) dans un écran dédié, entrée `engine`
-   de `APP_NAV` que l'app ne sert qu'en mode mainteneur, comme `rooms` ; l'écran rejoint `BASELINE_SCREENS` et
-   reprend la posture de parité de #174.
+- `manifest.screens[AppShell].slots` liste encore `engineView` que le composant n'a plus.
+- `parity.roiFloorPx` dit toujours 4 px à côté de `roiFloorTenPx` qui dit 10.
 
-Observations sans effet : `NOTES.md` n'a pas de section `2026-09-04.3` (vos notes vivent dans `manifest.parity.*`,
-ce qui nous va), `README.md` date du 2026-07-16.
+Verdict d'import (parité pixel, e2e) au prochain rapport, après le câblage. Prochaine vague : 0.7.2 ou 0.8.x.
 
-La demande complète, avec les types, reste dans **`roomprofile-071-presences-seed-pots-floor.md`** (durable).
+La demande complète reste dans **`roomprofile-071-presences-seed-pots-floor.md`** (durable, honorée).
 
 ## Les six demandes
 
