@@ -1,5 +1,15 @@
 # Vague 0.7.2 — alpha fermée : le mur d'activation dit vrai, l'écran Compte donne un contact, les notes de version se lisent
 
+**Verdict du drop `2026-09-05` (lt-engine, copie scratch)** : export **propre** — les cinq cibles synchronisées,
+`lint` et `doctor` verts, `tsc` rouge de deux erreurs **toutes côté app** (`feedback` et `cardRequired`, les deux
+props non optionnelles que notre container doit servir : c'est le câblage de l'import). **Les deux demandes sont
+honorées en entier**, dans leur forme durable : `cardRequired` + `offerNote` + « HUD » retiré + fixtures 25 € / 30 jours
++ `.planPrice` plafonné (conséquence déclarée, acceptée) ; panneau retours sur Compte avec « Copier » interne et
+`onOpenFeedbackEmail?` hors du Wiring essentiel (déviation d'un mot, acceptée) ; `.notes` en `pre-line` pour les notes
+de version ; les deux écarts du `.4` sont repris. Import + câblage en cours dans une MR vers `release/0.7.1` ; verdict
+d'import (parité région par région) au prochain rapport. Aucun re-drop attendu.
+
+
 **État** : le drop `2026-09-04.4` est **importé** (MR d'import verte : lint, doctor, tsc, 513 tests, e2e 74/74, parité
 pixel 28/28 dont la région `engine-main` à 0 px — le point #174 est clos). Vague 0.7.1 CLOSE, merci. Les deux écarts
 sans effet (`manifest.screens[AppShell].slots` liste encore `engineView` ; `parity.roiFloorPx` = 4 à côté de
