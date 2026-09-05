@@ -1,16 +1,8 @@
-# Vague 0.7.2 — alpha fermée : le mur d'activation dit vrai, l'écran Compte donne un contact, les notes de version se lisent
+# Vague 0.7.2 — drop 2026-09-05 VALIDÉ (points 1–3 honorés) ; UN point de plus : les notes de version dans tous les états de la mise à jour
 
-**Verdict du drop `2026-09-05` (lt-engine, copie scratch)** : export **propre** — les cinq cibles synchronisées,
-`lint` et `doctor` verts, `tsc` rouge de deux erreurs **toutes côté app** (`feedback` et `cardRequired`, les deux
-props non optionnelles que notre container doit servir : c'est le câblage de l'import). **Les deux demandes sont
-honorées en entier**, dans leur forme durable : `cardRequired` + `offerNote` + « HUD » retiré + fixtures 25 € / 30 jours
-+ `.planPrice` plafonné (conséquence déclarée, acceptée) ; panneau retours sur Compte avec « Copier » interne et
-`onOpenFeedbackEmail?` hors du Wiring essentiel (déviation d'un mot, acceptée) ; `.notes` en `pre-line` pour les notes
-de version ; les deux écarts du `.4` sont repris. Import + câblage en cours dans une MR vers `release/0.7.1` ; verdict
-d'import (parité région par région) au prochain rapport. Aucun re-drop attendu.
+**État (11:00)** : le drop `2026-09-05` est **validé sur copie scratch**, merci : export propre, les trois points honorés en forme durable (`cardRequired`, `offerNote`, `feedback` + `onOpenFeedbackEmail`, HUD retiré, fixtures 25 € / 30 jours, `.notes` en `pre-line`), écarts du `.4` repris. Il part à l'import avec le câblage app. **Reste un seul point, découvert en câblant (§4 ci-dessous)** : un re-drop `.2` qui ne porte que lui est bienvenu ; sinon il attend la vague suivante.
 
-
-**État** : le drop `2026-09-04.4` est **importé** (MR d'import verte : lint, doctor, tsc, 513 tests, e2e 74/74, parité
+Pour mémoire, le drop `2026-09-04.4` est **importé** (MR d'import verte : lint, doctor, tsc, 513 tests, e2e 74/74, parité
 pixel 28/28 dont la région `engine-main` à 0 px — le point #174 est clos). Vague 0.7.1 CLOSE, merci. Les deux écarts
 sans effet (`manifest.screens[AppShell].slots` liste encore `engineView` ; `parity.roiFloorPx` = 4 à côté de
 `roiFloorTenPx` = 10) sont à reprendre dans ce drop.
@@ -53,6 +45,15 @@ par entrée, précédée d'un « • », longueur plafonnée) au lieu de « Tata
 aujourd'hui le texte d'un bloc : demandé **`white-space: pre-line`** sur `.notes` (les sauts de ligne du texte servi
 deviennent des lignes, rien d'autre), et une fixture `notes` sur trois lignes pour que la preview et la baseline le
 montrent. Pas de rendu Markdown : l'app sert du texte.
+
+## 4. Les notes de version aussi pendant le téléchargement et quand la mise à jour est prête (ajout 11:00)
+
+`Account.tsx` ne rend `update.notes` que dans `UpdateNote` (état `available`). Or l'app télécharge d'elle-même au
+démarrage : le joueur ne voit l'écran qu'en `downloading` puis `ready`, deux vues (`UpdateDownloading`, `UpdateReady`)
+qui n'ont **aucun emplacement pour les notes**. Le type `AccountUpdate.notes` les accepte déjà et l'app les sert
+désormais dans les trois états. Demandé : le même bloc `.notes` (avec son `pre-line`) sous le titre de
+`UpdateDownloading` et de `UpdateReady`, rendu seulement quand `notes` est présent ; fixtures des deux états avec des
+notes sur trois lignes. Rien d'autre ne bouge.
 
 ## Ce qui ne bouge pas
 
