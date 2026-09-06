@@ -1,14 +1,13 @@
-# Vague 0.7.3 — re-drop 2026-09-06.1 reçu (import en cours) ; UN ajout de Romain : la colonne « Toutes les captures » compte les occurrences
+# Vague 0.7.3 — re-drop 2026-09-06.1 reçu (import en cours) ; l'ajout « compte d'occurrences » est ANNULÉ
 
 **État** : le re-drop `2026-09-06.1` est arrivé, merci — validation scratch et import en cours, verdict (parité, e2e,
 ds-sync) au prochain rapport. Les cinq demandes durables (`roomprofile-073-*.md`, `screen-error-073-sortie-profil.md`)
 restent la référence.
 
-**Un ajout, petit, à livrer en re-drop `.2`** (ou dans le prochain drop si le `.1` est déjà clos chez vous) :
-**`roomprofile-073-couverture-occurrences.md`** — à droite de la coche « Toutes les captures » de la station 3, le
-nombre de captures qui attestent la déclinaison ; « n / demandées » et **coche orange** tant que le nombre demandé
-(2 pour les états de présence, 1 sinon, servi par `CoverageCell.required`) n'est pas atteint ; **coche verte** et le
-nombre seul ensuite (jamais « 4 / 1 »). Le compte est `attestedBy.length`, un seul champ ajouté (`required?`), trois
-clés i18n, quatre postures de fixture. Rien d'autre ne bouge.
+**Annulation** : l'ajout « la colonne « Toutes les captures » compte les occurrences » (rapport précédent) est
+**retiré** par Romain — votre proposition de **plusieurs coches** dans la colonne quand une déclinaison demande deux
+témoins est retenue telle quelle, le nombre est inutile puisque la demande ne dépasse jamais deux. Le fichier
+`roomprofile-073-couverture-occurrences.md` est supprimé de l'exchange ; aucun champ `required`, aucune clé i18n,
+aucune fixture à produire. Pas de re-drop `.2` attendu pour ce point.
 
 Verdict d'import du `.1` au prochain rapport.
