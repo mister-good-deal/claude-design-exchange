@@ -1,64 +1,63 @@
-# Vague 0.7.2 — drop 2026-09-05 VALIDÉ (points 1–3 honorés) ; UN point de plus : les notes de version dans tous les états de la mise à jour
+# Vague 0.7.3 — retours de la campagne Windows 0.7.1 : la station 3 n'atteste que l'écart, et quatre demandes courtes
 
-**État (11:00)** : le drop `2026-09-05` est **validé sur copie scratch**, merci : export propre, les trois points honorés en forme durable (`cardRequired`, `offerNote`, `feedback` + `onOpenFeedbackEmail`, HUD retiré, fixtures 25 € / 30 jours, `.notes` en `pre-line`), écarts du `.4` repris. Il part à l'import avec le câblage app. **Reste un seul point, découvert en câblant (§4 ci-dessous)** : un re-drop `.2` qui ne porte que lui est bienvenu ; sinon il attend la vague suivante.
+**État** : le drop `2026-09-05` et son re-drop `.1` (vague 0.7.2) sont **importés** — MR d'import verte (lint, doctor,
+tsc, 517 tests, e2e 74/74, parité pixel 28/28 sans re-baseline : le panneau retours de `Account` et `Activation`
+n'ont pas bougé de région), câblage app livré (`feedback` + `onOpenFeedbackEmail`, `offerNote`, `cardRequired`,
+notes de version dans les trois états). Vague 0.7.2 CLOSE, merci — export propre, rien à reprendre.
 
-Pour mémoire, le drop `2026-09-04.4` est **importé** (MR d'import verte : lint, doctor, tsc, 513 tests, e2e 74/74, parité
-pixel 28/28 dont la région `engine-main` à 0 px — le point #174 est clos). Vague 0.7.1 CLOSE, merci. Les deux écarts
-sans effet (`manifest.screens[AppShell].slots` liste encore `engineView` ; `parity.roiFloorPx` = 4 à côté de
-`roiFloorTenPx` = 10) sont à reprendre dans ce drop.
+Cette vague vient de la campagne Windows 0.7.1 (les présences par empreinte tiennent ; c'est la SAISIE qui coûte).
+Cinq demandes, chacune complète dans son fichier durable à la racine de l'exchange — lisez-les, `report.md` ne fait
+que les résumer. Ordre de valeur : **1 d'abord**, puis 2, 3, 4, 5. Un seul drop pour les cinq est préférable ; deux
+drops (1 seul, puis 2–5) sont acceptés si le 1 demande du temps.
 
-Cette vague vient de l'audit du parcours de l'alpha fermée : ce sont des **textes et deux champs de données**, aucune
-mise en page ne bouge. Les deux demandes complètes vivent dans **`activation-alpha-offer.md`** et
-**`account-feedback-channel.md`** (durables) ; le point 3 tient en une ligne ci-dessous. Elle est attendue **dans la
-0.7.1** : dès que le drop est dans `_handoff/tatami-ui-package/` avec `manifest.version` bumpé, on l'importe.
+## 1. Station 3 : une case = l'écart au cas normal, une entrée par siège — `roomprofile-073-attestation-par-siege.md`
 
-## 1. Le mur d'activation dit le vrai prix, le vrai essai et le code `ALPHA` — `activation-alpha-offer.md`
+Onze déclinaisons à cocher par capture, c'est trop, et les deux faces d'une famille rendent saisissable la
+contradiction comme le silence. Trois règles fermes : **(a)** une famille binaire n'offre qu'UNE case, celle de
+l'écart (« Héros couché », « Timer visible ») ; **(b)** non cochée = **attesté à l'état normal**, jamais « pas
+d'information » (la dérivation leave-one-out a besoin des deux côtés) ; **(c)** « Non visible ici » (`absentZoneIds`)
+reste le seul « je ne sais pas ». Deux formes servies par la donnée : `family: "deviation"` (case) et `"choice"`
+(radiogroup sans normal : `actions`, `board`, `dealer`). Entrées « Table / Héros / Vilain 1 / Vilain 2 » via `group` ;
+« Éliminé » en premier, qui **implique** « Cartes couchées » du même siège (`VariantDef.implies`) : la famille
+impliquée se rend cochée ET verrouillée avec son motif. Colonne de droite : les deux faces d'une famille « écart »
+(normal · écart), ✓ dès qu'une capture du bucket l'atteste. Contrat : `VariantDef` gagne `zone`, `family`,
+`normal?`, `implies?` ; aucun rappel ajouté ni retiré ; `onCorrectLabels` garde son ensemble complet. i18n
+`roomProfileV3.attest*`, cinq postures de fixtures (dont « siège éliminé » et « famille non visible »).
 
-1. **La carte** — `activation.reassure` ouvre sur « Carte requise » ; c'est faux pendant l'alpha (aucune carte
-   demandée, le site le promet). Au choix : texte « Aucune carte pendant l'alpha · annulable à tout moment · paiement
-   sécurisé via Stripe », ou la forme durable `ActivationData.cardRequired: boolean` (servie par l'app, comme `locale`)
-   qui choisit entre les deux clauses.
-2. **« HUD » sort** de `activation.features.overlay` → « Overlay natif & color tags » / “Native overlay & color tags”.
-3. **`ActivationData.offerNote?: string | undefined`** — une note servie par l'app, rendue verbatim sous le bloc de
-   plan (ton discret, deux lignes au plus ; absente, rien ne se rend) : le code `ALPHA` à saisir sur la page Stripe et
-   la fin de l'essai.
-4. **Fixtures** : `ACTIVATION_FIXTURE` annonce `€25/mo` et `30-day trial · enter code ALPHA on the Stripe page`, plus
-   une `offerNote` d'exemple — plus jamais `€29/mo` / « First month free ». `splitPrice` (sur `/`) et `splitTrial`
-   (sur `·`) gardent leur contrat.
+## 2. Station 3 : choisir la taille sur place — `roomprofile-073-taille-station3.md`
 
-## 2. Une rangée « Un bug, une question ? » sur l'écran Compte — `account-feedback-channel.md`
+Le sélecteur « TAILLE DE FENÊTRE EN CALIBRATION » de la station 4, au même endroit, à la station 3 ; changer de
+taille redimensionne la vraie fenêtre comme aujourd'hui (`onSelectSize`, signature inchangée) ; chaque carte de
+taille dit combien de captures elle porte, et une prise absente d'une taille le dit (`takeOnlyIn`). `SizeBucket`
+gagne le compte servi, `Shot.seq` sert de nom.
 
-- Une rangée de plus (sous le bloc « Mise à jour » se lit naturellement, à vous de placer) qui affiche deux
-  identifiants **tels quels**, sélectionnables : « Discord : Ziper_Rom1#7108 » avec un bouton **« Copier »**
-  (`navigator.clipboard`, interne à l'écran — il n'existe pas de lien vers un utilisateur Discord), puis « ou par
-  e-mail : romain.laneuville.public@pm.me » cliquable.
-- Contrat : `AccountData.feedback: { discord: string; email: string }` (**non optionnel**, servi par l'app) ;
-  `AccountCallbacks.onOpenFeedbackEmail?: (() => void) | undefined` (une offre, comme `onOpenBilling`).
-- i18n FR/EN par le drop, clés `account.feedback*` : « Un bug, une question ? » / “A bug, a question?”, « Discord : » /
-  “Discord:”, « ou par e-mail : » / “or by e-mail:”, « Copier » / “Copy”, « Copié » / “Copied”. Fixtures
-  `Account.fixtures.ts` : les deux valeurs ci-dessus.
+## 3. Station 5 : des paquets de gabarits nommés, une vérification par paquet — `roomprofile-073-paquets-glyphes.md`
 
-## 3. Les notes de version se lisent sur plusieurs lignes (écran Compte)
+Deux styles de chiffres sur la table (gras / fin) et un seul tas de gabarits : le joueur ne voit pas qu'un style
+entier manque. Des **paquets** nommés par l'utilisateur (`GlyphPack`), chaque extraction rangée dans un paquet,
+la vérification filtrable par paquet (`packAll` / `packNone`). Habillage seulement : le jeu compilé pour le moteur
+reste plat, rien ne change côté lecture.
 
-`AccountData.update.notes` va recevoir la **section du CHANGELOG** de la version disponible (texte brut, une ligne
-par entrée, précédée d'un « • », longueur plafonnée) au lieu de « Tatami 0.7.1 ». Le `div` `styles.notes` rend
-aujourd'hui le texte d'un bloc : demandé **`white-space: pre-line`** sur `.notes` (les sauts de ligne du texte servi
-deviennent des lignes, rien d'autre), et une fixture `notes` sur trois lignes pour que la preview et la baseline le
-montrent. Pas de rendu Markdown : l'app sert du texte.
+## 4. F9 : un échec de capture se voit — `roomprofile-073-echec-capture.md`
 
-## 4. Les notes de version aussi pendant le téléchargement et quand la mise à jour est prête (ajout 11:00)
+Le plafond de captures par taille disparaît (`RoomProfileData.maxShotsPerSize` quitte le contrat, aucun écran ne
+le rendait). Ce qui reste : un **bandeau** (pas un toast) quand l'app émet `calibration-capture-failed`
+`{ at, takeId, requested, captured, failures[{ sizeId, message }] }` — le message backend verbatim, une ligne par
+taille refusée, « refusé partout » distingué de « refusé sur une taille » (`captured.length === 0`), un « Renvoyer ».
+`calibration-state` reste le signal du succès.
 
-`Account.tsx` ne rend `update.notes` que dans `UpdateNote` (état `available`). Or l'app télécharge d'elle-même au
-démarrage : le joueur ne voit l'écran qu'en `downloading` puis `ready`, deux vues (`UpdateDownloading`, `UpdateReady`)
-qui n'ont **aucun emplacement pour les notes**. Le type `AccountUpdate.notes` les accepte déjà et l'app les sert
-désormais dans les trois états. Demandé : le même bloc `.notes` (avec son `pre-line`) sous le titre de
-`UpdateDownloading` et de `UpdateReady`, rendu seulement quand `notes` est présent ; fixtures des deux états avec des
-notes sur trois lignes. Rien d'autre ne bouge.
+## 5. L'écran d'erreur de profil a une sortie — `screen-error-073-sortie-profil.md`
+
+Aujourd'hui « This screen hit an error » et un chemin. Demandé : un composant `ScreenError` servi comme les autres
+écrans (`ScreenErrorData` : titre, fichier en cause, ce que l'app a déjà fait, `outcome`), avec **trois sorties**
+(`ScreenErrorCallbacks`) : réessayer, rejouer le seed du profil (avec son avertissement), ouvrir le dossier du
+profil. Deux postures : erreur brute, seed refusé avec le message.
 
 ## Ce qui ne bouge pas
 
-Aucun composant partagé, aucun callback existant, aucun autre bloc des écrans `Activation` et `Account`. Les demandes
-durables précédentes restent honorées ; contrat d'export et bundle lint inchangés. Le formulaire de retour in-app
-n'est pas dans cette vague.
+Station 4 (établi, canvas, rail des zones), matrice de couverture, `Shot`, `CoverageCell`, `TourState` hors ajouts
+déclarés, les écrans `Account` / `Activation` livrés par la vague 0.7.2, le contrat d'export et le bundle lint.
+Hors vague : la zone « Frontière de main » disparaît du catalogue côté app — la station 4 est pilotée par les
+données, aucun changement DS.
 
 Verdict d'import au prochain rapport, après le drop.
