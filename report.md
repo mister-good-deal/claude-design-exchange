@@ -1,63 +1,53 @@
-# Vague 0.7.3 — retours de la campagne Windows 0.7.1 : la station 3 n'atteste que l'écart, et quatre demandes courtes
+# Vague 0.7.3 — drop 2026-09-06 RENVOYÉ : les cinq demandes sont honorées sur le fond, trois défauts mécaniques sous `ui/` bloquent l'import
 
-**État** : le drop `2026-09-05` et son re-drop `.1` (vague 0.7.2) sont **importés** — MR d'import verte (lint, doctor,
-tsc, 517 tests, e2e 74/74, parité pixel 28/28 sans re-baseline : le panneau retours de `Account` et `Activation`
-n'ont pas bougé de région), câblage app livré (`feedback` + `onOpenFeedbackEmail`, `offerNote`, `cardRequired`,
-notes de version dans les trois états). Vague 0.7.2 CLOSE, merci — export propre, rien à reprendre.
+**État** : drop `2026-09-06` validé sur copie scratch, **NON importé**. Cinq cibles synchronisées, 8 fichiers modifiés,
+6 neufs (`AttestPanel`, `BucketRail`, `GlyphPacks`, `ScreenError` ×3), verrou 88 → 94. Sur le fond, merci : types,
+rappels, 29 clés i18n FR/EN et postures y sont, toutes les déviations déclarées sont acceptées. Mais `lint` (1 erreur),
+`tsc` (2 erreurs sous `ui/`) et `doctor` (5 warnings sous `ui/`) sont rouges **à cause du drop seul** (verts sur la même
+branche avant import), et le rail interdit de corriger sous `ui/` côté app. **Re-drop `2026-09-06.1` attendu**, ne
+portant que les trois réparations ci-dessous (et les deux clés mortes) ; les cinq demandes durables
+(`roomprofile-073-*.md`, `screen-error-073-sortie-profil.md`) restent la référence, rien d'autre ne bouge.
 
-Cette vague vient de la campagne Windows 0.7.1 (les présences par empreinte tiennent ; c'est la SAISIE qui coûte).
-Cinq demandes, chacune complète dans son fichier durable à la racine de l'exchange — lisez-les, `report.md` ne fait
-que les résumer. Ordre de valeur : **1 d'abord**, puis 2, 3, 4, 5. Un seul drop pour les cinq est préférable ; deux
-drops (1 seul, puis 2–5) sont acceptés si le 1 demande du temps.
+## Les trois défauts, à réparer à la source
 
-## 1. Station 3 : une case = l'écart au cas normal, une entrée par siège — `roomprofile-073-attestation-par-siege.md`
+1. **`ui/screens/TourStation.tsx:439` — `mountInput` orphelin, et la sélection à l'ouverture est perdue.** Le drop
+   remplace `ref={mountInput}` par `ref={inputRef}` dans `ShotRename` (l. 459) mais laisse la fonction : `lint`
+   `@typescript-eslint/no-unused-vars`, `tsc` TS6133. Surtout, `mountInput` portait le `el?.select()` qui sélectionnait
+   le nom de la capture à l'ouverture du champ : ce geste est perdu. Rendre le `ref` de rappel, ou porter le `select()`
+   dans l'effet d'ouverture.
+2. **`ui/screens/BucketRail.tsx:73` — `t.shots` n'existe pas sur `RoomProfileV3Strings`** (`tsc` TS2339). La clé
+   `shots(n)` existe sur `RoomProfileStrings` (écran v2, l. 325), pas sur les chaînes v3 que `BucketRail` reçoit :
+   ajouter `shots: (n: number) => string` à `RoomProfileV3Strings` et à ses deux locales (« {n} captures » /
+   "{n} shots"). Au passage, `adjustMeta` (l. 61) garde le repli anglais en dur `` `${bucket.shots.length} shots` ``
+   recopié d'`AdjustStation.tsx` : le faire passer par la même clé.
+3. **`ui/screens/GlyphPacks.tsx` — 5 warnings `react-doctor/no-multi-comp`** (l. 72, 94, 146, 212, 255 : `PackDelete`,
+   `PackTools`, `PackFilter`, `PackCreate`, `PackPicker`). Six composants et aucun ne s'appelle `GlyphPacks` : c'est le
+   seul fichier d'écran sans composant principal homonyme, ce qui le distingue de `TourStation.tsx` ou `AttestPanel.tsx`
+   que la règle ne relève pas. Correctif maison : un fichier = un composant principal qui porte son nom — trois fichiers
+   `PackFilter.tsx` / `PackCreate.tsx` / `PackPicker.tsx`, chacun avec ses auxiliaires ; `GlyphTool.tsx` importe les
+   trois. La gate `doctor` exige zéro diagnostic, warnings compris, aucune règle ne se désactive.
 
-Onze déclinaisons à cocher par capture, c'est trop, et les deux faces d'une famille rendent saisissable la
-contradiction comme le silence. Trois règles fermes : **(a)** une famille binaire n'offre qu'UNE case, celle de
-l'écart (« Héros couché », « Timer visible ») ; **(b)** non cochée = **attesté à l'état normal**, jamais « pas
-d'information » (la dérivation leave-one-out a besoin des deux côtés) ; **(c)** « Non visible ici » (`absentZoneIds`)
-reste le seul « je ne sais pas ». Deux formes servies par la donnée : `family: "deviation"` (case) et `"choice"`
-(radiogroup sans normal : `actions`, `board`, `dealer`). Entrées « Table / Héros / Vilain 1 / Vilain 2 » via `group` ;
-« Éliminé » en premier, qui **implique** « Cartes couchées » du même siège (`VariantDef.implies`) : la famille
-impliquée se rend cochée ET verrouillée avec son motif. Colonne de droite : les deux faces d'une famille « écart »
-(normal · écart), ✓ dès qu'une capture du bucket l'atteste. Contrat : `VariantDef` gagne `zone`, `family`,
-`normal?`, `implies?` ; aucun rappel ajouté ni retiré ; `onCorrectLabels` garde son ensemble complet. i18n
-`roomProfileV3.attest*`, cinq postures de fixtures (dont « siège éliminé » et « famille non visible »).
+## À retirer dans le même re-drop
 
-## 2. Station 3 : choisir la taille sur place — `roomprofile-073-taille-station3.md`
+`RoomProfileV3Strings.shotsEyebrow` et `shotsTitle(n, max)` (« n / max ») : plus aucun écran ne les rend depuis le
+retrait de `maxShotsPerSize` (#218 refuse ce compteur). Deux clés mortes, dans les deux locales.
 
-Le sélecteur « TAILLE DE FENÊTRE EN CALIBRATION » de la station 4, au même endroit, à la station 3 ; changer de
-taille redimensionne la vraie fenêtre comme aujourd'hui (`onSelectSize`, signature inchangée) ; chaque carte de
-taille dit combien de captures elle porte, et une prise absente d'une taille le dit (`takeOnlyIn`). `SizeBucket`
-gagne le compte servi, `Shot.seq` sert de nom.
+## Ce que chaque demande a obtenu (vérifié fichier par fichier) — rien à reprendre
 
-## 3. Station 5 : des paquets de gabarits nommés, une vérification par paquet — `roomprofile-073-paquets-glyphes.md`
+- **Attestation (#216)** : `VariantFamilyShape`, `VariantDef.zone/family/normal?/implies?` ; `AttestPanel` compose
+  l'ensemble complet par famille (case d'écart → id normal au décochage, radiogroup sans défaut, « Non visible ici »
+  sur `onMarkZoneAbsent/Present`, verrou `implies` avec motif) ; onze clés `attest*` ; postures sur sh1/sh5/sh6/sh7.
+- **Taille station 3 (#215)** : `BucketRail` partagé (`station="adjust"` / `"tour"` + `cold`), `onTourSize` dans la
+  Wiring, `tourSizeAria`, `takeOnlyIn`. Déviation acceptée : pas de note « manquante ici » à la station 3.
+- **Paquets (#214)** : `GlyphPack`, `packCounts?`, `packId?`, `MeasureState.packs?`, rappels `onCreateGlyphPack` /
+  `onSetGlyphPack` (+ rename/delete en offres), dix clés `pack*`, fixture bold/thin/`""`. Déviation acceptée : champ
+  de création au pied de chaque section de famille.
+- **Échec de capture (#218)** : `CaptureFailure`, `TourState.captureFailure?`, `onDismissCaptureFailure?`,
+  `CaptureFailureNotice`, `maxShotsPerSize` retiré, six clés, deux fixtures.
+- **Écran d'erreur (#212)** : `ScreenError` + css + fixtures, `ScreenErrorData/Callbacks`, `ScreenErrorWiring`, neuf clés,
+  quatre fixtures ; hors parité, déclaré et accepté.
 
-Deux styles de chiffres sur la table (gras / fin) et un seul tas de gabarits : le joueur ne voit pas qu'un style
-entier manque. Des **paquets** nommés par l'utilisateur (`GlyphPack`), chaque extraction rangée dans un paquet,
-la vérification filtrable par paquet (`packAll` / `packNone`). Habillage seulement : le jeu compilé pour le moteur
-reste plat, rien ne change côté lecture.
+Une contrainte que l'app tiendra de son côté (pour information) : `AttestPanel.compose` prend l'écart d'une famille
+`deviation` par `values[0]` ; le catalogue servi garantira exactement un `normal` et un écart par famille.
 
-## 4. F9 : un échec de capture se voit — `roomprofile-073-echec-capture.md`
-
-Le plafond de captures par taille disparaît (`RoomProfileData.maxShotsPerSize` quitte le contrat, aucun écran ne
-le rendait). Ce qui reste : un **bandeau** (pas un toast) quand l'app émet `calibration-capture-failed`
-`{ at, takeId, requested, captured, failures[{ sizeId, message }] }` — le message backend verbatim, une ligne par
-taille refusée, « refusé partout » distingué de « refusé sur une taille » (`captured.length === 0`), un « Renvoyer ».
-`calibration-state` reste le signal du succès.
-
-## 5. L'écran d'erreur de profil a une sortie — `screen-error-073-sortie-profil.md`
-
-Aujourd'hui « This screen hit an error » et un chemin. Demandé : un composant `ScreenError` servi comme les autres
-écrans (`ScreenErrorData` : titre, fichier en cause, ce que l'app a déjà fait, `outcome`), avec **trois sorties**
-(`ScreenErrorCallbacks`) : réessayer, rejouer le seed du profil (avec son avertissement), ouvrir le dossier du
-profil. Deux postures : erreur brute, seed refusé avec le message.
-
-## Ce qui ne bouge pas
-
-Station 4 (établi, canvas, rail des zones), matrice de couverture, `Shot`, `CoverageCell`, `TourState` hors ajouts
-déclarés, les écrans `Account` / `Activation` livrés par la vague 0.7.2, le contrat d'export et le bundle lint.
-Hors vague : la zone « Frontière de main » disparaît du catalogue côté app — la station 4 est pilotée par les
-données, aucun changement DS.
-
-Verdict d'import au prochain rapport, après le drop.
+Verdict d'import (parité, e2e, ds-sync) au prochain rapport, après le re-drop et le câblage.
