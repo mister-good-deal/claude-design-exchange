@@ -1,46 +1,24 @@
-# Vague 0.7.4 — atelier de traitement à la station 5 : voir ce que chaque étape de lecture d'un montant fait, et la régler
+# Vague 0.7.4 — drop 2026-09-06.2 RENVOYÉ pour UN défaut : `PipelineFrame.tsx:55`, `key={i}` sur `cells.map`
 
-**État** : le re-drop `2026-09-06.1` (vague 0.7.3) est **importé** — MR d'import verte (lint, doctor, tsc, 528 tests,
-e2e 74/74, parité pixel 28/28 sans re-baseline, verrou 96/96), cinq demandes câblées côté app (familles
-d'attestation servies avec `zone` / `family` / `normal` / `implies`, sélecteur de taille, événement d'échec de
-capture, paquets de gabarits persistés, écran d'erreur branché sur ses commandes). Vague 0.7.3 CLOSE, merci — les
-deux écarts précédents (`engineView` dans les slots, `roiFloorPx`) ne sont plus là.
+**État** : le drop `2026-09-06.2` (prototype de l'atelier de traitement, station 5) est validé sur copie scratch,
+**NON importé**. Tout le contrat `roomprofile-074-atelier-station5.md` est honoré — sept fichiers à composant
+principal homonyme (`PipelineTool`, `PipelineOverview`, `PipelineStep`, `PipelineFrame`, …), les types
+`PipelineStep` / `PipelineRun` / `NumberMeasure` / `NumberRead`, `MeasureState.numberSteps` / `pipeline?` /
+`numberMeasure?`, les trois rappels de la Wiring et les deux offres, les 32 clés i18n FR/EN, les sept postures avec
+images `fixture://…`, la mise en scène « la bande et la loupe » — merci, c'est exactement la station expert demandée.
 
-**Cette vague tient en UNE demande, et c'est un prototype** : `roomprofile-074-atelier-station5.md`. Lisez-la en
-entier ; `report.md` ne fait que la situer.
+**Un seul rouge, sous `ui/`, que le rail nous interdit de corriger côté app** : la gate `doctor` (react-doctor, zéro
+diagnostic warnings compris) relève **`ui/screens/PipelineFrame.tsx:55` — `key={i}` sur `cells.map`** (clé d'index de
+tableau). Correctif à la source, au choix :
 
-## L'atelier de traitement — `roomprofile-074-atelier-station5.md`
+- une clé de **géométrie** de la cellule : `` `${cell.left}:${cell.top}:${cell.width}:${cell.height}` `` (les boîtes
+  d'un même témoin ne se superposent jamais, la clé est unique par construction) ;
+- ou un **id de cellule servi** : ajouter `id: string` à la boîte de cellule dans `PipelineRun` (l'app le fournira,
+  `c0`, `c1`, … dans l'ordre de segmentation) et `key={cell.id}`.
 
-La lecture des montants vient d'être mesurée pour la première fois sur des captures réelles : 59 lectures fausses sur
-320. Deux traitements les ramènent à 20 sans qu'un rect bouge. Romain veut **voir** ce que chaque étape fait pour la
-régler lui-même : un **troisième outil de la station 5** (`MeasureState.tool` gagne `"pipeline"`), ouvert depuis une
-boîte de ROI `number` de l'outil glyphes.
+La première voie ne touche pas le contrat ; la seconde le précise. Les deux nous vont.
 
-1. **Vue d'ensemble en tête** : image originale ⇒ image finale, entre les deux la valeur lue, sa confiance et la règle
-   qui a tranché (ou la raison de l'abstention, jamais un tiret muet).
-2. **Une carte par étape, onze, dans l'ordre** (`crop` → `luma` → `ink` → `column` → `components` → `morphology` →
-   `cells` → `series` → `match` → `grammar` → `result`) : libellé servi verbatim, interrupteur (sauf `crop`, `cells`,
-   `result`), **témoin avant / après** (deux URL d'image servies), coût en µs de cette exécution, paramètres avec
-   défaut et marque de surcharge, note servie (« 3 colonnes vidées », « série de droite retenue, 2 candidates »). Une
-   étape éteinte reste une carte inerte et lisible, jamais absente.
-3. **Portée** : sur la ROI (défaut) ou sur un glyphe choisi en cliquant une boîte numérotée dans le témoin de `cells`.
-4. **Exécution au clic seulement** (« Exécuter »), jamais en continu ; après un réglage, les témoins sont marqués
-   périmés, pas effacés.
-5. **Compteur** exactes / fausses / abstentions sur les captures étiquetées du bucket, total et par zone, avec son
-   propre bouton ; une valeur fausse est un défaut, une abstention est comptée à part. Puis « Enregistrer les
-   paramètres » pour la zone ou comme défaut du profil — jamais implicite.
+**Re-drop `2026-09-06.3` attendu, ne portant que cette réparation.** Rien d'autre à reprendre ; l'import et le
+câblage (`number_preview` / `number_measure` / `number_config_set`) sont prêts et attendent le `.3`.
 
-Contrat : `PipelineStep`, `PipelineRun`, `NumberMeasure`, `NumberRead` (miroir du moteur) ; `MeasureState` gagne
-`numberSteps`, `pipeline?`, `numberMeasure?` ; rappels `onRunPipeline` / `onToggleStep` / `onSetParam` dans la
-Wiring, `onMeasureNumbers` / `onSaveNumberParams` en offres. Images **par URL servie** (`fixture://…` en preview,
-cadre vide étiqueté si non résolue), jamais une data-URL ni un canvas maison. 32 clés i18n `pipeline*`, sept postures
-de fixture (jamais exécuté, exécution riche en notes, abstention avec raison, étape éteinte, portée glyphe, compteur
-avec une zone qui concentre les fautes, jamais mesuré).
-
-## Ce qui ne bouge pas
-
-La récolte de gabarits, les paquets (#214), le pager de captures, la station 4 (aucun rect ne bouge — c'est la
-raison d'être de l'atelier), la pipette, le rail des présences, la station 6, la matrice de couverture. Le contrat
-d'export et le bundle lint sont inchangés.
-
-Verdict d'import au prochain rapport, après le drop.
+Verdict d'import (parité, e2e, ds-sync) au prochain rapport.
