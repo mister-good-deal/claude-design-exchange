@@ -20,10 +20,13 @@ Un seul drop cumulatif pour ces trois issues ; aucun changement de moteur ni de 
 Typecheck, lint, doctor sans diagnostic, suite e2e complète et parité restent requis à l'import.
 
 
-## Verdict courant — drop corrigé accepté en recette locale
+## Verdict courant — drop corrigé accepté et intégré
 
-Le redrop cumulatif `2026-09-08.1` est accepté sur la branche locale `feature/ds-076`, commit
-`24e8e5b68bd0d9281ee176bd5c110b9851f1ed55`, base `52b7b99efb5949b9b192cd141a683048b566e736`.
+Le redrop cumulatif `2026-09-08.1` est intégré par la MR !236, HEAD
+`8cb86d1c5ab00fc8827033289956004ed6e9c363`, base assemblée `889761aa4fac0ff3d829d05057c092ba76c58fa4`.
+MR : https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/236
+CI 1740 SUCCESS, traces contrôlées sans flaky ni retry par le coordinateur ; merge release
+`4ea0309c0364a75e6d3d1ec843615c514e01f459`. Aucun nouveau tour DS requis.
 SHA256 de la copie validée puis importée :
 `0fe3ed8226bac3f8941ae9fd0913587f79d9f4a2262e8407c23eb60acc687737`.
 Manifest et preview identiques, previewOnly vide, 104 fichiers conformes au verrou après import officiel.
@@ -39,21 +42,21 @@ avec rollback, refus visible et retry persisté. Les ROI numériques restent con
 Le contrôle #251/5352 est complet. Les 29 tests dédiés container comprennent 7 froid/chaud, 12 atelier, 9 sizing
 (dont 5 déjà présents dans !231) et 1 abonnement StrictMode. Le hook pipeline compte 31 cas, inclus dans le total.
 
-Gates finales après le dernier correctif app : typecheck, lint, doctor zéro diagnostic, knip, check:guards et
-check:ds-sync verts ; Vitest **635 tests / 50 fichiers / 37,31 s** ; E2E **75 passed / 31,7 s** ; parité pixel
-**28 passed / 48,7 s**. E2E/parité sous verrou partagé, `CI=1`, `--retries=0` explicite. Aucun flaky accepté.
+Gates finales après rebase sur les neuf lots assemblés et !235 : typecheck, lint, doctor zéro diagnostic, knip, check:guards et
+check:ds-sync verts ; Vitest **704 tests / 52 fichiers / 75,10 s** ; E2E **75 passed / 31,8 s** ; parité pixel
+**28 passed / 44,8 s**. E2E/parité sous verrou partagé, `CI=1`, `--retries=0` explicite. Aucun flaky accepté.
 
 La première panne E2E est expliquée et conservée : l'oracle attendait Committer déjà actif au repos avant le départ
 asynchrone de métrologie. Le test attend maintenant la phase terminale puis conserve les assertions exactes.
-Patch isolé et preuve causale rouge/verte remis au coordinateur pour !231, indépendamment du DS.
+Patch isolé et preuve causale rouge/verte livrés par !231 ; parent exclu du rebase DS.
 Un autre rouge/vert app démontre qu'un ancien callback d'abonnement nettoyé doit être ignoré.
 
-Rapport, gestes, limites et deux captures : `recon/ds-076/recette.md` dans le commit local indiqué.
-Logs : `/tmp/tatami-ds-076/lt-engine/final/` ; preuves calibration :
+Rapport, gestes, limites et deux captures : `recon/ds-076/recette.md` dans le HEAD publié indiqué.
+Logs finaux : `/tmp/tatami-ds-076/lt-engine/integration/` ; preuves calibration :
 `/tmp/tatami-ds-076/lt-engine/calibration-gate-fix/`.
-Limites : fixtures navigateur, pas de preuve IPC Rust→DTO ou Windows réel. Pas encore de MR/CI DS : les neuf lots
-précédents ne sont pas tous intégrés (3/9 au relevé). Le rebase final, la déduplication des tests livrés via !231,
-les gates sur release assemblée puis la MR restent au rail coordinateur. Ce verdict ne vaut pas fusion.
+Limites : fixtures navigateur, pas de preuve IPC Rust→DTO ou Windows réel. Le rebase garde les 28 blobs du delta
+initial identiques ; cinq tests sizing hérités une seule fois, quatre supplémentaires, helper dédupliqué.
+Revue indépendante favorable avant fusion par le coordinateur ; aucun autre lot mêlé au DS.
 
 ---
 
