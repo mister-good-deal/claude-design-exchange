@@ -18,7 +18,8 @@ Afficher clairement :
 - l'historique des géométries archivées et leurs compatibilités historiques, sans les présenter comme actives ;
 - aucune plage de versions, aucune compatibilité supposée et aucun « compatible » déduit d'une version détectée.
 
-Une liste vide signifie « Aucune version client confirmée ». Une version client inconnue ne bloque pas Écrire.
+Une liste vide signifie « Aucune version client confirmée ». Une version client inconnue est uniquement journalisée :
+elle ne bloque pas Écrire et ne déclenche aucune invalidation ni rupture automatique.
 La confirmation est issue du geste de validation existant, après son verdict ; ne pas inventer un deuxième bouton
 qui attesterait une compatibilité sans validation. Les états et nombres sont servis par l'app, jamais recalculés
 à partir de l'horloge locale ou d'une comparaison de numéros de version.
@@ -43,6 +44,11 @@ et n'invalide pas localement les preuves par anticipation.
 
 ## Preuves de ROI et de glyphes
 
+Décision Romain : les images de référence sont aussi exigées au lancement du moteur. Le backend vérifie
+présence, dimensions et lien à la géométrie lors du chargement/rechargement, jamais par une lecture disque à chaque
+frame. Une source absente/invalide interdit les lectures concernées ; l’app reste accessible pour réparer le corpus.
+Afficher ce refus de source et son contexte sans proposer de mettre un JSON5 valide en quarantaine pour ce seul motif.
+
 Chaque validation affiche une référence consultable : image de capture, dimensions exactes du bucket, version de
 la géométrie, ROI et date de validation. L'image doit montrer le cadrage qui a servi au prélèvement ; les valeurs
 et rectangles sont fournis. Ne pas déduire la provenance d'un nom de fichier ou du simple dernier extracted_at.
@@ -65,6 +71,8 @@ Postures à livrer dans les fixtures, avec FR/EN :
 3. G2 en calibration : corpus/ROI/glyphes incomplets, preuve G1 historique exclue.
 4. G2 complète, compatibilité confirmée après le geste Écrire ; une version client observée seule reste non confirmée.
 5. Déclaration en cours puis refus, et annulation sans modification ; version client inconnue sans blocage indu.
+6. Source de validation manquante au lancement : lecture refusée, image/taille/géométrie en cause identifiées,
+   app et parcours de remise en état accessibles. Aucun succès fictif ni erreur répétée par frame.
 
 Aucune implémentation de fichiers, de runtime, d'IPC, de cache ou de migrations côté DS. Le backend vérifie la
 version, l'image, la taille et le cadrage au prélèvement et au commit ; les résultats tardifs périmés sont refusés.
