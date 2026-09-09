@@ -42,6 +42,8 @@ qui disent actuellement « une fois par ROI et par capture ». Changer de captur
 L'IPC et sa migration appartiennent à lt-profile ; aucune nouvelle persistance dans le DS.
 Le callback actuel peut garder son argument capture pour compatibilité pendant l'intégration ; il ne définit plus
 la portée du style. Ne pas créer un mécanisme « dernier choix mémorisé ».
+Le contrat figé sert `GlyphCoverageDto.roiPacks` et `packConflicts` : une migration contradictoire reste sans
+affectation jusqu'au choix explicite. L'app nomme ces ROI dans `MeasureState.glyphAdvice`, à rendre sans le masquer.
 
 Recette : pot=fin, hero_stack=gras ; chaque sélecteur montre sa valeur, après choix, changement de ROI, changement
 de capture et F5. « Sans paquet » signifie uniquement absence d'affectation. Annuler explicitement reste possible.
@@ -68,6 +70,10 @@ L'app servira la palette persistée et sa date ; le DS doit rendre « écrite à
 Le contrat existant `MeasureState.writes` sait déjà porter cette provenance (`unitId: "suits"`).
 La couleur persistée doit rester visible sans inventer trois échantillons récemment mesurés par enseigne.
 Distinguer visuellement, si nécessaire, palette écrite et nouveaux prélèvements incomplets.
+Le contrat Rust est désormais `RoomCalibrationDto.suitPalette: {spade,heart,diamond,club,measuredAt}|null`.
+L'app projette les couleurs dans `SuitSwatch.color`, garde les `samples` de session vides et renseigne `writes`.
+Aujourd'hui `PipetteTool.TargetRow`, `rowNote` et les compteurs lisent seulement `samples` : adapter ces rendus
+pour honorer la couleur servie et l'écriture datée, tout en conservant les trois nouveaux relevés pour une reprise.
 
 Recette : ouverture puis F5 avec les quatre couleurs et date du profil → palette écrite avec la même date ;
 aucun « il manque tout ». Sans mesure persistée → reste à prélever. Un prélèvement nouveau incomplet ne doit pas
