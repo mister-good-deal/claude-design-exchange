@@ -61,6 +61,14 @@ actif vide, aucune preuve héritée, aucun choix de confort supplémentaire à d
 jusqu'au lot backend #268 : aucun bouton fonctionnel ni état de géométrie simulé dans l'app actuelle.
 Ce sujet de conception est distinct de D1–D5 et n'élargit pas implicitement le candidat app ci-dessus.
 
+Complément confirmé #268 : les images de référence sont ÉGALEMENT EXIGÉES AU LANCEMENT. Leur présence,
+dimensions et lien à la géométrie sont contrôlés au chargement/rechargement, sans lecture disque par frame.
+Une source manquante ou invalide refuse les lectures concernées ; l'app reste accessible pour réparer le corpus.
+Ajouter la posture DS « source de validation manquante au lancement », identifiant image/taille/géométrie et
+parcours de remise en état. Aucun succès fictif, aucune quarantaine d'un JSON5 valide pour un PNG absent.
+Les versions client inconnues restent uniquement journalisées, sans invalidation automatique ni blocage d'Écrire.
+D5 reste prioritaire ; les données et callbacks #268 demeurent optionnels jusqu'au lot backend dédié.
+
 ---
 
 ## Rapports, demandes et historique précédents conservés intégralement
