@@ -1,3 +1,27 @@
+# Vague 0.7.7 — atelier et état persisté de la station 5
+
+GO Romain du 9 septembre 2026. Écrivain unique : lt-atelier.
+Issue groupée : https://gitlab.laneuville.me/rom1/tatami/-/issues/265
+Demande complète : [roomprofile-077-atelier-et-persistance.md](roomprofile-077-atelier-et-persistance.md).
+
+**Nouveau drop cumulatif demandé**, à partir de `2026-09-08.1` intégré en 0.7.6 :
+
+- #263 : mantisse 54 + decimals 1 → 5.4 BB ; corriger formatter ET fixtures DS, sans compensation app.
+- #257 / #262 : sélecteur contrôlé par le paquet servi, style stable propriété de ROI ; mots et contrat à aligner.
+- #260 : TOUS présente chaque paquet nommé, même vide, sa complétude et ses manquants ; détails dans ses onglets.
+- #259 : palette persistée avec date, distinguée des prélèvements de session ; aucune mesure inventée.
+- #255 : source « avant » visible dès sélection, indépendante du résultat ; erreurs et péremption explicites.
+  Exécuter reste pour ce drop tant que le coût mono-ROI réel n'a pas justifié sa suppression.
+- Interfaces #256 / #258 : honorer files servies vides et couverture périmée ; aucune reconstitution du catalogue.
+
+Le contrat de présentation précis et les recettes sont dans la demande complète. Pas de nouvelle API IPC demandée
+au DS. DTO Rust coordonnés séparément. Typecheck, lint, doctor zéro diagnostic, e2e complète et parité après import.
+Les fichiers permanents et toutes les corrections des vagues précédentes restent à conserver.
+
+## Rapport précédent conservé intégralement — vague 0.7.6 acceptée
+
+Le verdict ci-dessous est historique et n'annule pas la nouvelle demande 0.7.7 ci-dessus.
+
 # Vague 0.7.6 — station 3 froide, atelier explicite et refus sizing
 
 Responsable et écrivain unique : lt-engine. GO de Romain du 8 septembre 2026.
