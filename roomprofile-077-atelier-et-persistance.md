@@ -11,7 +11,7 @@ La campagne a renouvelé le corpus ; elle ne constitue aucun benchmark ni verdic
 `runOfDto` transmet déjà le contrat Rust sans transformation : `value` est la mantisse entière,
 `decimals` le nombre de décimales. Dans `RoomProfile.fixtures.ts`, `formatRead` doit utiliser
 `(value / 10 ** decimals).toFixed(decimals)` ; conserver les conventions d'unité existantes.
-Une mantisse nulle signifie absence de lecture, pas zéro. Aucune division compensatoire dans l'app.
+`value: null` signifie absence de lecture ; `value: 0` est un zéro valide. Aucune division compensatoire dans l'app.
 
 Corriger aussi TOUTES les fixtures et variantes qui servent une valeur déjà divisée, ainsi que la description
 anglaise du contrat. Exemple : `{value: 1.5, decimals: 1}` devient `{value: 15, decimals: 1}`.
