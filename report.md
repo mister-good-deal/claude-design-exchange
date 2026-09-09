@@ -1,3 +1,78 @@
+# Actualisation — export 2026-09-09.4 : géométrie présente, corrections requises
+
+Issue groupée : https://gitlab.laneuville.me/rom1/tatami/-/issues/265.
+Archive SHA256 `0676a7164876c62a60e77c075e101ae91cc7509146f631ca5bf06883efd72f08`.
+Scratch puis import officiel : lint, TypeScript et Doctor verts ; 109 fichiers DS conformes au verrou.
+Candidat local `2462d89fbc4063d2925eae45789259cc5e25603a`, base release `e2bb57f4` ; aucun push/MR.
+
+**#268 est désormais présent dans les sources livrées**, via GeometryPanel, GeometryProofs et leurs états.
+Données et callbacks restent optionnels : aucune géométrie simulée dans l'app sans le backend dédié C2.
+Les itérations personnelles de Romain du .3 (sélection de taille et disposition) sont conservées.
+D5 reste résolu. Le helper Doctor app a été corrigé côté Tatami ; aucune correction Design demandée pour lui.
+
+## D6 — rendre consultables les clients confirmés de chaque géométrie archivée
+
+GeometryArchive sert déjà la liste clients avec version client, date et version Tatami. ArchivedList ne rend
+que clients.length. Rendu React réel FR/EN : les deux lignes de G1 (Unibet4.18.2 et4.19.0, dates et Tatami)
+sont absentes ; seul leur nombre est visible. L'archive est nommée mais son historique demandé n'est pas consultable.
+
+Correction attendue : rendre ces lignes historiques en lecture seule, avec leurs trois valeurs servies,
+sans réactivation de l'archive ni crédit à la géométrie active. Aucun contrat backend supplémentaire nécessaire.
+Oracle : G2 active, G1 archivée, deux clients servis → versions, dates et Tatami consultables pour G1.
+Preuve : `ds-20260909-4/lt-tests/render-proof.json`, rendu statique réel FR/EN, CSS neutralisé, sans navigateur.
+
+## D7 — honorer l'attente et le refus servis dès le montage
+
+GeometryPanel initialise askedOn à null ; BreakBlock est conditionné à askedOn===geometry.id. Les fixtures
+DECLARING et REFUSED montées directement masquent donc l'état en cours et la cause du refus. Le bouton
+« Nouvelle géométrie… » reste visible pendant la déclaration servie. Les deux langues reproduisent ce défaut.
+
+Correction attendue : rendre les états declaring/declareError servis même sans ouverture locale préalable ;
+interdire une seconde déclaration pendant l'attente et conserver la cause verbatim et le contexte après refus.
+Le succès reste une nouvelle géométrie servie, sans succès local inventé. Sans callback, aucune fausse commande.
+Oracle : montage direct de chaque posture, puis attente → refus → nouvelle géométrie servie, sans perte de cause.
+Même preuve FR/EN ci-dessus ; aucun comportement navigateur ou backend n'est déduit de ce rendu statique.
+
+
+## D8 — reprendre une preuve réparée à nouvelle URL sans changer son identité
+
+1. Monter GeometryProofs avec une preuve d'id stable et une image prête à l'URL A.
+2. Déclencher l'événement error de cette image : le message d'échec remplace l'image.
+3. Servir la même preuve, même id, status ready et URL B après réparation.
+
+Obtenu : aucune image montée, URL B absente. Le témoin changeant seulement proof.id remonte bien l'image.
+GeometryProofs conserve la clé proof.id ; AssetFrame garde failed/nat sans invalider sa tentative à nouvelle URL.
+Correction attendue dans le DS : la nouvelle source doit avoir son propre chargement/erreur/dimensions et monter
+l'URL B, sans demander un nouvel identifiant métier ni conserver l'échec de A. Préserver le rejeu manuel à URL
+identique D1 et le cadrage large décentré D2 ; aucune régression de la source atelier, aucune autoexécution OCR.
+Preuve `ds-20260909-4/lt-tests/repair-proof.json` : vrai ReactDOM + jsdom, événement error et nouvelles props ;
+aucune requête réseau, aucun décodage image réel et aucun backend ne sont revendiqués par ce témoin.
+
+## D9 — fixture nouvelle géométrie : servir réellement le corpus vide annoncé
+
+ROOM_PROFILE_GEOMETRY_NEW_FIXTURE annonce G2 sans capture ni validation mais withGeometry étend le nominal
+ROOM_PROFILE_FIXTURE et en hérite huit captures. Comptage réel identique dans les témoins FR/EN : 8.
+Correction attendue des fixtures DS : la nouvelle géométrie doit servir zéro capture et zéro crédit de validation
+active dans toutes les données de démonstration concernées, tout en conservant G1 comme historique distinct.
+Les anciens rectangles restent des repères NON VALIDÉS ; aucun ancien compteur ne crédite G2. Vérifier les autres
+postures pour éviter d'annoncer un corpus vide ou incomplet avec les données actives complètes du nominal.
+C'est une incohérence de démonstration/test, pas un défaut backend ni une demande de nouveau schéma.
+
+## Verdict et suite
+
+**NO-GO fonctionnel pour #268 malgré l'import technique vert. Un export cumulatif corrigé est demandé.**
+Conserver les quatre corrections antérieures D1–D4, D5 résolu, les itérations UI personnelles de Romain du .3,
+les données/callbacks optionnels et les acquis du .4. La [demande permanente #268](roomprofile-077-geometry-versions.md)
+reste applicable ; aucun nouvel arbitrage utilisateur n'est requis.
+
+E2E et parité attendent le drop corrigé ; aucun push/MR du candidat incomplet. Aucune suppression ou baisse de gate,
+aucune retouche manuelle DS, aucun benchmark OCR, aucune validation Windows/corpus266 revendiquée.
+
+Les demandes et verdicts antérieurs restent conservés intégralement ci-dessous ; cette actualisation remplace
+le statut « #268 absent » du .3. Romain peut relancer Claude Design sur ces quatre corrections dès publication.
+
+---
+
 # Actualisation — export 2026-09-09.3, priorité Claude Design : géométries #268
 
 Romain précise que cet export provient de ses itérations d'interface (sélecteur de taille et disposition), et non d'une réponse annoncée à toute la vague. Archive de6e62f54450b0b916fc9b4c3f6806e4b3b5576985d777d150b9a871d84e968b.
