@@ -83,6 +83,13 @@ Ne pas fabriquer un faux résultat ni une chaîne exécutée pour remplir « ava
 
 Extension de présentation proposée : champ optionnel `MeasureState.pipelineSource`, contenant `context`
 (`sizeId`, `shotId`, `zoneId`), `status: "loading" | "ready" | "error"`, `url?`, `error?`.
+Complément validé par root : `rect?: Rect` (left/top/w/h en pourcentage de l'image) permet de réutiliser
+`ShotDto.imageUrl` et le rectangle calibré du bucket. Sans rect, l'URL désigne déjà le crop ; avec rect, elle désigne
+l'image entière et le DS cadre strictement la ROI, selon le mécanisme de `ColorSurface` : rapport d'aspect correct,
+overflow masqué, aucune translation ni déformation de la ROI. Aucun CSS app et aucun nouveau contrat IPC.
+Le chargement/décodage de l'image entière est un coût navigateur, distinct de la lecture OCR mono-ROI.
+Le descripteur source est servi par l'app ; le DS doit montrer le chargement réel de son image et son échec éventuel,
+même si le descripteur est déjà `ready`. Un échec image ne décale pas le rectangle et offre un rejeu récupérable.
 L'app possède le chargement et les générations ; le DS ne rend que la source du contexte sélectionné.
 `pipelineSource` est indépendant de `pipelineStatus` et de l'étape actuellement inspectée : la source reste clairement
 nommée, les témoins avant/après d'une étape traitée ne s'inventent pas avant son exécution.
