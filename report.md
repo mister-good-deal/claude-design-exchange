@@ -1,3 +1,14 @@
+# Actualisation — export 2026-09-09.3, priorité Claude Design : géométries #268
+
+Romain précise que cet export provient de ses itérations d'interface (sélecteur de taille et disposition), et non d'une réponse annoncée à toute la vague. Archive de6e62f54450b0b916fc9b4c3f6806e4b3b5576985d777d150b9a871d84e968b.
+
+Vérification scratch : lint et TypeScript verts ; le défaut D5 PackFilter est corrigé. Ne plus le remettre dans le travail demandé. Un warning Doctor concerne un helper de test app réservé à lt-tests ; correction côté Tatami, aucune demande Design pour ce diagnostic. L'intégration et les tests de régression complets du .3 restent en cours.
+
+**Travail Claude Design encore demandé : [gestionnaire des versions de géométrie #268](roomprofile-077-geometry-versions.md).** Sa présentation et ses callbacks sont absents du .3. La demande durable reste entièrement applicable : géométrie active/historique, versions client confirmées, rupture manuelle, repères conservés non validés et sources image exigées au lancement. Aucun nouvel arbitrage utilisateur requis.
+
+Préparer ce gestionnaire dans un export cumulatif conservant les itérations UI de Romain du .3 et les corrections précédentes. Les demandes et verdicts historiques ci-dessous restent la trace des anciennes versions ; cette actualisation remplace leur statut D5 prioritaire.
+
+---
 # Vague 0.7.7 — redrop 2026-09-09.1 : résidu de lint à corriger
 
 Issue groupée : https://gitlab.laneuville.me/rom1/tatami/-/issues/265
