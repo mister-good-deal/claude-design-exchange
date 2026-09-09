@@ -1,3 +1,17 @@
+# Actualisation — export 2026-09-09.7 : demandes Design satisfaites
+
+Archive SHA256 `3f10c04feadea63e64914d6a33afeaa6f7d5f300c8c6ac17415a10b1b14fbb7c`.
+Le résidu D7 est corrigé : sans callback, aucune commande de déclaration ; refus et contexte restent visibles.
+Les 25 témoins DS passent à assertions inchangées. Import scratch/officiel lint, TypeScript et Doctor verts. Candidat `5d41077e`.
+
+**Toutes les demandes Design actuelles sont satisfaites ; aucun nouveau lancement Claude Design n'est requis.**
+Les corrections D1–D9 et les itérations UI cumulatives sont conservées. Le raccordement app C2 des trois offres
+géométrie reste un travail Tatami séparé ; ce verdict DS ne certifie ni C2 de bout en bout ni les gates de publication.
+Aucune issue n'est fermée. Les demandes et verdicts ci-dessous restent intégralement conservés comme historique ;
+leur demande de nouvel export est remplacée par cette acceptation du .7.
+
+---
+
 # Actualisation — export 2026-09-09.6 : un résidu D7 à corriger
 
 Archive SHA256 `4176eed0f63825268750b5bfe4572e0cf7c696a0ad9ac64067cce7a517164e9c`.
