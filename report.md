@@ -1,3 +1,23 @@
+# Actualisation — export 2026-09-09.6 : un résidu D7 à corriger
+
+Archive SHA256 `4176eed0f63825268750b5bfe4572e0cf7c696a0ad9ac64067cce7a517164e9c`.
+Import scratch/officiel lint, TypeScript et Doctor verts ; D6/D8/D9 et les états D7 avec callback passent les
+sept témoins géométrie inchangés. Les 17 témoins DS précédents passent aussi. Candidat local `817545ca`.
+
+**D7 résiduel : sans `onDeclareGeometry`, un `declareError` servi fait rendre par BreakBlock un bouton
+« Déclarer la rupture » actif mais inerte.** Le message et l'état doivent rester visibles ; rendre la commande
+uniquement si son callback existe, y compris quand il disparaît au rendu suivant.
+
+Recette : monter le refus avec `on={}` → cause visible, aucune commande de déclaration ; fournir le callback
+→ geste réel disponible ; le retirer au rerender → commande retirée, cause conservée. Préserver attente/busy,
+annulation et envois réels, ainsi que D6/D8/D9, D1/D2 et toutes les itérations UI cumulatives du .3/.4/.6.
+Un export cumulatif correctif est demandé ; aucun nouveau choix utilisateur ni demande relative aux paquets.
+
+Preuve lt-tests `f2a5c998` : 24 témoins verts et ce seul cas rouge (ReactDOM/jsdom, sans backend ni réseau).
+Le témoin monte un refus servi avec `on={}` ; le bouton interdit est présent. Log archivé `ds-20260909-6/lt-tests/tests.log`.
+
+---
+
 # Actualisation — export 2026-09-09.4 : géométrie présente, corrections requises
 
 Issue groupée : https://gitlab.laneuville.me/rom1/tatami/-/issues/265.
