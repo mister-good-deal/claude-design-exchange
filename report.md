@@ -15,8 +15,9 @@ et deux styles de « deux coches » cohabitaient sans qu'on sache lire la nuance
 
 - lire le compte d'une jauge tel quel, sans correction ±1 par la capture affichée ;
 - n'avoir **qu'un** style de jauge : une case, deux carrés à un témoin, ✓ à deux ;
-- rendre **une ligne par variante, face ordinaire comprise**, exclusives, la face ordinaire cochée par défaut sur une
-  capture encore vierge pour la famille ;
+- rendre **une ligne par variante, face ordinaire comprise**, exclusives ; sur une capture encore vierge pour la
+  famille, seule la valeur par défaut que le catalogue déclare (`normal`) est cochée — aucune coche d'office sur une
+  famille `choice` ;
 - renommer l'en-tête « Toutes captures » en « Cette taille » / « This size », retirer « Normal · Écart » et les
   légendes qui expliquaient les deux styles.
 
