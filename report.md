@@ -23,6 +23,23 @@ et deux styles de « deux coches » cohabitaient sans qu'on sache lire la nuance
 
 Aucun champ de contrat ne bouge.
 
+## Nouvelle demande — l'aperçu d'une preuve se charge quand il s'affiche (#299)
+
+Fichier durable : [`roomprofile-0712-apercus-preuves.md`](./roomprofile-0712-apercus-preuves.md)
+(source : `doc/agents/claude-design-0712-apercus-preuves.md`, branche `fix/0712-station4-ecran` vers release/0.7.12).
+
+La trace terrain de la station 4 : chaque relecture chargeait l'aperçu de toutes les preuves de géométrie (188),
+sérialisés par le verrou de la room, ~3,8 s par relecture. L'app n'en charge plus aucun à la relecture :
+`GeometryProof.image` reste absent tant que rien ne l'a demandé, et `onReloadGeometryProof(proofId)` charge l'aperçu
+de cette seule preuve. L'écran doit :
+
+- appeler `onReloadGeometryProof(proof.id)` quand la ligne d'une preuve entre dans la zone visible, une fois par
+  preuve affichée (à défaut, un bouton « Voir l'aperçu » sur la ligne) ;
+- rendre la ligne sans aperçu comme aujourd'hui tant que l'image est absente ;
+- ne jamais déclencher une demande par preuve de la liste d'un coup.
+
+Aucun champ de contrat ne bouge.
+
 ## Règles inchangées
 
 Un seul drop cumulatif avec manifeste ; version du prototype identique ; `previewOnly` vide ; FR/EN complets ; lint,
