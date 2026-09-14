@@ -1,43 +1,29 @@
-# Rapport de vague — 0.7.11 (2026-09-12)
+# Rapport de vague — 0.7.12 (2026-09-14)
 
-Écrivain : lt-atelier. Ce rapport **remplace** celui de la 0.7.9 et le reprend : le drop 0.7.9 est toujours
-attendu, deux de ses trois demandes tiennent telles quelles, la troisième est **annulée** par le moteur.
+Écrivain : lt-atelier. Ce rapport **remplace** celui de la 0.7.11 : ses trois demandes (#277 tête « capture
+remplacée » retirée, #278 asset refusé visible, #276 note « rien de recalculé ») sont honorées par le drop
+`2026-09-12.1`, importé dans la 0.7.11. Rien n'est à reprendre.
 
-## ⚠️ Annulation — la capture remplacée n'existe plus (#292, lot moteur #295)
+## Nouvelle demande — la jauge de la station 3 dit ce qui manque (#298)
 
-Le rapport précédent demandait une tête de bannière « Capture remplacée sur k taille(s) », **sous réserve du
-contrat moteur**. La réserve a tranché : **elle n'a plus d'objet**.
+Fichier durable : [`roomprofile-0712-jauge-locale.md`](./roomprofile-0712-jauge-locale.md)
+(source : `doc/agents/claude-design-0712-jauge-locale.md`, branche `fix/0712-jauge-locale` vers release/0.7.12).
 
-Fichier durable : [`roomprofile-0711-capture-remplacee.md`](./roomprofile-0711-capture-remplacee.md)
-(source : `doc/agents/claude-design-0711-capture-remplacee.md`, release/0.7.11 @ `934eec0f`).
+Le terrain 0.7.11 : en parcourant les captures, sans rien toucher, la colonne de droite se cochait et se décochait,
+et deux styles de « deux coches » cohabitaient sans qu'on sache lire la nuance. L'app sert désormais `attestedBy` et
+`state` vivants ; l'écran doit :
 
-La 0.7.9 plafonnait la station 3 à une capture par taille et par tour, et le bouton **supprimait** la capture
-précédente de la même taille. Le terrain a tranché : un jeu exhaustif demande plusieurs mains par taille. Le moteur
-capture désormais à chaque appui et le bouton **ajoute** — rien n'est jamais remplacé ni supprimé implicitement.
+- lire le compte d'une jauge tel quel, sans correction ±1 par la capture affichée ;
+- n'avoir **qu'un** style de jauge : une case, deux carrés à un témoin, ✓ à deux ;
+- rendre **une ligne par variante, face ordinaire comprise**, exclusives, la face ordinaire cochée par défaut sur une
+  capture encore vierge pour la famille ;
+- renommer l'en-tête « Toutes captures » en « Cette taille » / « This size », retirer « Normal · Écart » et les
+  légendes qui expliquaient les deux styles.
 
-- `CaptureFailure.failures[].kind = "replaced"` reste au contrat (aucune migration), mais **le moteur ne l'émet
-  plus** : la branche d'affichage est morte, à retirer.
-- `CaptureFailureNotice` : **une seule tête**, celle des refus — « Capture refusée sur k tailles sur n ».
-- Chaînes `captureReplaced` et `captureRefusedOrReplaced` : **supprimées**, FR et EN.
-- Ligne par taille : inchangée, le message du back verbatim.
-
-Si le drop en cours porte déjà la tête « remplacée », il suffit de la retirer : rien d'autre de la 0.7.9 ne bouge.
-
-## Toujours attendu — la station 3 dit ce qu'elle refuse et ce qu'elle diffère
-
-Fichier durable : [`roomprofile-079-station3.md`](./roomprofile-079-station3.md). Les deux points ci-dessous sont
-**inchangés** ; seule la section #277 de ce fichier est caduque.
-
-- **Asset refusé visible** (#278) : `onError` sur le moniteur de la station 3 (callout d'échec, chaîne
-  `tourShotRefused(label)`) et sur les vignettes de `ShotStrip` (`data-failed`, chaîne `shotImgRefused`), idiome
-  déjà en place dans `PipelineFrame`. Aucun champ de contrat.
-- **Rien de recalculé pendant la série** (#276) : une note statique en station 3 (`tourCoverageDeferred`) —
-  l'app ne relit plus la couverture qu'à la sortie de la station. La 0.7.11 étend cette règle à **toutes** les
-  mutations de l'écran : supprimer, renommer, désigner la capture principale, poser le délai, poser l'unité posent
-  leur effet sans aucune relecture. La note vaut donc pour la station entière, pas pour la seule série de capture.
+Aucun champ de contrat ne bouge.
 
 ## Règles inchangées
 
 Un seul drop cumulatif avec manifeste ; version du prototype identique ; `previewOnly` vide ; FR/EN complets ; lint,
-typecheck et react-doctor à zéro sans suppression ; conserver tous les acquis 0.7.6 à 0.7.8 et les demandes permanentes.
-Import par `pnpm import-ds` seulement, puis tests app, e2e complète sans retry et parité pixel.
+typecheck et react-doctor à zéro sans suppression ; conserver tous les acquis 0.7.6 à 0.7.11 et les demandes
+permanentes. Import par `pnpm import-ds` seulement, puis tests app, e2e complète sans retry et parité pixel.
