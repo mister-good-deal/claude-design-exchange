@@ -1,47 +1,39 @@
-# Rapport de vague — 0.7.12 (2026-09-14)
+# Rapport de vague — 0.7.14 (2026-09-15)
 
-Écrivain : lt-atelier. Ce rapport **remplace** celui de la 0.7.11 : ses trois demandes (#277 tête « capture
-remplacée » retirée, #278 asset refusé visible, #276 note « rien de recalculé ») sont honorées par le drop
-`2026-09-12.1`, importé dans la 0.7.11. Rien n'est à reprendre.
+Écrivain : lt-atelier. Ce rapport **remplace** celui de la 0.7.12 : ses deux demandes (#298 jauge par face, #299
+aperçu de preuve à l'affichage) sont honorées par le drop `2026-09-14`, importé dans la 0.7.13. Rien n'est à
+reprendre. L'itération que Romain mène directement avec vous sur la bet bar (#297, sizing par position) continue
+hors de ce rapport : ne pas la perdre.
 
-## Nouvelle demande — la jauge de la station 3 dit ce qui manque (#298)
+Fichier durable de la vague : [`roomprofile-0714-capture-station4.md`](./roomprofile-0714-capture-station4.md)
+(source : `doc/agents/claude-design-0714-capture-station4.md`, branche `fix/0714-capture-station4` vers
+release/0.7.14). Trois demandes, un seul drop.
 
-Fichier durable : [`roomprofile-0712-jauge-locale.md`](./roomprofile-0712-jauge-locale.md)
-(source : `doc/agents/claude-design-0712-jauge-locale.md`, branche `fix/0712-jauge-locale` vers release/0.7.12).
+## 1. Bloquant — la station 4 affiche la capture sur laquelle l'app écrit (#307)
 
-Le terrain 0.7.11 : en parcourant les captures, sans rien toucher, la colonne de droite se cochait et se décochait,
-et deux styles de « deux coches » cohabitaient sans qu'on sache lire la nuance. L'app sert désormais `attestedBy` et
-`state` vivants ; l'écran doit :
+Au terrain, la station 4 écrivait ses preuves sur la capture principale pendant qu'elle en affichait une autre, et
+n'affichait pas la capture choisie en station 3. La capture de la station 4 vit dans l'état local de `ZoneWorkbench`
+sans que l'app en soit informée.
 
-- lire le compte d'une jauge tel quel, sans correction ±1 par la capture affichée ;
-- n'avoir **qu'un** style de jauge : une case, deux carrés à un témoin, ✓ à deux ;
-- rendre **une ligne par variante, face ordinaire comprise**, exclusives ; sur une capture encore vierge pour la
-  famille, seule la valeur par défaut que le catalogue déclare (`normal`) est cochée — aucune coche d'office sur une
-  famille `choice` ;
-- renommer l'en-tête « Toutes captures » en « Cette taille » / « This size », retirer « Normal · Écart » et les
-  légendes qui expliquaient les deux styles.
+- Contrat : `WizardState.activeShotId?: string`, la capture servie de la station `adjust`.
+- `ZoneWorkbench` affiche la capture servie, sans repli ; vignette, pager, flèches ← → et bascule vers une capture qui
+  atteste la déclinaison émettent `on.onSelectShot(sizeId, shotId)` — plus aucun `selectShot` local.
+- `CardTemplateTool` lit la même capture servie et son sélecteur émet `on.onSelectShot`.
+- Règle durable : un écran ne tient jamais en local un id de domaine qu'une écriture de l'app utilise sans le recevoir
+  en argument ; il le lit servi et émet le callback.
+- Fixture : une posture de station 4 dont la capture servie n'est pas la principale.
 
-Aucun champ de contrat ne bouge.
+## 2. Station 4 — « Tout sélectionner » puis les flèches déplacent le groupe (#305)
 
-## Nouvelle demande — l'aperçu d'une preuve se charge quand il s'affiche (#299)
+Flèches sur le groupe entier après « Tout sélectionner », un clic sur un membre ne dissout pas le groupe, jamais de
+défilement de page tant qu'une sélection existe, un seul `onNudgeZones` pour tout le groupe.
 
-Fichier durable : [`roomprofile-0712-apercus-preuves.md`](./roomprofile-0712-apercus-preuves.md)
-(source : `doc/agents/claude-design-0712-apercus-preuves.md`, branche `fix/0712-station4-ecran` vers release/0.7.12).
+## 3. Station 3 — « Capturer cette taille » (#303)
 
-La trace terrain de la station 4 : chaque relecture chargeait l'aperçu de toutes les preuves de géométrie (188),
-sérialisés par le verrou de la room, ~3,8 s par relecture. L'app n'en charge plus aucun à la relecture :
-`GeometryProof.image` reste absent tant que rien ne l'a demandé, et `onReloadGeometryProof(proofId)` charge l'aperçu
-de cette seule preuve. L'écran doit :
-
-- appeler `onReloadGeometryProof(proof.id)` quand la ligne d'une preuve entre dans la zone visible, une fois par
-  preuve affichée (à défaut, un bouton « Voir l'aperçu » sur la ligne) ;
-- rendre la ligne sans aperçu comme aujourd'hui tant que l'image est absente ;
-- ne jamais déclencher une demande par preuve de la liste d'un coup.
-
-Aucun champ de contrat ne bouge.
+`tourCapture` et `orF9` disent la différence : le bouton prend la taille courante, F9 une capture par taille du layout.
 
 ## Règles inchangées
 
 Un seul drop cumulatif avec manifeste ; version du prototype identique ; `previewOnly` vide ; FR/EN complets ; lint,
-typecheck et react-doctor à zéro sans suppression ; conserver tous les acquis 0.7.6 à 0.7.11 et les demandes
+typecheck et react-doctor à zéro sans suppression ; conserver tous les acquis 0.7.6 à 0.7.13 et les demandes
 permanentes. Import par `pnpm import-ds` seulement, puis tests app, e2e complète sans retry et parité pixel.
