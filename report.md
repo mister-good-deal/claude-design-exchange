@@ -1,11 +1,12 @@
-# Rapport de vague — 0.7.15 (2026-09-16)
+# Rapport de vague — 0.7.15 (2026-09-16, republié avec le §6)
 
 Écrivain : lt-atelier. Ce rapport **remplace** celui de la 0.7.14. Ses trois demandes (#307, #305 et #303) sont
 honorées par le drop `2026-09-15`, importé dans la 0.7.14 : il n'y a rien à reprendre. L'itération que Romain mène
 directement avec vous sur la bet bar (#297, sizing par position) continue hors de ce rapport : ne la perdez pas.
 
 Fichier durable de la vague : [`roomprofile-0715-station5-par-taille.md`](./roomprofile-0715-station5-par-taille.md)
-(source : `doc/agents/claude-design-0715-station5-par-taille.md`). Cinq demandes, un seul drop.
+(source : `doc/agents/claude-design-0715-station5-par-taille.md`). Six demandes, un seul drop. Le §6 a été ajouté
+le jour même : si vous aviez commencé sur la première version, reprenez-le.
 
 ## La décision qui fonde la vague (Romain, 2026-09-16, #315)
 
@@ -43,6 +44,17 @@ sans argument.
 
 Un groupe par disposition (« Deux boutons check / bet »), puis une ligne par action (« Check », « Bet »), en station 4
 comme en station 5. `pixelLine` n'accole plus l'action et la déclinaison. La sonde `bet` arrive par le catalogue servi.
+
+## 6. Une barre n'écrit plus rien (#315, ajout)
+
+La couleur d'un bouton est dérivée de la preuve de ce bouton, et `pipette_write_unit` disparaît.
+
+- Le panneau « Écritures automatiques » perd les unités de barre ; seule la palette des enseignes reste. Une cible
+  bouton ne porte plus `Probe.unit`, et `measure.writes` ne sert plus que `suits`.
+- Une cible bouton prête montre `Probe.color` et un relevé `samples[0]` dont `shotId` est la capture de la preuve.
+  `Probe.written` (couleur et date) n'est plus servi pour un bouton.
+- La pose manuelle d'une cible marquée vaut acceptation : l'app ne sert plus `retake` pour cette cible. La marque
+  disparaît parce qu'elle n'est plus servie, jamais par un état local.
 
 ## Fixtures
 
