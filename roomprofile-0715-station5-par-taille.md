@@ -55,7 +55,7 @@ affiche ses outils (Pipette, Glyphes, Atelier) sans bandeau : la taille mesurée
 - **Marque « à reprendre »** : contrat `Probe.retake?: string`, le motif servi (par exemple « hors tolérance :
   ΔE 14 contre #E5A200 en 1048×720 »). La ligne de la cible affiche la marque et son motif.
 - **Pose manuelle seulement sur une cible marquée** : `ColorSurface` n'est cliquable que si `retake` est servi. Une
-  cible non marquée affiche sa couleur prélevée et la capture de sa preuve, sans surface de pose. Une cible sans
+  cible non marquée affiche sa couleur prélevée et la capture de sa preuve (§6), sans surface de pose. Une cible sans
   couleur ni marque dit que son bouton est à valider en station 4, et renvoie vers la station 4 par
   `onReplayStation("adjust")`.
 - Les enseignes (palette des cartes) ne changent pas : trois relevés, pose libre.
@@ -80,6 +80,22 @@ deux ». Et le bouton `bet` n'a pas de sonde.
   déclinaison servie (« Deux boutons fold / call », « Deux boutons check / bet », « Trois boutons »), puis une ligne
   par bouton, nommée par son action (« Check », « Bet »). `pixelLine` n'accole plus l'action et la déclinaison.
 - La sonde `bet` arrive par le catalogue servi (moteur). L'écran rend les sondes servies, sans liste codée en dur.
+
+## 6. Une barre n'écrit plus rien : la couleur d'un bouton se lit, elle ne s'écrit pas (#315, ajout du 2026-09-16)
+
+Le moteur dérive la couleur d'une sonde de la preuve de son bouton : la commande d'écriture d'une barre
+(`pipette_write_unit`) disparaît. Les arbitrages sont notés sur #315.
+
+- **Le panneau « Écritures automatiques » perd les unités de barre** (« Deux boutons (fold / call) — il manque Fold,
+  Call »). Seule la palette des enseignes y reste, avec son écriture d'un bloc. Une cible bouton ne porte plus
+  `Probe.unit` et `measure.writes` ne sert plus que l'unité `suits`. La ligne « unité de la cible » de `TargetRead`
+  disparaît pour un bouton.
+- **Une cible bouton prête montre sa couleur, sans date d'écriture** : `Probe.color`, plus un seul relevé
+  `samples[0]` dont `shotId` est la capture de la preuve, servie par l'app. `Probe.written` (couleur et date, #259)
+  n'est plus servi pour un bouton. Il reste pour les enseignes.
+- **La pose manuelle d'une cible marquée vaut acceptation** : la couleur est relue sur la capture posée, et l'app ne
+  sert plus `retake` pour cette cible, même si la couleur diffère des autres tailles. L'écran ne tient aucune marque en
+  local : la marque disparaît parce qu'elle n'est plus servie.
 
 ## Fixtures
 
