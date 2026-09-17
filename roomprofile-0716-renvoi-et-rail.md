@@ -69,9 +69,30 @@ une taille qui porte deux barres annonce deux fois le même nom :
 Le manifeste du drop `2026-09-16` le prévoit déjà (`parity.pixelLineOneButton` : la composition survit dans chaque
 nom accessible) ; la surface de pose armée l'applique, pas le rail. Le texte visible ne change pas.
 
+## 5. Station 4 — sur un écran de fin, seule `requeue` s'affiche (#320, ajout du 2026-09-17)
+
+**Terrain.** Capture #46 en 1572×1080 : « Vous avez été éliminé du tournoi… Disputer une autre partie ? ». La station
+4 cache déjà la barre d'action, le board, les cartes et les vilains (#312). Elle affiche pourtant encore les blindes,
+les pots, la mise et le tapis du héros, alors qu'une seule ROI est attendue : `requeue`.
+
+**Règle (moteur, G1 de #320).** Le catalogue déclare, en plus de `requires`, les attestations qui **excluent** une
+zone. Pour toute zone sauf `requeue`, cette exclusion est `requeue/present`. Le moteur refuse déjà d'écrire ou
+d'admettre une zone exclue sur une capture qui atteste son exclusion. L'écran doit maintenant cesser de l'afficher.
+
+| Où | Aujourd'hui | Attendu |
+|---|---|---|
+| Contrat | `Zone.requires?: string[]` seul | `Zone.excludedBy?: string[]`, des ids de variante (`requeue/present`), servis par l'app comme `requires` ; absent ou vide = rien n'exclut la zone |
+| `requiresMet` / `derivedHidden` | une zone est masquée si aucune de ses `requires` n'est attestée | elle l'est aussi si **une** de ses `excludedBy` est attestée par la capture chargée (`attestsVariant`) : même calcul pur, recalculé à chaque capture, l'œil manuel posé par-dessus comme aujourd'hui |
+| Rail, canvas, gabarit | les zones de `derivedHidden` ne se dessinent pas et disent pourquoi | idem pour une zone exclue ; `requeue` reste la seule ROI dessinée sur cette capture |
+
+Le geste manuel qui révèle une ROI masquée (A3) garde sa règle. S'il ne sait pas réécrire une exclusion de façon
+symétrique, il ne révèle pas une ROI exclue : corriger le label de la capture reste le chemin.
+
 ## Fixtures
 
 - Station 5 : une cible sans couleur dont la barre est attestée par une capture qui n'est **pas** la principale, pour
   que le renvoi du §1 porte un `shotId` distinct.
 - Station 4 : une taille à deux barres, capture servie à deux boutons, pour que les puces « Trois boutons » rendent
   l'état du §2.
+- Station 4 : une capture « Relancer » (`requeue/present`) sur une taille calibrée, pour que le §5 rende les zones de
+  table masquées et `requeue` seule.
