@@ -6,7 +6,8 @@ L'itération que Romain mène directement avec vous sur la bet bar (#297, sizing
 rapport : ne la perdez pas.
 
 Fichier durable de la vague : [`roomprofile-0716-renvoi-et-rail.md`](./roomprofile-0716-renvoi-et-rail.md)
-(source : `doc/agents/claude-design-0716-renvoi-et-rail.md`). Quatre demandes, un seul drop.
+(source : `doc/agents/claude-design-0716-renvoi-et-rail.md`). **Cinq demandes**, un seul drop. Le §5 (#320) a été
+ajouté le jour même : si vous aviez commencé sur la première version, reprenez-la.
 
 ## Pourquoi cette vague (campagne Windows 0.7.15, 2026-09-17)
 
@@ -35,10 +36,17 @@ une fois par groupe, ou dans le `title`. Les notes (« à reprendre », §2) pas
 `pixelPlaceAria`, puce posée, œil de la station 4 et `probeSelectAria` de la station 5 composent par `pixelLabel`
 (« Fold · 2 boutons »). Le texte visible ne change pas.
 
+## 5. Station 4 — sur un écran de fin, seule `requeue` s'affiche (#320, ajout)
+
+`Zone.excludedBy?: string[]` (ids de variante, `requeue/present` pour toute zone sauf `requeue`). `requiresMet` et
+`derivedHidden` masquent aussi une zone dont une exclusion est attestée par la capture chargée : même calcul pur, l'œil
+manuel par-dessus. Sur la capture #46 « Relancer », seule `requeue` se dessine.
+
 ## Fixtures
 
 - Station 5 : une cible sans couleur dont la barre est attestée par une capture non principale.
 - Station 4 : une taille à deux barres, capture servie à deux boutons.
+- Station 4 : une capture « Relancer » (`requeue/present`) sur une taille calibrée.
 
 ## Règles inchangées
 
