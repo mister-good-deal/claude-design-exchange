@@ -120,6 +120,11 @@ verdict?: SizeVerdict;   // le verdict de la station AFFICHÉE, servi tel quel
 - **La sous-ROI de rang est de la taille (#331, ajout du 18/09).** `onSetCardRankSubRoi?: (sizeId: string, family:
   CardFamily, rect: CardRankSubRoi) => void`, comme `onSetCardTemplate(sizeId, …)` : le geste reçoit la taille que la
   vignette règle, l'app ne la lit plus dans un état ambiant. La mention « bucket-independent » du contrat tombe.
+- **Le bandeau ne recouvre jamais le canevas (correction du 19/09, gate de parcours).** Fenêtre 1440 × 720 : le
+  bandeau des tailles, collant, occupe 97 → 216 px ; « Valider » de la barre de zone tombe à y = 734 px, sous le pli.
+  Pour valider, le joueur défile, et le haut du canevas passe sous le bandeau opaque : « Pot total » est masqué, et un
+  clic à sa place tombe sur le bandeau. Attendu : le canevas défile sous le bandeau avec une marge (`scroll-margin`),
+  ou la barre de zone reste dans la vue ; aucune ROI n'est jamais sous le bandeau.
 
 ## 6. L'état local ne survit pas à sa taille ni à sa cible
 
@@ -157,7 +162,8 @@ trouve les mêmes familles de défauts qu'aux stations 3 à 5. Quatre relèvent 
 - Station 5 : un cadre de bouton au bord droit de la barre (le cas du terrain), pour que le centrage se voie.
 - Bandeau : une taille verte `36 / 36` en station 4 et orange `8 / 12` en station 5 ; une taille sans `verdict` ; une
   taille retenue.
-- Station 4 : une ROI `adjusted` dont la ligne est refusée (« faits d'origine périmés ») ; une note `collateral`.
+- Station 4 : une ROI `adjusted` dont la ligne est refusée (« faits d'origine périmés ») ; une note `collateral` ;
+  la station en fenêtre 1440 × 720, barre de zone ouverte sur « Pot total ».
 - Outil glyphes : deux tailles à couverture servie différente (1048 × 720 complète, 698 × 720 sans gabarit natif) ;
   une vérité en `crop: "pending"`.
 - Station 6 : un verdict refusé à trois lignes (deux tailles, deux stations) ; un verdict `stale` ; un blocker de
