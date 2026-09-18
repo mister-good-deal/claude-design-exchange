@@ -6,9 +6,9 @@
 continue hors de ce rapport : ne la perdez pas.
 
 Fichier durable de la vague : [`roomprofile-0717-station5-sur-place.md`](./roomprofile-0717-station5-sur-place.md)
-(source : `doc/agents/claude-design-0717-station5-sur-place.md`). **Six demandes**, un seul drop. Toute la station 5
-de la 0.7.17 en dépend. **Ajout du 18/09, avant tout drop** : point 5, `onSetCardRankSubRoi` reçoit sa
-taille.
+(source : `doc/agents/claude-design-0717-station5-sur-place.md`). **Sept demandes**, un seul drop. Toute la station 5
+de la 0.7.17 en dépend. **Ajouts du 18/09, avant tout drop** : point 5, `onSetCardRankSubRoi` reçoit sa
+taille ; point 7, l'outil glyphes et la station 6.
 
 ## Pourquoi cette vague (campagne Windows 0.7.16, 2026-09-18)
 
@@ -22,7 +22,7 @@ system affiche, l'app décide)**.
 - La porte `placeable()` de la 0.7.15 (#315) : toute cible est posable en station 5.
 - Le renvoi de la 0.7.16 (§1, #322) : `TargetWaiting`, `handoverOf`, `goPlacePixel`, et `onPlacePoint` avec lui.
 
-## Les six demandes
+## Les sept demandes
 
 1. **Station 5 sur place (#332, bloquant).** Plus de porte, plus de renvoi, plus de note `probeSettled`, plus de
    bouton vers la station 3. « Reprendre » (remplace « Refaire ») et « Annuler » (`onCancelColorSample(sizeId,
@@ -38,6 +38,9 @@ system affiche, l'app décide)**.
    `onSetCardRankSubRoi(sizeId, family, rect)` reçoit sa taille, comme `onSetCardTemplate(sizeId, …)`.
 6. **État local estampillé.** `ColorSurface`, `CardTemplateTool`, `ZoneWorkbench`, `PurgeControl` : lu sous la clé
    (taille, capture, cible) où il a été produit.
+7. **Outil glyphes et station 6 (ajout, audit #351–#367).** Couverture glyphes servie pour la taille affichée (plus
+   aucun compte dans `GlyphTool`) et « glyphes couverts » au bandeau de la station 5 ; saisie sans découpe dite, jamais
+   déguisée en cellules ; nom de paquet gardé jusqu'au service ; `WriteVerdict.blockers` structurés et verdict périmé.
 
 ## Règles inchangées
 
