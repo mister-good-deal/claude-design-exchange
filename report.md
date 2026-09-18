@@ -7,7 +7,8 @@ continue hors de ce rapport : ne la perdez pas.
 
 Fichier durable de la vague : [`roomprofile-0717-station5-sur-place.md`](./roomprofile-0717-station5-sur-place.md)
 (source : `doc/agents/claude-design-0717-station5-sur-place.md`). **Six demandes**, un seul drop. Toute la station 5
-de la 0.7.17 en dépend.
+de la 0.7.17 en dépend. **Ajout du 18/09, avant tout drop** : point 5, `onSetCardRankSubRoi` reçoit sa
+taille.)
 
 ## Pourquoi cette vague (campagne Windows 0.7.16, 2026-09-18)
 
@@ -33,7 +34,8 @@ system affiche, l'app décide)**.
 4. **Bandeau = verdict (#330).** `SizeBucket.verdict { state, done, total, lines? }`, celui de la station affichée,
    rendu tel quel dans les stations 3 à 6 ; aucun repli.
 5. **Station 4 (#328, #331).** Une ROI dont la ligne est refusée n'est pas cochée et dit son motif, sa capture et
-   « Revalider sur cette capture » ; `WizardState.collateral` annonce ce qu'une écriture a fait tomber.
+   « Revalider sur cette capture » ; `WizardState.collateral` annonce ce qu'une écriture a fait tomber. **Ajout** :
+   `onSetCardRankSubRoi(sizeId, family, rect)` reçoit sa taille, comme `onSetCardTemplate(sizeId, …)`.
 6. **État local estampillé.** `ColorSurface`, `CardTemplateTool`, `ZoneWorkbench`, `PurgeControl` : lu sous la clé
    (taille, capture, cible) où il a été produit.
 
