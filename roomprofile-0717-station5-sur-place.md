@@ -112,6 +112,9 @@ verdict?: SizeVerdict;   // le verdict de la station AFFICHÉE, servi tel quel
   ce que la dernière écriture a fait tomber. Présent et non vide : une note en tête de la station les énumère
   verbatim (« Ce réglage a dévalidé 7 zones de 1920 × 720 : Board 1… »). L'app cesse de la servir au geste suivant ;
   aucun callback.
+- **La sous-ROI de rang est de la taille (#331, ajout du 18/09).** `onSetCardRankSubRoi?: (sizeId: string, family:
+  CardFamily, rect: CardRankSubRoi) => void`, comme `onSetCardTemplate(sizeId, …)` : le geste reçoit la taille que la
+  vignette règle, l'app ne la lit plus dans un état ambiant. La mention « bucket-independent » du contrat tombe.
 
 ## 6. L'état local ne survit pas à sa taille ni à sa cible
 
