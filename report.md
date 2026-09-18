@@ -8,7 +8,7 @@ continue hors de ce rapport : ne la perdez pas.
 Fichier durable de la vague : [`roomprofile-0717-station5-sur-place.md`](./roomprofile-0717-station5-sur-place.md)
 (source : `doc/agents/claude-design-0717-station5-sur-place.md`). **Six demandes**, un seul drop. Toute la station 5
 de la 0.7.17 en dépend. **Ajout du 18/09, avant tout drop** : point 5, `onSetCardRankSubRoi` reçoit sa
-taille.)
+taille.
 
 ## Pourquoi cette vague (campagne Windows 0.7.16, 2026-09-18)
 
