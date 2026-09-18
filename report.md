@@ -1,56 +1,45 @@
-# Rapport de vague — 0.7.16 (2026-09-17)
+# Rapport de vague — 0.7.17 (2026-09-18)
 
-Écrivain : lt-atelier. Ce rapport **remplace** celui de la 0.7.15. Ses six demandes (#310, #315, #314, #313, §6) sont
-honorées par les drops `2026-09-16` et `2026-09-16.1`, importés dans la 0.7.15 (MR !311) : il n'y a rien à reprendre.
-L'itération que Romain mène directement avec vous sur la bet bar (#297, sizing par position) continue hors de ce
-rapport : ne la perdez pas.
+Écrivain : lt-atelier. Ce rapport **remplace** celui de la 0.7.16, dont les cinq demandes sont honorées par le drop
+`2026-09-17` (importé dans la 0.7.16, MR !319) : rien n'est à en reprendre, **sauf son §1, que cette vague annule**
+(voir plus bas). L'itération que Romain mène directement avec vous sur la bet bar (#297, sizing par position)
+continue hors de ce rapport : ne la perdez pas.
 
-Fichier durable de la vague : [`roomprofile-0716-renvoi-et-rail.md`](./roomprofile-0716-renvoi-et-rail.md)
-(source : `doc/agents/claude-design-0716-renvoi-et-rail.md`). **Cinq demandes**, un seul drop. Le §5 (#320) a été
-ajouté le jour même : si vous aviez commencé sur la première version, reprenez-la.
+Fichier durable de la vague : [`roomprofile-0717-station5-sur-place.md`](./roomprofile-0717-station5-sur-place.md)
+(source : `doc/agents/claude-design-0717-station5-sur-place.md`). **Six demandes**, un seul drop. Toute la station 5
+de la 0.7.17 en dépend.
 
-## Pourquoi cette vague (campagne Windows 0.7.15, 2026-09-17)
+## Pourquoi cette vague (campagne Windows 0.7.16, 2026-09-18)
 
-En station 5, une cible sans couleur renvoie en station 4 **sans cible** : la pose est partie sur le pixel Fold de la
-mauvaise barre, et le moteur l'a refusée. C'est la règle durable de la 0.7.14, appliquée à un geste qui change de
-station : il emporte l'adresse complète de ce qu'il arme, et l'app n'en devine rien.
+Neuvième campagne arrêtée par une station. Pour poser une sonde, Romain a fait station 5 → 4 → 3 → 4 → 5. La norme
+est désormais écrite (`doc/architecture/contrat-des-stations.md`) ; quatre de ses clauses vous concernent : P1 (ce
+qui est affiché est ce qui est écrit), P2 (une donnée, une source), P4 (aucun retour en arrière), **P9 (le design
+system affiche, l'app décide)**.
 
-## 1. Le renvoi emporte sa cible (#322, bloquant)
+## Ce que cette vague annule
 
-`onPlacePoint(sizeId, pointId, shotId?)`. `TargetWaiting` émet `onPlacePoint(bucket.id, target.pointId,
-target.shot.id)` : la taille du bandeau, le pixel de la sonde et la capture qui atteste sa barre. Le libellé nomme ce
-qui sera armé (« Poser le pixel Fold · 2 boutons ▸ station 4 »). « Pointer le pixel » (`bet_blur`) passe `bucket.id`.
+- La porte `placeable()` de la 0.7.15 (#315) : toute cible est posable en station 5.
+- Le renvoi de la 0.7.16 (§1, #322) : `TargetWaiting`, `handoverOf`, `goPlacePixel`, et `onPlacePoint` avec lui.
 
-## 2. Station 4 — une puce n'arme rien sur une barre non attestée (#322)
+## Les six demandes
 
-Si la capture servie n'atteste pas la déclinaison d'une sonde (`attestsVariant` faux), la puce n'émet pas
-`onSelectPoint` et dit quelle capture elle attend (« attend une capture à trois boutons »).
-
-## 3. Station 4 — une ligne de pixel sur une seule ligne (#321)
-
-Pastille, nom, étiquette et œil sur une ligne, comme une ROI. « suit la ROI de son bouton » ne repousse plus l'œil :
-une fois par groupe, ou dans le `title`. Les notes (« à reprendre », §2) passent sous la ligne.
-
-## 4. La déclinaison survit dans chaque nom accessible (#318)
-
-`pixelPlaceAria`, puce posée, œil de la station 4 et `probeSelectAria` de la station 5 composent par `pixelLabel`
-(« Fold · 2 boutons »). Le texte visible ne change pas.
-
-## 5. Station 4 — sur un écran de fin, seule `requeue` s'affiche (#320, ajout)
-
-`Zone.excludedBy?: string[]` (ids de variante, `requeue/present` pour toute zone sauf `requeue`). `requiresMet` et
-`derivedHidden` masquent aussi une zone dont une exclusion est attestée par la capture chargée : même calcul pur, l'œil
-manuel par-dessus. Sur la capture #46 « Relancer », seule `requeue` se dessine.
-
-## Fixtures
-
-- Station 5 : une cible sans couleur dont la barre est attestée par une capture non principale.
-- Station 4 : une taille à deux barres, capture servie à deux boutons.
-- Station 4 : une capture « Relancer » (`requeue/present`) sur une taille calibrée.
+1. **Station 5 sur place (#332, bloquant).** Plus de porte, plus de renvoi, plus de note `probeSettled`, plus de
+   bouton vers la station 3. « Reprendre » (remplace « Refaire ») et « Annuler » (`onCancelColorSample(sizeId,
+   targetId)`). `bet_blur` se pose dans la station (`kind: "point"`).
+2. **Le cadre est la ROI.** Centré sur elle, marge proportionnelle, translaté et jamais rogné, contour toujours
+   dessiné, taille de la ROI affichée.
+3. **L'app décide (P9).** Servis : `Probe.shotId`, `Probe.blocked`, `Probe.origin` (posée ici / amorcée),
+   `SuitSwatch.retained`, `ProbeSample.sizeId` et `zoneId`. `shotForVariant` et `retainedColor` quittent `ui/`.
+4. **Bandeau = verdict (#330).** `SizeBucket.verdict { state, done, total, lines? }`, celui de la station affichée,
+   rendu tel quel dans les stations 3 à 6 ; aucun repli.
+5. **Station 4 (#328, #331).** Une ROI dont la ligne est refusée n'est pas cochée et dit son motif, sa capture et
+   « Revalider sur cette capture » ; `WizardState.collateral` annonce ce qu'une écriture a fait tomber.
+6. **État local estampillé.** `ColorSurface`, `CardTemplateTool`, `ZoneWorkbench`, `PurgeControl` : lu sous la clé
+   (taille, capture, cible) où il a été produit.
 
 ## Règles inchangées
 
 - Un seul drop cumulatif avec manifeste ; version du prototype identique ; `previewOnly` vide ; FR/EN complets.
 - Lint, typecheck et react-doctor à zéro, sans suppression.
-- Conservez tous les acquis de 0.7.6 à 0.7.15 et les demandes permanentes.
+- Conservez tous les acquis de 0.7.6 à 0.7.16 (hors ce qui est annulé ci-dessus) et les demandes permanentes.
 - Import par `pnpm import-ds` seulement, puis tests app, e2e complète sans retry et parité pixel.
