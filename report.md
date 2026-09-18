@@ -14,7 +14,6 @@ session ; une taille retenue garde son badge « retenue » ; un blocker de valid
 Et, même jour : en station 4, le bandeau collant ne recouvre jamais le canevas (fenêtre 1440 × 720,
 « Pot total » masqué).
 
-
 ## Pourquoi cette vague (campagne Windows 0.7.16, 2026-09-18)
 
 Neuvième campagne arrêtée par une station. Pour poser une sonde, Romain a fait station 5 → 4 → 3 → 4 → 5. La norme
