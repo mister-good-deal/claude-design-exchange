@@ -131,6 +131,18 @@ motif existe déjà chez vous : `ZoneWorkbench.hiddenShotId`, `PipelineTool.want
 
 Changer de taille, de capture ou de cible ne montre donc rien de l'ancienne, pas même une image.
 
+## 7. Outil glyphes et station 6 : servir, ne plus compter (ajout du 18/09, audit)
+
+Romain n'a jamais atteint l'outil glyphes ni la station 6 en campagne ; l'audit de leur écran (issues #351 à #367)
+trouve les mêmes familles de défauts qu'aux stations 3 à 5. Quatre relèvent du design system.
+
+| Où | Aujourd'hui | Attendu |
+|---|---|---|
+| Couverture de l'outil glyphes (#355, #361) | `GlyphTool` calcule sections, totaux, pourcentage, couverture par paquet, pire famille (`sectionsOf`, `totalOf`, `packCoverage`, `bucketGlyphTotals`, `codeRequired`, `readUnitCodes`), refiltre les ROI de la capture (`roisOnShot`) et la charge (`workloadOf`) ; le titre « Couverture glyphes — 698 × 720 · 25 / 25 » porte un compte de room | l'app sert, **pour la taille affichée**, `done` / `total` / `state` par famille et par paquet, la liste des ROI de la capture et la charge ; le DS les rend tels quels. Le bandeau de la station 5 dit aussi « glyphes couverts » de chaque taille, servi (`SizeBucket.glyphs?: { done, total }`), comme le contrat l'exige |
+| Saisie sans découpe (#353) | les caractères tapés s'affichent comme des cellules du crop et sont cliquables comme segments | `GlyphTruth.crop?: "ready" \| "pending" \| "absent"`, servi : hors `ready`, la saisie s'affiche comme un texte en attente (« découpe en cours » / « aucune découpe sur cette capture »), aucune cellule, aucun segment cliquable |
+| Création de paquet (#358) | `PackCreate` vide le champ au clic | le champ garde le nom jusqu'à ce que le paquet soit servi dans `packs` ; un refus laisse le nom en place |
+| Verdict d'« Écrire » (#366) | `WriteVerdict.blockers: string[]` | `blockers?: { station: StationId; sizeId?: string; line: string; detail: string }[]`, rendu verbatim et groupé par station puis taille ; `WriteVerdict.stale?: boolean` servi : un verdict antérieur au contexte courant se dit périmé |
+
 ## Fixtures
 
 - Station 5 : une cible **posée ici** (relevé servi avec `at`, `origin: "posed"`), une **amorcée**
@@ -139,3 +151,6 @@ Changer de taille, de capture ou de cible ne montre donc rien de l'ancienne, pas
 - Station 5 : un cadre de bouton au bord droit de la barre (le cas du terrain), pour que le centrage se voie.
 - Bandeau : une taille verte `36 / 36` en station 4 et orange `8 / 12` en station 5 ; une taille sans `verdict`.
 - Station 4 : une ROI `adjusted` dont la ligne est refusée (« faits d'origine périmés ») ; une note `collateral`.
+- Outil glyphes : deux tailles à couverture servie différente (1048 × 720 complète, 698 × 720 sans gabarit natif) ;
+  une vérité en `crop: "pending"`.
+- Station 6 : un verdict refusé à trois lignes (deux tailles, deux stations) ; un verdict `stale`.
