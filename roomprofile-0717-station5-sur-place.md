@@ -69,11 +69,13 @@ Quatre règles de domaine quittent `ui/` ; l'app les sert.
 | Capture de chaque cible | `shotForVariant` → `attestingShot` (la **première** capture attestante, pas celle de la station) | `Probe.shotId?: string` : la capture de cette taille que la station 5 montre pour cette cible. `SuitSwatch.shotId` existe déjà, sans le repli `?? shotForVariant(bucket, undefined)`. `shotForVariant` quitte `PipetteTool` |
 | Posable ou non | `placeable()` | `Probe.blocked?: string`, verbatim : « ROI actions.two_buttons.fold non validée pour 1048 × 720 », « aucune capture de 1048 × 720 n'atteste Deux boutons ». Présent : pas de surface, pas de bouton, la ligne le dit. Absent : la surface est offerte |
 | Origine de la couleur | rien | `Probe.origin?: "posed" \| "seeded"` : **posée ici**, ou **amorcée** (déduite de la preuve du bouton, ou `bet_blur` validé d'office hors des ROI de la barre). Absent = pas de couleur. La ligne et la loupe disent l'origine |
-| Couleur retenue d'une enseigne | `retainedColor` (médiane par luma dans `ui/`) | `SuitSwatch.retained?: string`, la couleur que l'app retient **sur cette taille**. `retainedColor` quitte `ui/` |
+| Couleur retenue d'une enseigne | `retainedColor` (médiane par luma dans `ui/`) | `SuitSwatch.retained?: string`, la couleur retenue, servie, et `SuitSwatch.retainedOn?: string`, la taille où elle a été relevée (« 1048 × 720 »). **Correction du 19/09** : la palette des enseignes est un produit de **room**, relevé sur une taille nommée ; la ligne le dit (« relevée sur 1048 × 720 »), elle n'est pas un verdict de chaque taille. `retainedColor` quitte `ui/` |
 
 Et chaque relevé nomme ce dont il vient (#333) : `ProbeSample.sizeId: string` (obligatoire) et
 `ProbeSample.zoneId?: string` (la carte d'une enseigne), à côté de `shotId`/`shotLabel`. Le slot l'affiche :
 « 1048 × 720 · Board 3 · #2 Turn ». Une pose servie porte son `at` : le marqueur se dessine sur la surface.
+**Correction du 19/09** : les relevés d'une enseigne ne vivent que dans la session. À la réouverture, la ligne rend la
+couleur retenue servie (`retained`, `retainedOn`) sans relevés : aucun slot vide ne se présente comme un relevé perdu.
 
 ## 4. Le bandeau est le verdict de la station (#330)
 
@@ -100,6 +102,9 @@ verdict?: SizeVerdict;   // le verdict de la station AFFICHÉE, servi tel quel
   la station.
 - `zonesValidated`, `zonesTotal`, `probesReady`, `probesTotal` quittent le bandeau ; `state` ne sert plus au badge.
   `verdict` absent : la carte dit « verdict non servi », jamais un repli.
+- **Correction du 19/09** : une taille **retenue** (`SizeBucket.retained?: true`, servi : plus produite par aucune
+  disposition, purgeable) n'a aucun verdict. Sa carte garde le badge « retenue » ; « verdict non servi » ne vaut que
+  pour une taille active.
 - L'en-tête du canevas de la station 4 lit le même `verdict`.
 
 ## 5. Station 4 : un refus se voit, une chute s'annonce (#328, #331)
@@ -141,16 +146,19 @@ trouve les mêmes familles de défauts qu'aux stations 3 à 5. Quatre relèvent 
 | Couverture de l'outil glyphes (#355, #361) | `GlyphTool` calcule sections, totaux, pourcentage, couverture par paquet, pire famille (`sectionsOf`, `totalOf`, `packCoverage`, `bucketGlyphTotals`, `codeRequired`, `readUnitCodes`), refiltre les ROI de la capture (`roisOnShot`) et la charge (`workloadOf`) ; le titre « Couverture glyphes — 698 × 720 · 25 / 25 » porte un compte de room | l'app sert, **pour la taille affichée**, `done` / `total` / `state` par famille et par paquet, la liste des ROI de la capture et la charge ; le DS les rend tels quels. Le bandeau de la station 5 dit aussi « glyphes couverts » de chaque taille, servi (`SizeBucket.glyphs?: { done, total }`), comme le contrat l'exige |
 | Saisie sans découpe (#353) | les caractères tapés s'affichent comme des cellules du crop et sont cliquables comme segments | `GlyphTruth.crop?: "ready" \| "pending" \| "absent"`, servi : hors `ready`, la saisie s'affiche comme un texte en attente (« découpe en cours » / « aucune découpe sur cette capture »), aucune cellule, aucun segment cliquable |
 | Création de paquet (#358) | `PackCreate` vide le champ au clic | le champ garde le nom jusqu'à ce que le paquet soit servi dans `packs` ; un refus laisse le nom en place |
-| Verdict d'« Écrire » (#366) | `WriteVerdict.blockers: string[]` | `blockers?: { station: StationId; sizeId?: string; line: string; detail: string }[]`, rendu verbatim et groupé par station puis taille ; `WriteVerdict.stale?: boolean` servi : un verdict antérieur au contexte courant se dit périmé |
+| Verdict d'« Écrire » (#366) | `WriteVerdict.blockers: string[]` | `blockers?: { station?: StationId; sizeId?: string; line?: string; detail: string }[]`, rendu verbatim et groupé par station puis taille ; **correction du 19/09** : un blocker sans station ni ligne est le refus de la validation finale du chargeur, rangé sous « Validation finale » ; `WriteVerdict.stale?: boolean` servi : un verdict antérieur au contexte courant se dit périmé |
 
 ## Fixtures
 
 - Station 5 : une cible **posée ici** (relevé servi avec `at`, `origin: "posed"`), une **amorcée**
   (`origin: "seeded"`, surface offerte), une `blocked` « ROI non validée », une `blocked` « aucune capture »,
-  `bet_blur` en `kind: "point"`, une enseigne à trois relevés et sa couleur `retained`.
+  `bet_blur` en `kind: "point"`, une enseigne à trois relevés et sa couleur `retained` ; une enseigne sans relevé de
+  session, couleur `retained` relevée sur 1048 × 720 (`retainedOn`).
 - Station 5 : un cadre de bouton au bord droit de la barre (le cas du terrain), pour que le centrage se voie.
-- Bandeau : une taille verte `36 / 36` en station 4 et orange `8 / 12` en station 5 ; une taille sans `verdict`.
+- Bandeau : une taille verte `36 / 36` en station 4 et orange `8 / 12` en station 5 ; une taille sans `verdict` ; une
+  taille retenue.
 - Station 4 : une ROI `adjusted` dont la ligne est refusée (« faits d'origine périmés ») ; une note `collateral`.
 - Outil glyphes : deux tailles à couverture servie différente (1048 × 720 complète, 698 × 720 sans gabarit natif) ;
   une vérité en `crop: "pending"`.
-- Station 6 : un verdict refusé à trois lignes (deux tailles, deux stations) ; un verdict `stale`.
+- Station 6 : un verdict refusé à trois lignes (deux tailles, deux stations) ; un verdict `stale` ; un blocker de
+  validation finale, sans station ni ligne.
