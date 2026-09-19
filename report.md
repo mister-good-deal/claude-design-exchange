@@ -1,16 +1,20 @@
-# Rapport de vague — 0.7.17 (2026-09-18, retour du drop 2026-09-19.1)
+# Rapport de vague — 0.7.17 (2026-09-19, passe 4)
 
-## Retour du drop 2026-09-19.1 — défauts 1, 2 et 4 corrigés, reste le 3
+## Passe 4 — deux points, rien d'autre
 
-`tsc` et react-doctor sont verts. Il reste un seul défaut, le 3 : lint `GlyphTool.tsx:805`, deux
-`@stylistic/multiline-ternary` sur `{coverage === undefined ? ( … ) : ( … )}` du panneau de couverture. `--fix` ne le
-répare pas, car le ternaire contient des commentaires : la correction est manuelle. L'extrait, la forme attendue et la
-commande sont dans [`roomprofile-0717-drop-20260919-defauts.md`](./roomprofile-0717-drop-20260919-defauts.md).
+Le drop `2026-09-19.2` est importé : ses trois gates étaient vertes. La gate e2e de la palette, rejouée sur le
+transcript du vrai moteur, trouve **un** défaut d'affichage : une marque de relevé se dessine sur une carte où ce relevé
+n'a pas été pris. Il s'y ajoute une collision de clé React déjà relevée en station 6.
 
-Avant d'exporter, depuis la racine du workspace DS, avec [`lint-bundle/`](./lint-bundle/) republié aujourd'hui (son
-`eslint.config.mjs` était en retard sur l'app) : `npm install`, `npm run fix`, puis `npm run check`, qui doit rendre
-**0**. Ne rien changer d'autre dans le drop.
+Fichier : [`roomprofile-0717-passe4-marques-et-cles.md`](./roomprofile-0717-passe4-marques-et-cles.md).
 
+1. `ColorSurface` ne dessine la marque d'un relevé que sur SA carte : `sample.shotId` = capture affichée **et**
+   `sample.zoneId` = ROI affichée. Les relevés pris ailleurs restent comptés et listés, jamais dessinés ailleurs.
+2. `ValidateStation` : `key={b.detail}` entre en collision quand deux blocages partagent le même motif. La clé est
+   faite de la station, de la taille, de la ligne et du motif.
+
+**Ne rien changer d'autre dans le drop.** Avant d'exporter : `tsc` vert, lint avec le [`lint-bundle/`](./lint-bundle/)
+à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic.
 
 ---
 
