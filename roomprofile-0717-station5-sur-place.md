@@ -90,16 +90,23 @@ interface SizeVerdict {
     state: BucketState;
     done: number;
     total: number;
-    lines?: { key: string; ok: boolean; reason?: string; shotId?: string; shotLabel?: string }[];
+    lines?: { key: string; ok: boolean; reason?: string; shotId?: string; shotLabel?: string; group?: VerdictGroup }[];
+    groups?: { group: VerdictGroup; done: number; total: number }[];   // station 5 : un compte par groupe, servi
 }
+type VerdictGroup = "colors" | "glyphs";
 // SizeBucket
 verdict?: SizeVerdict;   // le verdict de la station AFFICHÉE, servi tel quel
 ```
 
 - `BucketRail` (stations 3, 4, 5) et la ligne de taille de la station 6 rendent **badge et compteur depuis `verdict`
   seul** : ton du badge par `verdict.state`, méta « `done` / `total` » suivie du mot de la station (variantes
-  attestées, ROI validées, couleurs prêtes, passes vertes). Plus de texte composé depuis des champs différents selon
-  la station.
+  attestées, ROI validées, passes vertes). Plus de texte composé depuis des champs différents selon la station.
+- **Station 5, deux comptes (correction du 19/09, contrat : « couleurs prêtes sur attendues, glyphes couverts »).** Son
+  verdict mêle sondes, `bet_blur` et familles de glyphes (terrain : 8 / 10), un seul « done / total » y serait faux.
+  Chaque ligne porte son groupe, servi : `lines[].group?: "colors" | "glyphs"`. Les comptes de chaque groupe sont
+  servis aussi : `verdict.groups?: { group: "colors" | "glyphs"; done: number; total: number }[]`. Le bandeau de la
+  station 5 rend le badge par `verdict.state` et, pour méta, un compte par groupe, tel qu'il est servi (« 7 / 8 couleurs
+  prêtes · 1 / 2 glyphes couverts »). Le DS ne déduit jamais un groupe d'une clé et ne compte aucune ligne.
 - `zonesValidated`, `zonesTotal`, `probesReady`, `probesTotal` quittent le bandeau ; `state` ne sert plus au badge.
   `verdict` absent : la carte dit « verdict non servi », jamais un repli.
 - **Correction du 19/09** : une taille **retenue** (`SizeBucket.retained?: true`, servi : plus produite par aucune
@@ -144,14 +151,15 @@ Changer de taille, de capture ou de cible ne montre donc rien de l'ancienne, pas
 ## 7. Outil glyphes et station 6 : servir, ne plus compter (ajout du 18/09, audit)
 
 Romain n'a jamais atteint l'outil glyphes ni la station 6 en campagne ; l'audit de leur écran (issues #351 à #367)
-trouve les mêmes familles de défauts qu'aux stations 3 à 5. Quatre relèvent du design system.
+trouve les mêmes familles de défauts qu'aux stations 3 à 5. Cinq relèvent du design system.
 
 | Où | Aujourd'hui | Attendu |
 |---|---|---|
-| Couverture de l'outil glyphes (#355, #361) | `GlyphTool` calcule sections, totaux, pourcentage, couverture par paquet, pire famille (`sectionsOf`, `totalOf`, `packCoverage`, `bucketGlyphTotals`, `codeRequired`, `readUnitCodes`), refiltre les ROI de la capture (`roisOnShot`) et la charge (`workloadOf`) ; le titre « Couverture glyphes — 698 × 720 · 25 / 25 » porte un compte de room | l'app sert, **pour la taille affichée**, `done` / `total` / `state` par famille et par paquet, la liste des ROI de la capture et la charge ; le DS les rend tels quels. Le bandeau de la station 5 dit aussi « glyphes couverts » de chaque taille, servi (`SizeBucket.glyphs?: { done, total }`), comme le contrat l'exige |
+| Couverture de l'outil glyphes (#355, #361) | `GlyphTool` calcule sections, totaux, pourcentage, couverture par paquet, pire famille (`sectionsOf`, `totalOf`, `packCoverage`, `bucketGlyphTotals`, `codeRequired`, `readUnitCodes`), refiltre les ROI de la capture (`roisOnShot`) et la charge (`workloadOf`) ; le titre « Couverture glyphes — 698 × 720 · 25 / 25 » porte un compte de room | l'app sert, **pour la taille affichée**, `done` / `total` / `state` par famille et par paquet, la liste des ROI de la capture et la charge ; le DS les rend tels quels. Les familles sont celles des lignes du groupe `glyphs` du verdict de la station 5 ; une famille qui bloque « Écrire » le dit sur sa ligne (`writeBlocked`, servi). **Correction du 19/09** : `SizeBucket.glyphs` est retiré ; « glyphes couverts » au bandeau est le compte du groupe `glyphs` du verdict (point 4) |
+| Refus de découpe (#362, #372) | la boîte d'une ROI refusée dit « aucun crop pour cette ROI sur cette capture » sans le motif ; le rapport ajoute « arrêtée sur <première ROI refusée> — rien n'a été découpé après », faux : la passe découpe chaque ROI, un refus n'arrête pas les autres | `ExtractReport.refused?: { zoneId: string; message: string }[]`, servi : le motif du moteur, verbatim, s'affiche **dans la boîte de sa ROI**, à la place de « aucun crop » (ex. « rang coupé par la sous-ROI », « aucune encre dans la sous-ROI de rang »). `failedZoneId` et la phrase « arrêtée sur … » disparaissent ; les ROI découpées restent entières |
 | Saisie sans découpe (#353) | les caractères tapés s'affichent comme des cellules du crop et sont cliquables comme segments | `GlyphTruth.crop?: "ready" \| "pending" \| "absent"`, servi : hors `ready`, la saisie s'affiche comme un texte en attente (« découpe en cours » / « aucune découpe sur cette capture »), aucune cellule, aucun segment cliquable |
 | Création de paquet (#358) | `PackCreate` vide le champ au clic | le champ garde le nom jusqu'à ce que le paquet soit servi dans `packs` ; un refus laisse le nom en place |
-| Verdict d'« Écrire » (#366) | `WriteVerdict.blockers: string[]` | `blockers?: { station?: StationId; sizeId?: string; line?: string; detail: string }[]`, rendu verbatim et groupé par station puis taille ; **correction du 19/09** : un blocker sans station ni ligne est le refus de la validation finale du chargeur, rangé sous « Validation finale » ; `WriteVerdict.stale?: boolean` servi : un verdict antérieur au contexte courant se dit périmé |
+| Verdict d'« Écrire » (#366) | `WriteVerdict.blockers: string[]` | `blockers?: { station?: StationId; sizeId?: string; line?: string; detail: string }[]`, rendu verbatim et groupé par station puis taille ; `line` est un **libellé servi** par l'app, la ligne de room (« Palette des enseignes ») ou la ROI de la ligne refusée (« Pot total »), jamais un identifiant ; **correction du 19/09** : un blocker sans station ni ligne est le refus de la validation finale du chargeur, rangé sous « Validation finale » ; `WriteVerdict.stale?: boolean` servi : un verdict antérieur au contexte courant se dit périmé |
 
 ## Fixtures
 
@@ -160,11 +168,12 @@ trouve les mêmes familles de défauts qu'aux stations 3 à 5. Quatre relèvent 
   `bet_blur` en `kind: "point"`, une enseigne à trois relevés et sa couleur `retained` ; une enseigne sans relevé de
   session, couleur `retained` relevée sur 1048 × 720 (`retainedOn`).
 - Station 5 : un cadre de bouton au bord droit de la barre (le cas du terrain), pour que le centrage se voie.
-- Bandeau : une taille verte `36 / 36` en station 4 et orange `8 / 12` en station 5 ; une taille sans `verdict` ; une
-  taille retenue.
+- Bandeau : une taille verte `36 / 36` en station 4 et orange en station 5 avec ses deux comptes servis
+  (`7 / 8` couleurs, `1 / 2` glyphes) ; une taille sans `verdict` ; une taille retenue.
 - Station 4 : une ROI `adjusted` dont la ligne est refusée (« faits d'origine périmés ») ; une note `collateral` ;
   la station en fenêtre 1440 × 720, barre de zone ouverte sur « Pot total ».
 - Outil glyphes : deux tailles à couverture servie différente (1048 × 720 complète, 698 × 720 sans gabarit natif) ;
-  une vérité en `crop: "pending"`.
+  une vérité en `crop: "pending"` ; une capture où une ROI carte est refusée (« rang coupé par la sous-ROI ») à côté
+  de ROI découpées ; une famille `writeBlocked`.
 - Station 6 : un verdict refusé à trois lignes (deux tailles, deux stations) ; un verdict `stale` ; un blocker de
   validation finale, sans station ni ligne.
