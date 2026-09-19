@@ -1,18 +1,16 @@
-# Rapport de vague — 0.7.17 (2026-09-18, retour du drop 2026-09-19)
+# Rapport de vague — 0.7.17 (2026-09-18, retour du drop 2026-09-19.1)
 
-## Retour du drop 2026-09-19 — quatre défauts, le reste est conforme
+## Retour du drop 2026-09-19.1 — défauts 1, 2 et 4 corrigés, reste le 3
 
-Le drop `2026-09-19` est **conforme à la demande 0.7.17** (7 points et addenda, vérifié prop par prop) : ne rien changer
-d'autre. Quatre défauts empêchent son import ; le détail, lignes comprises, est dans
-[`roomprofile-0717-drop-20260919-defauts.md`](./roomprofile-0717-drop-20260919-defauts.md) :
+`tsc` et react-doctor sont verts. Il reste un seul défaut, le 3 : lint `GlyphTool.tsx:805`, deux
+`@stylistic/multiline-ternary` sur `{coverage === undefined ? ( … ) : ( … )}` du panneau de couverture. `--fix` ne le
+répare pas, car le ternaire contient des commentaires : la correction est manuelle. L'extrait, la forme attendue et la
+commande sont dans [`roomprofile-0717-drop-20260919-defauts.md`](./roomprofile-0717-drop-20260919-defauts.md).
 
-1. tsc `ZoneWorkbench.tsx` : 12 `dispatch` sans `at` (état estampillé §6) ;
-2. tsc `RoomProfile.fixtures.ts:7352` : `withZoneCounts` introuvable ;
-3. lint `GlyphTool.tsx:803` : deux `@stylistic/multiline-ternary` ;
-4. react-doctor `ZoneWorkbench.tsx:1146` : `exhaustive-deps` de l'effet clavier.
+Avant d'exporter, depuis la racine du workspace DS, avec [`lint-bundle/`](./lint-bundle/) republié aujourd'hui (son
+`eslint.config.mjs` était en retard sur l'app) : `npm install`, `npm run fix`, puis `npm run check`, qui doit rendre
+**0**. Ne rien changer d'autre dans le drop.
 
-Le drop corrigé doit passer seul `tsc`, le lint du bundle `@stylistic` et react-doctor à zéro. `NOTES.md` et `README.md`
-du zip décrivent encore les vagues 0.7.3 / 0.7.4 : à rafraîchir.
 
 ---
 
