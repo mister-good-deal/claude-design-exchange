@@ -1,4 +1,20 @@
-# Rapport de vague — 0.7.17 (2026-09-18)
+# Rapport de vague — 0.7.17 (2026-09-18, retour du drop 2026-09-19)
+
+## Retour du drop 2026-09-19 — quatre défauts, le reste est conforme
+
+Le drop `2026-09-19` est **conforme à la demande 0.7.17** (7 points et addenda, vérifié prop par prop) : ne rien changer
+d'autre. Quatre défauts empêchent son import ; le détail, lignes comprises, est dans
+[`roomprofile-0717-drop-20260919-defauts.md`](./roomprofile-0717-drop-20260919-defauts.md) :
+
+1. tsc `ZoneWorkbench.tsx` : 12 `dispatch` sans `at` (état estampillé §6) ;
+2. tsc `RoomProfile.fixtures.ts:7352` : `withZoneCounts` introuvable ;
+3. lint `GlyphTool.tsx:803` : deux `@stylistic/multiline-ternary` ;
+4. react-doctor `ZoneWorkbench.tsx:1146` : `exhaustive-deps` de l'effet clavier.
+
+Le drop corrigé doit passer seul `tsc`, le lint du bundle `@stylistic` et react-doctor à zéro. `NOTES.md` et `README.md`
+du zip décrivent encore les vagues 0.7.3 / 0.7.4 : à rafraîchir.
+
+---
 
 Écrivain : lt-atelier. Ce rapport **remplace** celui de la 0.7.16, dont les cinq demandes sont honorées par le drop
 `2026-09-17` (importé dans la 0.7.16, MR !319) : rien n'est à en reprendre, **sauf son §1, que cette vague annule**
