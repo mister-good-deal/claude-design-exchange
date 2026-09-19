@@ -24,5 +24,5 @@ Attendu : une clé faite de `b.station`, `b.sizeId`, `b.line` et `b.detail`.
 
 ## Avant d'exporter
 
-Depuis la racine du workspace DS : `tsc` vert ; lint avec le [`lint-bundle/`](./lint-bundle/) à jour (`npm install`,
+Depuis la racine du workspace DS : `tsc` vert ; lint avec le [`lint-bundle/`](https://github.com/mister-good-deal/claude-design-exchange/tree/main/lint-bundle) à jour (`npm install`,
 `npm run fix`, puis `npm run check`, qui doit rendre **0**) ; react-doctor à **zéro** diagnostic, erreurs et warnings.
