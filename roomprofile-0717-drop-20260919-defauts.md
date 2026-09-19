@@ -1,30 +1,53 @@
-# Drop 2026-09-19 : quatre défauts à corriger, rien d'autre
+# Drop 2026-09-19.1 : défauts 1, 2 et 4 corrigés, reste le 3
 
-Retour sur le drop `2026-09-19` (manifest `2026-09-19`, 117 fichiers), importé par `pnpm import-ds`. Écrivain exchange :
+Retour sur le drop `2026-09-19.1` (manifest `2026-09-19.1`), importé par `pnpm import-ds`. Écrivain exchange :
 lt-atelier. Ce fichier ne livre aucun écran, aucun CSS app, aucune édition de `ui/`.
 
-**Le reste du drop est conforme à la demande 0.7.17** ([`roomprofile-0717-station5-sur-place.md`](./roomprofile-0717-station5-sur-place.md),
-7 points et addenda), vérifié prop par prop : **ne rien changer d'autre**. Seuls les quatre défauts ci-dessous
-empêchent l'import. Ils sont côté DS et l'app ne les retouche jamais à la main.
+`tsc` et react-doctor sont **verts**, sur `ui/` et sur l'app câblée avec. Le reste du drop est conforme : **ne rien
+changer d'autre**. Un seul défaut reste, côté DS : l'app ne le retouche jamais à la main.
 
-## Les quatre défauts
+## Le défaut restant : lint `ui/screens/GlyphTool.tsx:805`
 
-1. **tsc — `ui/screens/ZoneWorkbench.tsx`** : `WorkbenchAction` exige désormais `at` (la taille, état estampillé §6),
-   mais 12 `dispatch` ne le passent pas, aux lignes 903, 904, 1007, 1033, 1035, 1057, 1066, 1129, 1150, 1163, 1172
-   et 1174 (TS2345). Chaque geste doit porter la taille où il est fait.
-2. **tsc — `ui/screens/RoomProfile.fixtures.ts:7352`** : `withZoneCounts` est introuvable (TS2552). C'est un reste de
-   la fin de `zonesValidated` / `zonesTotal` ; la fixture doit servir un `verdict` à la place.
-3. **lint — `ui/screens/GlyphTool.tsx:803`** : deux `@stylistic/multiline-ternary` (saut de ligne attendu entre le test
-   et le conséquent, puis entre le conséquent et l'alternative).
-4. **react-doctor — `ui/screens/ZoneWorkbench.tsx:1146`** : `exhaustive-deps` sur l'effet clavier (le tableau de
-   dépendances ne couvre pas tout ce que l'effet lit).
+Deux `@stylistic/multiline-ternary` sur le panneau de couverture. Le test et le conséquent sont sur la même ligne,
+et le conséquent et l'alternative aussi :
 
-## Les trois gates que le drop doit passer seul, côté DS
+```tsx
+{coverage === undefined ? (
+    <p className={styles.callout} data-tone="warn">{t.glyphCoverageNone}</p>
+) : (
+    <>
+        …
+    </>
+)}
+```
 
-- `tsc` sans erreur sur `ui/` ;
-- le lint du bundle `@stylistic` (`lint-bundle/`) sans erreur ;
-- react-doctor à **zéro**, erreurs et warnings.
+Forme attendue (le reste du bloc est inchangé ; l'indentation est laissée à `npm run fix`) :
 
-## À rafraîchir aussi
+```tsx
+{coverage === undefined
+    ? <p className={styles.callout} data-tone="warn">{t.glyphCoverageNone}</p>
+    : (
+        <>
+            …
+        </>
+    )}
+```
 
-`NOTES.md` et `README.md` du zip décrivent encore les vagues 0.7.3 / 0.7.4 : à rafraîchir pour cette vague.
+Pourquoi `--fix` ne le répare pas : le fixer de `multiline-ternary` (`@stylistic` 5.10) renonce dès qu'un commentaire
+se trouve dans le ternaire. L'alternative en porte quatre (`{/* #260 … */}`, `{/* #355 … */}`, `{/* #214 … */}`,
+`{/* 0.7.8 (#275) … */}`). La correction est donc manuelle. Vérifié : la forme attendue, puis `npm run fix`, donne
+`npm run check` à 0.
+
+## La commande à passer avant d'exporter
+
+Depuis la racine du workspace DS, à côté de `ui/`, avec [`lint-bundle/`](./lint-bundle/) **tel que republié
+aujourd'hui** (son `eslint.config.mjs` était en retard sur l'app : l'exception `no-extra-parens` pour le JSX
+parenthésé y manquait) :
+
+```bash
+npm install
+npm run fix
+npm run check   # doit rendre 0
+```
+
+Les deux autres gates restent `tsc` sans erreur sur `ui/` et react-doctor à zéro : elles sont vertes sur ce drop.
