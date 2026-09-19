@@ -43,6 +43,17 @@ export default [
             "@stylistic/function-call-argument-newline": ["error", "consistent"],
             "@stylistic/multiline-ternary": ["error", "always-multiline"],
             "@stylistic/arrow-parens": ["error", "as-needed"],
+            /*
+             * `no-confusing-arrow` requires parens around a conditional arrow body; without this exception
+             * `no-extra-parens` rejects those same parens — circular. The parens are the house style.
+             * `enforceForArrowConditionals` is deprecated upstream but its `ignoredNodes` replacement does not
+             * cover this case in the pinned @stylistic version — keep it until it does.
+             *
+             * `ignoreJSX: "all"`: same circular conflict on parenthesised multi-line JSX (`const X = ( <div/> );`) —
+             * the fix strips the parens and leaves the `;` alone on its line, which `semi-style` rejects and cannot
+             * repair. The parens are the house style, and what every export ships.
+             */
+            "@stylistic/no-extra-parens": ["error", "all", { enforceForArrowConditionals: false, ignoreJSX: "all" }],
             "@stylistic/function-paren-newline": ["error", "consistent"],
             "@stylistic/eol-last": ["error", "always"],
             "@stylistic/no-tabs": "error",
