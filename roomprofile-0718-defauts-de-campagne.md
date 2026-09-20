@@ -1,7 +1,7 @@
 # Demande Claude Design — 0.7.18 : les huit défauts d'écran de la campagne du 20/09
 
 Lot lt-atelier [#409](https://gitlab.laneuville.me/rom1/tatami/-/issues/409). Écrivain exchange : lt-atelier.
-Source : campagne Windows 0.7.17 du 2026-09-20 (`recon/win-validation-2026-09-20/REPORT.md`) — la première qui va
+Source : le rapport de la campagne Windows du 2026-09-20 (branche `windows/validation-0.7.17`) — la première qui va
 jusqu'au dry-run complet, arrêtée avant « Écrire ». **Huit points, rien d'autre** : ne rien changer d'autre dans le
 drop. Ce fichier ne livre aucun écran, aucun CSS app, aucune édition de `ui/`.
 
