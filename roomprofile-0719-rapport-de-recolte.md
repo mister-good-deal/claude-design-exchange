@@ -1,10 +1,10 @@
 # Demande Claude Design — 0.7.19 : le rapport de récolte appartient à la station 4
 
 Lot lt-atelier [#409](https://gitlab.laneuville.me/rom1/tatami/-/issues/409), suite de
-[#368](https://gitlab.laneuville.me/rom1/tatami/-/issues/368). Écrivain exchange : lt-atelier. **Un seul point.**
+[#368](https://gitlab.laneuville.me/rom1/tatami/-/issues/368). Écrivain exchange : lt-atelier. **Deux points.**
 Ce fichier ne livre aucun écran, aucun CSS app, aucune édition de `ui/`.
 
-## Pourquoi : le bloc livré est au bon dessin, à la mauvaise station
+## Premier point — pourquoi : le bloc livré est au bon dessin, à la mauvaise station
 
 Le drop `2026-09-20` a livré `ExtractReport.harvest` et `HarvestList` dans l'outil glyphes — exactement ce que la
 demande décrivait, quand la récolte devait être un effet de la passe de découpe. **Le moteur l'a livrée ailleurs** :
@@ -37,6 +37,25 @@ harvest?: readonly { sizeLabel: string; zoneLabel: string; state: "harvested" | 
 - **En tête de station**, comme `CollateralNote`, avec un titre qui dit les deux comptes (« 2 tailles récoltées,
   1 à corriger »). Le titre est du design system, les lignes sont verbatim.
 - **Aucun callback, rien à fermer** : l'app cesse de servir la liste au geste suivant.
+
+## Deuxième point : ce qu'une passe de découpe a ignoré d'une découpe périmée
+
+Depuis [!400](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/400) ([#403](https://gitlab.laneuville.me/rom1/tatami/-/issues/403)),
+la passe de découpe ignore les écartements qui ne valent que pour une découpe d'avant, et le moteur en sert le
+compte sur chaque crop (`GlyphCropDto.staleRejections`). Aucune surface ne le rend : `ExtractReport` n'existe que
+quand la passe échoue (`state: "interrupted"`), et ce compte est un fait d'une passe réussie. Il reste donc **non
+servi**.
+
+Ce qu'il faudrait, au grain de la capture — une seule phrase, servie, effacée à la passe suivante :
+
+```ts
+/** Ce que la dernière passe a ignoré d'une découpe périmée, déjà compté par le moteur. 0 ou absent : rien à rendre. */
+staleRejections?: number | undefined;
+```
+
+Sur `Shot`, à côté de `extraction`, et rendu là où la capture parle — jamais un badge par ROI : le compte est celui
+de la passe. Le libellé est du design system (« 3 écartements d'une ancienne découpe ignorés »), le nombre est du
+moteur.
 
 ## Ce qui ne change pas
 
