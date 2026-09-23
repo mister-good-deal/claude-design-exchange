@@ -1,31 +1,24 @@
-# Rapport de vague — 0.7.19, deuxième demande (2026-09-23)
+# Rapport de vague — 0.7.19, verdict du drop 2026-09-23 (2026-09-23)
 
-Écrivain : lt-atelier. Ce rapport **remplace** celui du 2026-09-21 et **en reprend** la demande restée ouverte.
-L'itération que Romain mène directement avec vous sur la bet bar (#297, sizing par position) continue hors de ce
-rapport : ne la perdez pas.
+Écrivain : lt-atelier. Ce rapport **remplace** le précédent. L'itération que Romain mène directement avec vous sur la
+bet bar (#297) continue hors de ce rapport.
 
-## La demande neuve — l'écran d'une campagne qui s'enchaîne
+## Conformité : 6 / 6
 
-Fichier : [`roomprofile-0719-ecran-de-campagne.md`](./roomprofile-0719-ecran-de-campagne.md) (source :
-`doc/agents/claude-design-0719-ecran-de-campagne.md`). La campagne du 22/09 s'est **arrêtée sur les bandeaux** ; la
-suivante recalibre sept tailles sur une géométrie neuve. Cinq points :
+Le drop `2026-09-23` (md5 `b87c34f01135aad3a4f41d3a71628255`) honore les cinq points de
+[`roomprofile-0719-ecran-de-campagne.md`](./roomprofile-0719-ecran-de-campagne.md) et `Shot.staleRejections` repris du
+21/09 : `lastGesture` sur la carte de taille et les trois notes retirées, « Scinder / Fusionner / défaire » avec
+`GlyphSegment.edits`, le titre sans compte et une section par paquet, `written` et `harvestGap`, `validatedAt`. Les
+sept ajouts déclarés sont acceptés. `lint` du design system : vert. `tsc` : rouge côté app seulement (le câblage).
 
-1. **Aucun retour de geste ne s'empile** : `CollateralNote`, `HarvestNote` et `HarvestList` disparaissent ; le retour
-   d'un geste est UNE phrase servie dans la carte de sa taille (`SizeBucket.lastGesture`). Zéro notification.
-2. **« Scinder » et « Fusionner »** une découpe en station 5 (`onSplitSegment`, `onJoinSegments`, `onUndoCutEdit`,
-   `GlyphSegment.edits`).
-3. **Couverture glyphes** : le titre perd son compte ; en « Tous », une section par paquet, jamais une somme de deux.
-4. **« Découpé » n'est pas « écrit »** : `GlyphSegment.written`, et `GlyphTruth.harvestGap` qui nomme le geste qui
-   répare.
-5. **Géométries** : `GeometryState.validatedAt` — « Déclarée le … · Validée le … / Jamais validée ».
+## Un défaut, à corriger à la source — react-doctor, 1 warning
 
-## Reprise — la demande ouverte du 21/09
+`ui/screens/GlyphTool.tsx:719` — règle `no-reset-all-state-on-prop-change` (Bugs) : l'effet qui écoute `Escape` sur
+`window` pendant qu'un geste est armé, et n'y fait que `setCut(null)`. La gate exige **zéro** diagnostic, sans
+suppression ni changement de règle.
 
-Fichier : [`roomprofile-0719-rapport-de-recolte.md`](./roomprofile-0719-rapport-de-recolte.md), **deuxième point
-seulement** (le premier est honoré, et le point 1 ci-dessus le remplace) : `Shot.staleRejections?: number`, ce qu'une
-passe de découpe réussie a ignoré d'une découpe périmée, en une seule phrase là où la capture parle, effacée à la passe
-suivante. Le libellé est le vôtre, le nombre est du moteur.
+Correctif proposé, sans effet : `Escape` se lit dans le `onKeyDown` de la ligne du crop armée (qui prend le focus à
+l'armement), comme le clic du segment se lit dans son `onClick`. Aucun écouteur global, aucun `useEffect`.
 
-**Ne rien changer d'autre dans le drop.** Avant d'exporter : `tsc` vert, lint avec le
-[`lint-bundle/`](./lint-bundle/) à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic ; chaque point
-déclaré dans `parity.declaredChanges`.
+**Ne rien changer d'autre** : re-drop du même contenu avec ce seul correctif. Avant d'exporter : `tsc` vert, lint avec le
+[`lint-bundle/`](./lint-bundle/) à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic.
