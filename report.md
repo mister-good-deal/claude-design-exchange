@@ -1,30 +1,31 @@
-# Rapport de vague — 0.7.19 (2026-09-21)
+# Rapport de vague — 0.7.19, deuxième demande (2026-09-23)
 
-Écrivain : lt-atelier. Ce rapport **remplace** le précédent. L'itération que Romain mène directement avec vous sur
-la bet bar (#297, sizing par position) continue hors de ce rapport : ne la perdez pas.
+Écrivain : lt-atelier. Ce rapport **remplace** celui du 2026-09-21 et **en reprend** la demande restée ouverte.
+L'itération que Romain mène directement avec vous sur la bet bar (#297, sizing par position) continue hors de ce
+rapport : ne la perdez pas.
 
-Fichier de la vague : [`roomprofile-0719-rapport-de-recolte.md`](./roomprofile-0719-rapport-de-recolte.md)
-(source : `doc/agents/claude-design-0719-rapport-de-recolte.md`). Il porte maintenant **deux points** : le premier
-est **tenu**, le second est la demande ouverte.
+## La demande neuve — l'écran d'une campagne qui s'enchaîne
 
-## Ce que le drop 2026-09-21 a tenu — premier point, honoré
+Fichier : [`roomprofile-0719-ecran-de-campagne.md`](./roomprofile-0719-ecran-de-campagne.md) (source :
+`doc/agents/claude-design-0719-ecran-de-campagne.md`). La campagne du 22/09 s'est **arrêtée sur les bandeaux** ; la
+suivante recalibre sept tailles sur une géométrie neuve. Cinq points :
 
-`harvest` sur l'état de la station 4, jumeau de `collateral` : une ligne par entrée servie, clé faite de l'adresse
-entière, vert et ambre dans la même liste, motif verbatim du moteur, aucun callback, effacé au geste suivant.
-`HarvestList` reste en station 5 pour « Relancer l'extraction ». Conformité **1/1**, import vert, câblé sur les
-deux écritures (✓ de ROI et commit de géométrie) et livré. Rien à en reprendre.
+1. **Aucun retour de geste ne s'empile** : `CollateralNote`, `HarvestNote` et `HarvestList` disparaissent ; le retour
+   d'un geste est UNE phrase servie dans la carte de sa taille (`SizeBucket.lastGesture`). Zéro notification.
+2. **« Scinder ici »** sur une cellule soudée de la station 5 (`onSplitSegment`, `onRemoveSegmentCut`,
+   `GlyphSegment.cutBefore`).
+3. **Couverture glyphes** : le titre perd son compte ; en « Tous », une section par paquet, jamais une somme de deux.
+4. **« Découpé » n'est pas « écrit »** : `GlyphSegment.written`, et `BucketGlyphTotal.repair` qui nomme le geste qui
+   répare.
+5. **Géométries** : `GeometryState.validatedAt` — « Déclarée le … · Validée le … / Jamais validée ».
 
-## La demande ouverte — deuxième point
+## Reprise — la demande ouverte du 21/09
 
-**Une surface pour ce qu'une passe de découpe a ignoré d'une découpe périmée.** Le moteur sert désormais, sur
-chaque crop, le nombre d'écartements qui ne valaient que pour une découpe d'avant. Aucune surface ne le rend :
-`ExtractReport` n'existe **que** quand la passe échoue (`state: "interrupted"`), et ce compte est un fait d'une
-passe **réussie**. Il reste donc non servi côté écran.
-
-Il faut un champ au grain de la capture — `staleRejections?: number` sur `Shot`, à côté de `extraction` —, rendu là
-où la capture parle, en **une seule phrase** effacée à la passe suivante, jamais un badge par ROI : le compte est
-celui de la passe, pas d'une ROI. Le libellé est le vôtre (« 3 écartements d'une ancienne découpe ignorés »), le
-nombre est du moteur. Le détail est dans le fichier de la vague.
+Fichier : [`roomprofile-0719-rapport-de-recolte.md`](./roomprofile-0719-rapport-de-recolte.md), **deuxième point
+seulement** (le premier est honoré, et le point 1 ci-dessus le remplace) : `Shot.staleRejections?: number`, ce qu'une
+passe de découpe réussie a ignoré d'une découpe périmée, en une seule phrase là où la capture parle, effacée à la passe
+suivante. Le libellé est le vôtre, le nombre est du moteur.
 
 **Ne rien changer d'autre dans le drop.** Avant d'exporter : `tsc` vert, lint avec le
-[`lint-bundle/`](./lint-bundle/) à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic.
+[`lint-bundle/`](./lint-bundle/) à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic ; chaque point
+déclaré dans `parity.declaredChanges`.
