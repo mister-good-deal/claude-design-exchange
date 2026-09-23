@@ -15,7 +15,7 @@ suivante recalibre sept tailles sur une géométrie neuve. Cinq points :
 2. **« Scinder » et « Fusionner »** une découpe en station 5 (`onSplitSegment`, `onJoinSegments`, `onUndoCutEdit`,
    `GlyphSegment.edits`).
 3. **Couverture glyphes** : le titre perd son compte ; en « Tous », une section par paquet, jamais une somme de deux.
-4. **« Découpé » n'est pas « écrit »** : `GlyphSegment.written`, et `BucketGlyphTotal.repair` qui nomme le geste qui
+4. **« Découpé » n'est pas « écrit »** : `GlyphSegment.written`, et `GlyphTruth.harvestGap` qui nomme le geste qui
    répare.
 5. **Géométries** : `GeometryState.validatedAt` — « Déclarée le … · Validée le … / Jamais validée ».
 
