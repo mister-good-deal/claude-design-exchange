@@ -15,12 +15,12 @@ le vôtre.
 ## La demande neuve — le traitement des montants se règle par taille
 
 Fichier : [`roomprofile-0719-traitement-de-la-taille.md`](./roomprofile-0719-traitement-de-la-taille.md) (source :
-`doc/agents/claude-design-0719-traitement-de-la-taille.md`). Deux points :
+`doc/agents/claude-design-0719-traitement-de-la-taille.md`). Trois points :
 
 1. **Le panneau « Traitement de la taille » dans l'atelier** : cinq réglages servis (`AmountTreatment`), la passe
    avant / après en justes / fausses / abstentions, `onSetAmountTreatment` en offre — sans handler, le panneau est en
    lecture seule ; la taille de référence le dit et n'offre rien.
-2. **Station 5** : sur une taille non référence, la couverture dit `readAt` (« lu au modèle de la room (1572 × 1080) »).
+. **Pipette** : les trois sondes d'un bouton (`probe.<v>.<a>`, `#2`, `#3`) forment une ligne, trois pastilles (`Probe.point`).
 
 **Ne rien changer d'autre dans le drop.** Avant d'exporter : `tsc` vert, lint avec le [`lint-bundle/`](./lint-bundle/)
 à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic ; chaque point déclaré dans
