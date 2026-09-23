@@ -21,7 +21,7 @@ Fichier : [`roomprofile-0719-traitement-de-la-taille.md`](./roomprofile-0719-tra
    avant / après en justes / fausses / abstentions, `onSetAmountTreatment` en offre — sans handler, le panneau est en
    lecture seule ; la taille de référence le dit et n'offre rien.
 2. **Station 5** : sur une taille non référence, la couverture dit `readAt` (« lu au modèle de la room (1572 × 1080) »).
-3. **Pipette** : les trois sondes d'un bouton (`probe.<v>.<a>`, `#2`, `#3`) forment une ligne, trois pastilles (`Probe.point`).
+3. **Pipette** : les trois sondes d'un bouton (`probe.<v>.<a>`, `#2`, `#3`) forment une ligne, trois pastilles (`Probe.pointRank`).
 
 **Ne rien changer d'autre dans le drop.** Avant d'exporter : `tsc` vert, lint avec le [`lint-bundle/`](./lint-bundle/)
 à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic ; chaque point déclaré dans
