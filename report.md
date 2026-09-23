@@ -12,8 +12,8 @@ suivante recalibre sept tailles sur une géométrie neuve. Cinq points :
 
 1. **Aucun retour de geste ne s'empile** : `CollateralNote`, `HarvestNote` et `HarvestList` disparaissent ; le retour
    d'un geste est UNE phrase servie dans la carte de sa taille (`SizeBucket.lastGesture`). Zéro notification.
-2. **« Scinder ici »** sur une cellule soudée de la station 5 (`onSplitSegment`, `onRemoveSegmentCut`,
-   `GlyphSegment.cutBefore`).
+2. **« Scinder » et « Fusionner »** une découpe en station 5 (`onSplitSegment`, `onJoinSegments`, `onUndoCutEdit`,
+   `GlyphSegment.edits`).
 3. **Couverture glyphes** : le titre perd son compte ; en « Tous », une section par paquet, jamais une somme de deux.
 4. **« Découpé » n'est pas « écrit »** : `GlyphSegment.written`, et `BucketGlyphTotal.repair` qui nomme le geste qui
    répare.
