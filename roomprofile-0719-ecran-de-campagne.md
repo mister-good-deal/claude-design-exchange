@@ -40,28 +40,34 @@ dans une station.** On retient **zéro notification**.
   capture à corriger reste où la capture parle (`segmentMismatch`, station 5).
 - Rien à fermer : l'app cesse de servir la phrase au geste suivant.
 
-## 2. Station 5 : « Scinder ici » sur une cellule soudée ([#430])
+## 2. Station 5 : « Scinder » et « Fusionner » une découpe ([#430])
 
 **Terrain.** `villain_1_bet`, capture « #41 · River », vérité « 7,2BB » : un liseré d'un pixel soude le 7 et la virgule,
-4 segments pour 5 glyphes. Le moteur dit « corriger la découpe » ; la station n'offre qu'« écarter », qui retranche.
+4 segments pour 5 glyphes. À l'inverse, le pot « 4,8BB » de « #45 · Flop » en 698 × 720 sort en 6 segments pour 5. Le
+moteur dit « corriger la découpe » ; la station n'offre qu'« écarter », qui retranche.
 
-**Attendu, contrat** (une OFFRE : sans handler, rien n'est rendu) :
+**Attendu, contrat** (des OFFRES : sans handler, rien n'est rendu) :
 
 ```ts
-/** Pose une coupure dans le segment `index`, à `at` ∈ ]0, 1[ de sa largeur affichée (0 = bord gauche). */
+/** Coupe le segment `index` à `at` ∈ ]0, 1[ de sa largeur affichée (0 = bord gauche). */
 onSplitSegment?: (shotId: string, zoneId: string, index: number, at: number) => void;
-/** Retire la coupure posée par le joueur au bord GAUCHE du segment `index`. */
-onRemoveSegmentCut?: (shotId: string, zoneId: string, index: number) => void;
+/** Fusionne le segment `index` avec le suivant (`index + 1`). */
+onJoinSegments?: (shotId: string, zoneId: string, index: number) => void;
+/** Défait une correction du joueur, désignée par son id servi. */
+onUndoCutEdit?: (shotId: string, zoneId: string, editId: string) => void;
 ```
 
-et sur `GlyphSegment` : `cutBefore?: boolean` — servi, vrai quand une coupure du JOUEUR sépare ce segment du précédent.
+et sur `GlyphSegment` : `edits?: readonly { id: string; kind: "split" | "join"; at: number }[]` — servi : les
+corrections du JOUEUR qui tombent dans ce segment ou sur son bord gauche, `at` ∈ [0, 1] de sa largeur.
 
-- Le geste s'**arme** explicitement (un bouton « Scinder » sur la ligne du crop), puis un clic dans un segment pose la
-  coupure à la position cliquée ; un trait vertical suit le pointeur tant que c'est armé ; `Échap` désarme ; un clic
-  pose UNE coupure et désarme. Le clic d'un segment hors de ce mode reste « écarter / reprendre », inchangé.
-- Offert seulement sur un crop `ready`, ROI non écartée — les mêmes conditions que l'écartement.
-- Une coupure posée se voit (un repère entre les deux segments) et se retire par `onRemoveSegmentCut` depuis ce repère.
-- Ni fusion ni coupure calculée à l'écran : la découpe revient du moteur, l'écran la redessine.
+- Deux boutons sur la ligne du crop, « Scinder » et « Fusionner », qui **arment** leur geste ; `Échap` désarme ; un
+  geste posé désarme. Armé « Scinder » : un trait vertical suit le pointeur dans les segments, le clic coupe à la
+  position cliquée. Armé « Fusionner » : les jonctions entre deux segments voisins deviennent les cibles, le clic
+  fusionne les deux. Hors de ces modes, le clic d'un segment reste « écarter / reprendre », inchangé.
+- Offerts seulement sur un crop `ready`, ROI non écartée — les mêmes conditions que l'écartement.
+- Une correction posée se voit (un repère à sa position, d'un ton distinct de celui d'un segment écarté) et se défait
+  depuis ce repère par `onUndoCutEdit`.
+- Aucune découpe calculée à l'écran : elle revient du moteur, l'écran la redessine.
 
 ## 3. Couverture glyphes : plus aucun nombre qui unit deux paquets ([#432])
 
