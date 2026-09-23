@@ -72,13 +72,13 @@ lignes « Fold », « Fold#2 », « Fold#3 ».
 **Contrat** :
 
 ```ts
-point?: 1 | 2 | 3 | undefined;   // sur Probe : le rang du point dans son bouton ; absent = une sonde seule
+pointRank?: 1 | 2 | 3 | undefined;   // sur Probe : le rang du point dans son bouton ; absent = une sonde seule (`point` reste la position posée)
 ```
 
-- Les sondes d'une même `action` et d'une même variante qui portent `point` forment **une ligne** : le nom du bouton,
+- Les sondes d'une même `action` et d'une même variante qui portent `pointRank` forment **une ligne** : le nom du bouton,
   puis trois pastilles (1, 2, 3), chacune avec son état et sa couleur, chacune armable pour sa pose comme une sonde
   aujourd'hui. Ni trois lignes, ni un suffixe « #2 » affiché.
-- Une sonde sans `point` (le pixel neutre, `bet_blur`) garde sa ligne actuelle.
+- Une sonde sans `pointRank` (le pixel neutre, `bet_blur`) garde sa ligne actuelle.
 
 ## Avant d'exporter
 
