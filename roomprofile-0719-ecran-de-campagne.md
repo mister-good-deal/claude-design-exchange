@@ -91,9 +91,9 @@ dit manquant. Les deux disent vrai — il est à l'écran, il n'est pas écrit �
 
 - `GlyphSegment.written?: boolean` — servi : vrai quand le gabarit de ce segment est écrit au profil. Un segment écrit
   porte une marque discrète (coin, point) ; un segment non écrit reste tel quel. L'écran ne déduit rien.
-- `BucketGlyphTotal.repair?: string` — la phrase servie qui nomme le geste qui répare cette taille (« la récolte n'a
-  jamais tourné sur cette taille : Relancer l'extraction sur #41 · River »), rendue verbatim sous la ligne de la taille.
-  Absente : rien.
+- `GlyphTruth.harvestGap?: string` — la phrase servie qui dit, pour CETTE ROI sur CETTE capture, pourquoi rien n'est
+  écrit et le geste qui répare (« vérité saisie, découpe juste, rien d'écrit : Relancer l'extraction »). Rendue
+  verbatim dans la boîte de la ROI, à la place où parle `segmentMismatch`. Absente : rien.
 
 ## 5. Géométries : l'état de la géométrie active se lit ([#435], [#268])
 
