@@ -1,7 +1,7 @@
 # Demande Claude Design — 0.7.19 : le traitement des montants se règle par taille
 
 Lot lt-etude [#443](https://gitlab.laneuville.me/rom1/tatami/-/issues/443), rédigée et publiée par lt-atelier (écrivain
-exchange). **Deux points, rien d'autre.** Ce fichier ne livre aucun écran, aucun CSS app, aucune édition de `ui/`.
+exchange). **Trois points, rien d'autre.** Ce fichier ne livre aucun écran, aucun CSS app, aucune édition de `ui/`.
 
 ## Pourquoi
 
@@ -63,6 +63,23 @@ readAt?: string | undefined;   // sur la couverture de la taille : « lu au mod�
 Rendue verbatim sous le titre de la couverture, à la place des pastilles de la famille des montants quand elle est
 servie. Les rangs de carte ne changent pas (ils restent par taille).
 
+## 3. Pipette : trois points par bouton, trois pastilles d'une même ligne ([#420])
+
+Le moteur sert désormais **trois sondes par bouton d'action** (`probe.<variante>.<action>`, puis `#2` et `#3`) : la
+couleur d'un bouton se juge sur trois pixels que le joueur pose hors du texte. Aujourd'hui le rail les liste en trois
+lignes « Fold », « Fold#2 », « Fold#3 ».
+
+**Contrat** :
+
+```ts
+point?: 1 | 2 | 3 | undefined;   // sur Probe : le rang du point dans son bouton ; absent = une sonde seule
+```
+
+- Les sondes d'une même `action` et d'une même variante qui portent `point` forment **une ligne** : le nom du bouton,
+  puis trois pastilles (1, 2, 3), chacune avec son état et sa couleur, chacune armable pour sa pose comme une sonde
+  aujourd'hui. Ni trois lignes, ni un suffixe « #2 » affiché.
+- Une sonde sans `point` (le pixel neutre, `bet_blur`) garde sa ligne actuelle.
+
 ## Avant d'exporter
 
 Depuis la racine du workspace DS : `tsc` vert ; lint avec le [`lint-bundle/`][bundle] à jour (`npm install`,
@@ -70,3 +87,4 @@ Depuis la racine du workspace DS : `tsc` vert ; lint avec le [`lint-bundle/`][bu
 Déclarez chaque point dans `parity.declaredChanges`.
 
 [bundle]: https://github.com/mister-good-deal/claude-design-exchange/tree/main/lint-bundle
+[#420]: https://gitlab.laneuville.me/rom1/tatami/-/issues/420
