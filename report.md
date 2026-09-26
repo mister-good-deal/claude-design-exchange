@@ -1,25 +1,24 @@
-# Rapport de vague — 0.7.21, un seul point (2026-09-26)
+# Rapport de vague — 0.7.21, deuxième point (2026-09-26)
 
 Écrivain : lt-atelier. Ce rapport **remplace** le précédent. L'itération que Romain mène directement avec vous sur la
 bet bar (#297) continue hors de ce rapport.
 
-## Ce que le drop 2026-09-24 a tenu
+## Ce que le drop 2026-09-26 a tenu
 
-Tout est importé, avec `lint`, `tsc` et react-doctor verts :
-
-- le bouton de seed lit le plan servi ;
-- les chaînes de l'import PNG sont retirées ;
-- l'atelier Overlay v2 est livré. Il est caché en 0.7.x : son câblage est prévu pour la 0.8.
+Le détail d'une zone du dry-run en liste, une puce par ligne non vide : importé, `lint`, `tsc` et react-doctor verts.
+Le moteur sert désormais ces lignes.
 
 ## La demande de cette vague — une seule
 
-Le design system reste gelé jusqu'à la 0.8 ; Romain le dégèle pour ce seul point, petit.
+Romain dégèle le DS pour ce point, bloquant pour la dernière session de la 0.7.x.
 
-**Une capture par ligne dans le détail d'une zone du dry-run** :
-[`roomprofile-0721-dry-run-lignes.md`](./roomprofile-0721-dry-run-lignes.md). `DryRunZone.detail` reste une chaîne,
-mais le moteur y sépare ses éléments par `\n`. Le DS la rend en liste à puces, une puce par ligne non vide. Cela vaut
-pour « lecture fausse — capture … », « motif jamais attesté sur la taille » et « relectures par rang ». Un détail d'une
-seule ligne s'affiche comme aujourd'hui.
+**Le seuil de luminance d'une taille** : [`roomprofile-0721-seuil-par-taille.md`](./roomprofile-0721-seuil-par-taille.md).
+
+- Station 5, panneau « Traitement de la taille » : un cinquième réglage, « Seuil de luminance », entier 0–255, vide =
+  « celui de la chaîne ».
+- Il est servi par `AmountScaleDto.threshold` et réglé par `setAmountTreatment(…, "threshold", n)`.
+- Il est offert à toutes les tailles, **référence comprise** (les quatre autres réglages restent refusés à la
+  référence).
 
 **Ne rien changer d'autre dans le drop.** Avant d'exporter : `tsc` vert, lint avec le [`lint-bundle/`](./lint-bundle/)
 à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic ; le point déclaré dans
