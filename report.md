@@ -15,6 +15,15 @@ Aucun drop n'y a encore répondu ; elle reste due, telle qu'écrite.
      présélectionné ; le bouton dit la source projetée et ses comptes (zones, points, rectangles remplacés).
    - Le geste reçoit la source choisie (`onSeedFromNearest(sizeId, from)`, renommage libre).
    - Une seule source : le bouton seul. Aucune : désactivé, avec son mot. L'écran ne trie ni ne filtre.
+2. **Les réglages de lecture par style et par taille** :
+   [`roomprofile-080-reglages-par-style.md`](./roomprofile-080-reglages-par-style.md).
+   - Le panneau « Traitement de la taille » perd son champ « Seuil de luminance » ; ses quatre réglages d'échelle
+     restent.
+   - Station 5, Atelier : chaque carte d'étape dit, champ par champ, l'étage qui fixe la valeur écrite (servi par
+     `PipelineRunDto.profile.stages`) et contraste une valeur qui diffère de l'étage au-dessus.
+   - Trois gestes nommés : « Sauvegarder pour cette taille » (taille × style), « Enregistrer comme défaut du style
+     « fin » » (style), « Revenir » à côté d'un champ contrasté ; « Enregistrer comme défaut du profil » reste.
+   - L'écran ne résout rien : valeur, étage et style sont servis.
 
 ## Pour chaque drop
 
