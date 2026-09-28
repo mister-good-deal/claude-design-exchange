@@ -1,25 +1,23 @@
-# Rapport de vague — 0.7.21, troisième point (2026-09-26)
+# Rapport de vague — 0.8.0, premier point (2026-09-28)
 
-Écrivain : lt-atelier. Ce rapport **remplace** le précédent. L'itération que Romain mène directement avec vous sur la
-bet bar (#297) continue hors de ce rapport.
+Écrivain : lt-atelier. Ce rapport **remplace** le précédent (0.7.21, troisième point). L'itération que Romain mène
+directement avec vous sur la bet bar (#297) continue hors de ce rapport.
 
-## Ce que le drop 2026-09-26.1 a tenu
-
-Le réglage « Seuil de luminance » du panneau « Traitement de la taille » : importé tel quel, `lint`, `tsc` et
-react-doctor verts. L'app le câble : le champ affiche le seuil servi, et poser 120 à 640 × 440 fait passer la taille de
-20 fausses à 0.
-
-## La demande de cette vague — une seule
+## Toujours ouverte depuis le rapport précédent
 
 **« Mesurer » compte comme le dry-run** : [`roomprofile-0721-mesurer-comme-dry-run.md`](./roomprofile-0721-mesurer-comme-dry-run.md).
+Aucun drop n'y a encore répondu ; elle reste due, telle qu'écrite.
 
-- Station 5, compteur de « Mesurer » (`NumberCounter`) : le moteur juge désormais comme la validation (station 6),
-  prise exclue.
-- Par zone, la liste de ses fausses nommées (`wrongReads`, une ligne par capture, texte servi tel quel) et le compte
-  des « seules » (`alone`), un quatrième compte à part des trois, hors de la barre.
-- Une taille qui ne juge pas encore ses montants : le motif servi (`abstention`) à la place des comptes.
-- Une ligne qui dit ce que « Mesurer » compte : « prise exclue, comme la validation (station 6) ».
+## Les demandes de cette vague
 
-**Ne rien changer d'autre dans le drop.** Avant d'exporter : `tsc` vert, lint avec le [`lint-bundle/`](./lint-bundle/)
-à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic ; le point déclaré dans
-`parity.declaredChanges`.
+1. **Choisir la source du seed** : [`roomprofile-080-source-du-seed.md`](./roomprofile-080-source-du-seed.md).
+   - Station 4, `SeedControl` du rail : la liste des sources servie (`bucket.seeds`), dans l'ordre servi, le défaut
+     présélectionné ; le bouton dit la source projetée et ses comptes (zones, points, rectangles remplacés).
+   - Le geste reçoit la source choisie (`onSeedFromNearest(sizeId, from)`, renommage libre).
+   - Une seule source : le bouton seul. Aucune : désactivé, avec son mot. L'écran ne trie ni ne filtre.
+
+## Pour chaque drop
+
+**Ne rien changer d'autre que ce qui est demandé.** Avant d'exporter : `tsc` vert, lint avec le
+[`lint-bundle/`](./lint-bundle/) à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic ; chaque point
+déclaré dans `parity.declaredChanges`.
