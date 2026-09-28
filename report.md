@@ -1,29 +1,24 @@
-# Rapport de vague — 0.8.0, premier point (2026-09-28)
+# Rapport de vague — 0.8.0, deuxième point (2026-09-28)
 
-Écrivain : lt-atelier. Ce rapport **remplace** le précédent (0.7.21, troisième point). L'itération que Romain mène
+Écrivain : lt-atelier. Ce rapport **remplace** le précédent (0.8.0, premier point). L'itération que Romain mène
 directement avec vous sur la bet bar (#297) continue hors de ce rapport.
 
-## Toujours ouverte depuis le rapport précédent
+## Ce que le drop 2026-09-28 a tenu
 
-**« Mesurer » compte comme le dry-run** : [`roomprofile-0721-mesurer-comme-dry-run.md`](./roomprofile-0721-mesurer-comme-dry-run.md).
-Aucun drop n'y a encore répondu ; elle reste due, telle qu'écrite.
+Il répond aux trois demandes ouvertes : « Mesurer » compte comme le dry-run, le choix de la source du seed, et les
+réglages de lecture par style et par taille. Importé tel quel : `lint`, `tsc` et react-doctor verts côté export. L'app le
+câble (!521) : l'Atelier sert l'étage de chaque réglage et écrit un champ à la fois, la station 4 envoie la source
+choisie, le compteur de « Mesurer » lit ce que le moteur sert. La parité ne bouge sur aucune scène.
 
-## Les demandes de cette vague
+## La demande de cette vague — une seule
 
-1. **Choisir la source du seed** : [`roomprofile-080-source-du-seed.md`](./roomprofile-080-source-du-seed.md).
-   - Station 4, `SeedControl` du rail : la liste des sources servie (`bucket.seeds`), dans l'ordre servi, le défaut
-     présélectionné ; le bouton dit la source projetée et ses comptes (zones, points, rectangles remplacés).
-   - Le geste reçoit la source choisie (`onSeedFromNearest(sizeId, from)`, renommage libre).
-   - Une seule source : le bouton seul. Aucune : désactivé, avec son mot. L'écran ne trie ni ne filtre.
-2. **Les réglages de lecture par style et par taille** :
-   [`roomprofile-080-reglages-par-style.md`](./roomprofile-080-reglages-par-style.md).
-   - Le panneau « Traitement de la taille » perd son champ « Seuil de luminance » ; ses quatre réglages d'échelle
-     restent.
-   - Station 5, Atelier : chaque carte d'étape dit, champ par champ, l'étage qui fixe la valeur écrite (servi par
-     `PipelineRunDto.profile.stages`) et contraste une valeur qui diffère de l'étage au-dessus.
-   - Trois gestes nommés : « Sauvegarder pour cette taille » (taille × style), « Enregistrer comme défaut du style
-     « fin » » (style), « Revenir » à côté d'un champ contrasté ; « Enregistrer comme défaut du profil » reste.
-   - L'écran ne résout rien : valeur, étage et style sont servis.
+**La pipette montre les points d'un bouton, sans clic à blanc** : [`roomprofile-080-pipette.md`](./roomprofile-080-pipette.md).
+
+- Station 5, pipette : sur la capture, les points déjà posés du bouton actif, numérotés (1), (2), (3), le point actif
+  distingué. Les positions sont servies (`Probe.point` de la cible, de son `#2` et de son `#3`) ; l'écran ne calcule rien.
+- Retirer le « clic à blanc » de la pipette (`ActuatorRow`, `onTestPoint`) et ses libellés ; `unplacedClick` devient
+  « pas encore posé ». Le clic de test de la station 4 (`onTestClick`) reste.
+- Rien à faire pour l'enchaînement 1 → 2 → 3 : l'app sert déjà la cible suivante après un prélèvement accepté.
 
 ## Pour chaque drop
 
