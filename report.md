@@ -8,7 +8,7 @@ directement avec vous sur la bet bar (#297) continue hors de ce rapport.
 Importé tel quel : `lint`, `tsc` et react-doctor verts côté export. L'app le câble (!528) : les points posés d'un bouton
 sont numérotés sur la capture, le clic à blanc a quitté la station 5. La parité ne bouge sur aucune scène.
 
-## Les demandes de cette vague — trois
+## Les demandes de cette vague — quatre
 
 1. **« Références de validation » : un compte et l'image à la demande** :
    [`roomprofile-081-references-de-validation.md`](./roomprofile-081-references-de-validation.md). **Drop d'import.**
@@ -25,6 +25,12 @@ sont numérotés sur la capture, le clic à blanc a quitté la station 5. La par
    **Drop d'import, un point.**
    - `CalibrationCanvas` lit l'état servi de chaque zone sans repli `?? "adjusted"` : l'app en fournit un pour
      chaque zone qu'elle pose. Aucun pixel ne bouge quand l'état est fourni.
+
+4. **« Valider la géométrie », un geste à part d'« Écrire »** :
+   [`roomprofile-081-valider-la-geometrie.md`](./roomprofile-081-valider-la-geometrie.md). **Drop d'import.**
+   - Panneau « Géométrie de la room » : un bouton, un clic, sur un nouveau rappel `onValidateGeometry()`, avec la
+     phrase servie à côté ; occupé pendant le geste, la liste servie des lignes au refus. « Écrire » n'inscrit plus la
+     validation.
 
 ## Pour chaque drop
 
