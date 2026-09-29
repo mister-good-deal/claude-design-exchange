@@ -8,7 +8,7 @@ directement avec vous sur la bet bar (#297) continue hors de ce rapport.
 Importé tel quel : `lint`, `tsc` et react-doctor verts côté export. L'app le câble (!528) : les points posés d'un bouton
 sont numérotés sur la capture, le clic à blanc a quitté la station 5. La parité ne bouge sur aucune scène.
 
-## Les demandes de cette vague — deux
+## Les demandes de cette vague — trois
 
 1. **« Références de validation » : un compte et l'image à la demande** :
    [`roomprofile-081-references-de-validation.md`](./roomprofile-081-references-de-validation.md). **Drop d'import.**
@@ -20,6 +20,11 @@ sont numérotés sur la capture, le clic à blanc a quitté la station 5. La par
    **Prototype, pas un drop d'import : trois variantes différentes**, Romain choisit avant toute décision.
    - Station 3 : le geste « Détacher de la prise » sur une capture, et la ligne de divergence servie par l'app, près
      de la capture, avec le geste à côté.
+
+3. **Le canvas ne choisit jamais l'état d'une zone** : [`roomprofile-0721-canvas-etat.md`](./roomprofile-0721-canvas-etat.md).
+   **Drop d'import, un point.**
+   - `CalibrationCanvas` lit l'état servi de chaque zone sans repli `?? "adjusted"` : l'app en fournit un pour
+     chaque zone qu'elle pose. Aucun pixel ne bouge quand l'état est fourni.
 
 ## Pour chaque drop
 
