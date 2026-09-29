@@ -10,7 +10,7 @@ Il répond aux deux demandes d'import qu'il nomme, **références de validation*
 `onShowGeometryProof` (« Voir l'aperçu » demande l'image d'une seule preuve) ; elle sert déjà l'état de chaque zone
 posée. La parité ne bouge sur aucune scène.
 
-## Les demandes de cette vague — deux
+## Les demandes de cette vague — trois
 
 1. **« Valider la géométrie », un geste à part d'« Écrire »** :
    [`roomprofile-081-valider-la-geometrie.md`](./roomprofile-081-valider-la-geometrie.md). **Drop d'import, toujours
@@ -23,6 +23,11 @@ posée. La parité ne bouge sur aucune scène.
    variantes B et C.
    - Station 3 : le geste « Détacher de la prise » sur une capture, sur un nouveau rappel ; la ligne de divergence
      servie par l'app, rendue telle quelle. Sans rappel, pas de contrôle ; sans ligne servie, rien.
+
+3. **« Mesurer » nomme ses montants illisibles** :
+   [`roomprofile-081-montants-illisibles.md`](./roomprofile-081-montants-illisibles.md). **Drop d'import.**
+   - `NumberCounter` : sous le compte, une ligne par phrase servie de `unreadReads` (déjà dans `NumberTallyDto`), dans
+     l'ordre servi, verbatim, comme la liste des fausses. Sans illisible, rien de plus.
 
 ## Pour chaque drop
 
