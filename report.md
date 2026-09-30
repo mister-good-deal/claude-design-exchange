@@ -41,6 +41,7 @@ la conservation après rechargement, puis l’offre renouvelée après modificat
 par le container et le DS. La charge terrain de 954 preuves ne monte plus de panneau aux stations 4, 5 et 6 ;
 les refus de sources et leur réparation restent accessibles.
 
-Aucune retouche sémantique manuelle du DS. Les essais natifs complets de la MR se terminent avant son push.
+Aucune retouche sémantique manuelle du DS. Les 638 tests natifs du shell et les 1 370 autres tests Rust passent.
+Les corrections sont poussées dans !554, prête à relire.
 Les issues terrain restent ouvertes jusqu’au « ça OK » de Romain sous Windows. Aucune nouvelle demande DS
 pour cette vague ; la bet bar continue séparément.
