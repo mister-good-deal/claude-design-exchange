@@ -1,36 +1,32 @@
-# Rapport de vague — 0.8.1, deuxième point (2026-09-29)
+# Rapport de vague — 0.8.2, corrections de campagne (2026-09-30)
 
-Écrivain : lt-atelier. Ce rapport **remplace** le précédent (0.8.1, quatre demandes). L'itération que Romain mène
-directement avec vous sur la bet bar (#297) continue hors de ce rapport.
+Publication sur demande explicite de Romain. Cette vague prépare la fin des retours de la campagne Windows 0.8.1.
+MR d'intégration : [!554](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/554).
+L'itération bet bar (#297) menée directement avec Romain continue hors de ce rapport.
 
-## Ce que le drop 2026-09-29 a tenu
+## Deux corrections demandées
 
-Il répond aux deux demandes d'import qu'il nomme, **références de validation** (#522) et **canvas sans repli d'état**
-(#468). Importé tel quel : `lint` et react-doctor verts côté export, `tsc` vert une fois l'app câblée. L'app offre
-`onShowGeometryProof` (« Voir l'aperçu » demande l'image d'une seule preuve) ; elle sert déjà l'état de chaque zone
-posée. La parité ne bouge sur aucune scène.
+La demande complète est [roomprofile-082-campagne-windows.md](./roomprofile-082-campagne-windows.md).
 
-## Les demandes de cette vague — trois
+1. **#522 — supprimer « Références de validation »** entièrement, sans compteur ni bouton de remplacement.
+   Conserver les refus de sources du panneau Géométrie et les gestes de réparation servis.
+   Cette demande remplace le précédent allègement/repli du panneau de la vague 0.8.1.
+2. **#547 — version du client obligatoire pour valider** : saisie si la version observée manque, provenance
+   lue/saisie rendue depuis les données servies, callback `onValidateGeometry(clientVersion?: string)`.
+   Sans callback offert, aucun geste de validation ; occupé pendant l'écriture, refus servi visible.
+   Le backend exige déjà une version et conserve sa provenance. Le câblage app suivra votre drop.
 
-1. **« Valider la géométrie », un geste à part d'« Écrire »** :
-   [`roomprofile-081-valider-la-geometrie.md`](./roomprofile-081-valider-la-geometrie.md). **Drop d'import, toujours
-   ouverte** : le drop 2026-09-29 ne la portait pas.
-   - Panneau « Géométrie de la room » : un bouton, un clic, sur un nouveau rappel `onValidateGeometry()`, avec la
-     phrase servie à côté ; occupé pendant le geste, la liste servie des lignes au refus.
-2. **Détacher une jumelle de sa prise — la variante A** :
-   [`roomprofile-081-detacher-de-la-prise.md`](./roomprofile-081-detacher-de-la-prise.md). **Romain a choisi le
-   prototype A** (`prototypes/detacher-de-la-prise/`). **Drop d'import** : l'écran réel de la variante A, rien des
-   variantes B et C.
-   - Station 3 : le geste « Détacher de la prise » sur une capture, sur un nouveau rappel ; la ligne de divergence
-     servie par l'app, rendue telle quelle. Sans rappel, pas de contrôle ; sans ligne servie, rien.
+## Continuité de la vague précédente
 
-3. **« Mesurer » nomme ses montants illisibles** :
-   [`roomprofile-081-montants-illisibles.md`](./roomprofile-081-montants-illisibles.md). **Drop d'import.**
-   - `NumberCounter` : sous le compte, une ligne par phrase servie de `unreadReads` (déjà dans `NumberTallyDto`), dans
-     l'ordre servi, verbatim, comme la liste des fausses. Sans illisible, rien de plus.
+Le dépôt 0.8.1 porte déjà le bouton « Valider la géométrie » (#521), le geste « Détacher de la prise » variante A
+(#518), et les lignes de montants illisibles (#478). Les conserver dans l'export cumulatif ; #547 complète le
+bouton de validation existant. Les demandes durables précédentes restent consultables :
+[validation](./roomprofile-081-valider-la-geometrie.md),
+[détachement](./roomprofile-081-detacher-de-la-prise.md),
+[illisibles](./roomprofile-081-montants-illisibles.md).
 
-## Pour chaque drop
+## Export attendu
 
-**Ne rien changer d'autre que ce qui est demandé.** Avant d'exporter : `tsc` vert, lint avec le
-[`lint-bundle/`](./lint-bundle/) à jour (`npm run check` rend **0**), react-doctor à **zéro** diagnostic ; chaque point
-déclaré dans `parity.declaredChanges`.
+Périmètre limité aux deux corrections, types, chaînes et postures associées. Déclarer les changements visuels dans
+`parity.declaredChanges`. Export cumulatif conforme à [contract.md](./contract.md), lint/typecheck verts et
+react-doctor à zéro diagnostic. Romain transmettra ensuite le DS pour import, câblage et recette.
