@@ -45,3 +45,18 @@ Respecter le contrat des stations P1/P9 : l'écran affiche ce que le moteur sert
 Pas de refonte, d'autre écran ou de fonctionnalité supplémentaire. Export cumulatif, lint/typecheck/doctor sans
 diagnostic, puis import et parité pixel suivant le
 [rail Claude Design](https://gitlab.laneuville.me/rom1/tatami/-/blob/master/doc/agents/claude-design.md).
+
+## Réception du drop `2026-09-30`
+
+Importé dans [!554](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/554) sur le « DS ready » de Romain.
+Le panneau et ses commandes de consultation sont retirés. Les refus de sources et leur réparation restent servis.
+Le champ transmet la version saisie ; les confirmations affichent leur provenance. Le moteur compare l'état courant
+à la validation enregistrée et sert `validationCurrent` : le geste disparaît après succès, reste absent au
+rechargement et revient après une modification de géométrie. Une ancienne validation sans client ne masque pas le geste.
+
+Les tests du vrai producteur Rust, rejoués par le container et le DS, couvrent le refus, la saisie, la provenance,
+le rechargement et la modification d'une ROI. Le test sur les 954 preuves vérifie l'absence du panneau aux stations
+4, 5 et 6. La clôture des retours terrain suit le « ça OK » de Romain sous Windows.
+
+Gates du DS et de son câblage : typecheck, lint, React Doctor sans diagnostic, knip et verrou des 123 fichiers verts ;
+924 tests front, 79 e2e et 24 comparaisons de parité pixel passent. Export et preview annoncent tous deux `2026-09-30`.
