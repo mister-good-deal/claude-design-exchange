@@ -45,3 +45,18 @@ Aucune retouche sémantique manuelle du DS. Les 638 tests natifs du shell et les
 Les corrections sont poussées dans !554, prête à relire.
 Les issues terrain restent ouvertes jusqu’au « ça OK » de Romain sous Windows. Aucune nouvelle demande DS
 pour cette vague ; la bet bar continue séparément.
+
+## Nouvelle demande — Overlay v2 (1er octobre, Ref #22 et #548)
+
+Le développement Overlay v2 rapatrié de Claude Cloud est en revue complète avant sa MR vers `release/0.8.2`.
+Les deux demandes suivantes sont publiées sur instruction de Romain. Elles s’ajoutent aux corrections de campagne
+ci-dessus : le prochain export doit conserver les modifications Room Profile du drop `2026-09-30`.
+
+- [Interrupteur de l’atelier et refus servis](./overlay-v2-enabled.md) : l’écran reçoit `overlayEnabled`,
+  `onSetOverlayEnabled` et `refusal`, avec toutes les chaînes françaises et anglaises dans le DS.
+- [Cluster siqnote sur table](./overlay-v2-siq-panels.md) : état et géométrie des panneaux pour le hit-test,
+  libellé « non reconnu » entièrement lisible et localisé, refus servi ; fermeture d’édition imposée par l’app.
+
+La note s’enregistre bien avec **Ctrl+Entrée**, Entrée va à la ligne : décision de Romain, aucune demande de
+modification sur ce point. Aucun calcul de jeu ni décision métier ne doit être ajouté au DS.
+La revue peut préciser les scénarios de ces demandes ; ce rapport conserve les demandes de campagne déjà traitées.
