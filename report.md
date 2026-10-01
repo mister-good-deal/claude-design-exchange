@@ -77,3 +77,11 @@ Le test avec le vrai container et le vrai `SiqCluster` reproduit la perte du bro
 attendu : `onSetNote(text): Promise<boolean>`, maintien du brouillon et du focus pendant l'attente et après refus,
 fermeture uniquement après succès ou annulation explicite, protection contre double sauvegarde et réponse périmée.
 La MR Overlay v2 restera en brouillon jusqu'à l'import du correctif et au test de ce parcours. Ref #548.
+
+## Revue Overlay v2 publiée — MR !555
+
+[MR !555](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/555), vers `release/0.8.2`, en brouillon. La revue a corrigé 17 défauts côté moteur, shell et app ; aucune retouche manuelle du DS. Les 1 499 tests Rust, 690 tests Tauri, 1 011 tests front, 106 e2e et 27 comparaisons pixel passent.
+
+Le point 7 de [siqnote](./overlay-v2-siq-panels.md) reste bloquant : garder le brouillon après refus d’enregistrement et attendre la confirmation de l’app avant de fermer. Les demandes [atelier](./overlay-v2-enabled.md) et [précision du pas](./overlay-v2-bet-step.md) sont également publiées. Le prochain export doit conserver le drop Room Profile du 2026-09-30 intégré dans !554.
+
+[Rapport détaillé](https://gitlab.laneuville.me/rom1/tatami/-/blob/0a8a2d0599eeeefd1b607c7b6c16877c4d506890/specs/024-overlay-v2/review-report.md). La recette Windows reste due ; la MR ne sera pas présentée comme prête au merge avant correction du blocage DS. Ref #548.
