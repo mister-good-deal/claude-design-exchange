@@ -60,3 +60,12 @@ ci-dessus : le prochain export doit conserver les modifications Room Profile du 
 La note s’enregistre bien avec **Ctrl+Entrée**, Entrée va à la ligne : décision de Romain, aucune demande de
 modification sur ce point. Aucun calcul de jeu ni décision métier ne doit être ajouté au DS.
 La revue peut préciser les scénarios de ces demandes ; ce rapport conserve les demandes de campagne déjà traitées.
+
+### Compléments issus de la revue
+
+La demande siqnote décrit maintenant un défaut reproduit : « + » retire le champ de note sans signaler la fin
+ d’édition. L’app ajoute une garde de fermeture ; le DS doit terminer l’édition proprement ou désactiver ce bouton
+pendant l’édition. Les mots de réserve épuisée et de refus d’ouverture d’édition figurent aussi dans les demandes.
+
+Troisième demande : [précision du pas de molette](./overlay-v2-bet-step.md). Pour `nudgeStepBb = 0.25`, l’aide affiche
+actuellement `0.3 bb`. Elle doit conserver la valeur servie ; les montants des presets restent les chaînes Rust.
