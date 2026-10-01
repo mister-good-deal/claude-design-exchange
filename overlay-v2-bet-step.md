@@ -2,6 +2,9 @@
 
 Revue Overlay v2 du 2026-10-01, Ref #23 et #548.
 
+**Publiée le 2026-10-01** sur l'exchange :
+[overlay-v2-bet-step.md](https://github.com/mister-good-deal/claude-design-exchange/blob/main/overlay-v2-bet-step.md).
+
 `BetBar` reçoit `nudgeStepBb`, une valeur servie. `fmtStep` la formate actuellement avec `toFixed(1)` : pour un pas de
 `0.25`, l'aide annonce `0.3 bb`, alors que chaque mouvement applique `0.25 bb`. Conserver les décimales significatives
 du pas sans changer sa valeur, en français et en anglais. Ajouter un cas `0.25` et garder les cas `0.1` et `1`.
