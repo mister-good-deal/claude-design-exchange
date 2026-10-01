@@ -25,6 +25,13 @@ partout, sauf sur les rectangles que la page lui publie. Quatre points du contra
 4. **Une ligne de refus.** Un geste refusé par le shell (tag hors palette, magasin illisible…) se dit verbatim ;
    l'app pose aujourd'hui un `role="alert"` sous le cluster, hors du DS. Demande : `data.refusal?: string`, rendu par le
    cluster comme `tagRejection` l'est dans l'atelier.
+5. **Terminer l'édition avant de retirer son champ.** La revue du 2026-10-01 reproduit ce défaut : éditer une note,
+   puis cliquer « + » retire le textarea sans appeler `onNoteEditEnd`. L'app croit encore l'édition active et le
+   routage reste suspendu. Demande : terminer explicitement l'édition avant d'ouvrir la palette (ou désactiver « + »
+   pendant l'édition), avec un callback de fin unique. Tester annulation, ouverture de palette et nouvelle édition.
+   La fermeture imposée par `data.editing` doit suivre le même contrat.
+6. **Le refus d'ouvrir l'éditeur** : fournir un libellé fr/en quand le focus ou le mode d'édition n'a pas pu être obtenu.
+   La décision et les détails de refus restent servis par l'app ; aucune prise de focus n'appartient au DS.
 
 ## Aussi, à savoir
 
