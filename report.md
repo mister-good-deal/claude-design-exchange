@@ -69,3 +69,11 @@ pendant l’édition. Les mots de réserve épuisée et de refus d’ouverture d
 
 Troisième demande : [précision du pas de molette](./overlay-v2-bet-step.md). Pour `nudgeStepBb = 0.25`, l’aide affiche
 actuellement `0.3 bb`. Elle doit conserver la valeur servie ; les montants des presets restent les chaînes Rust.
+
+### Blocage confirmé — brouillon perdu après refus de sauvegarde
+
+Le test avec le vrai container et le vrai `SiqCluster` reproduit la perte du brouillon lorsque `set_player_note`
+échoue : le DS a déjà fermé l'éditeur. Le point 7 de [la demande siqnote](./overlay-v2-siq-panels.md) décrit le contrat
+attendu : `onSetNote(text): Promise<boolean>`, maintien du brouillon et du focus pendant l'attente et après refus,
+fermeture uniquement après succès ou annulation explicite, protection contre double sauvegarde et réponse périmée.
+La MR Overlay v2 restera en brouillon jusqu'à l'import du correctif et au test de ce parcours. Ref #548.
