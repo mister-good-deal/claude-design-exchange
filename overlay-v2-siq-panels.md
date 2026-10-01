@@ -32,6 +32,14 @@ partout, sauf sur les rectangles que la page lui publie. Quatre points du contra
    La fermeture imposée par `data.editing` doit suivre le même contrat.
 6. **Le refus d'ouvrir l'éditeur** : fournir un libellé fr/en quand le focus ou le mode d'édition n'a pas pu être obtenu.
    La décision et les détails de refus restent servis par l'app ; aucune prise de focus n'appartient au DS.
+7. **Conserver le brouillon lorsque l'enregistrement échoue — bloque la sortie de brouillon de la MR.**
+   Reproduction avec le vrai container et le vrai DS : saisir une note, Ctrl+Entrée, puis refus de l'IPC
+   (`joueurs illisibles`). Le DS ferme immédiatement l'éditeur ; rouvrir affiche l'ancienne note et le brouillon est
+   perdu. Demande : `onSetNote(text): Promise<boolean>` ; seul `true` confirme l'écriture. Pendant l'attente et sur
+   `false` ou rejet, conserver champ, texte et édition ; montrer `data.refusal` verbatim. Fermer et appeler
+   `onNoteEditEnd` uniquement après succès ou annulation explicite. Empêcher les doubles sauvegardes et ignorer une
+   résolution tardive concernant un joueur ou une session d'édition remplacés. Tests : succès, refus, double clic,
+   annulation pendant attente et changement de joueur avant réponse.
 
 ## Aussi, à savoir
 
