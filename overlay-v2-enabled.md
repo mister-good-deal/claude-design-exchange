@@ -18,6 +18,9 @@ en fr et en en : c'est un écart, à retirer dès l'export suivant.
 2. **Une ligne de refus pour les gestes de l'atelier** (géométrie, croix, « Copier vers… », interrupteur) : un
    `data.refusal?: string` rendu verbatim, comme `tagRejection` l'est pour un tag. L'app l'affiche aujourd'hui sous
    l'interrupteur, hors de l'écran DS.
+3. **La réserve de fenêtres épuisée** : rendre les comptes servis `reserve.capacity`, `reserve.tracked` et
+   `reserve.uncovered` avec une phrase localisée fr/en, visible lorsque des tables ne peuvent pas recevoir d'overlay.
+   L'app décide de cette indisponibilité ; le DS en porte les mots et le rendu.
 
 La baseline de parité (`BaselineApp`) compose aujourd'hui l'interrupteur de l'app au-dessus de l'écran : à l'import,
 elle reviendra à l'écran DS seul.
