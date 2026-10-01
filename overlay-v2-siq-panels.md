@@ -5,7 +5,7 @@
 Suivi de la vague : #548. Export et import correctifs attendus.
 
 La page d'overlay d'une table rend `SiqCluster` tel quel, dans une fenêtre transparente que le shell laisse traversable
-partout, sauf sur les rectangles que la page lui publie. Quatre points du contrat actuel obligent l'app à des écarts,
+partout, sauf sur les rectangles que la page lui publie. Plusieurs points du contrat actuel obligent l'app à des écarts,
 à retirer dès l'export suivant.
 
 ## Ce que l'app demande
