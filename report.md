@@ -118,3 +118,27 @@ Export cumulatif avec le drop `2026-10-02` (Overlay v2) et le `2026-09-30`.
    décimale libre, aucun `step` HTML ; l'app valide et refuse en le disant.
 4. **SiqCluster** : Entrée enregistre, Maj+Entrée va à la ligne ; rien pendant une composition IME.
 5. **SiqCluster** : `onNoteDraft(playerId, text)` sur une fin d'édition imposée par l'app, avec l'id d'ouverture.
+
+## Verdict d'intégration — drop `2026-10-02.2` (2 octobre, Ref #561 et #559)
+
+Drop accepté, importé sur une copie par `pnpm import-ds` (il remplace le `.1`, porté inchangé). Gates du DS : lint et
+React Doctor verts ; `tsc` rouge seulement côté app, le temps du câblage (aucune édition d'un fichier DS).
+
+1. **Raccourcis & mises — interrupteur** : câblé (`hotkeysEnabled` servi par le profil, `onSetHotkeysEnabled`).
+   Coupé, le moteur ne lie plus aucune touche, kill switch compris, et lève une suspension en cours.
+2. **Halo des tables — mots** : l'écran app prend `featureHelp` / `featureOn` / `featureOff` ; ses mots provisoires sont
+   retirés. Coupé, « Aperçu » est désactivé.
+3. **Pas de molette** : câblé (`nudgeStepBb`, `onSetNudgeStep`) ; 0,25 reste 0,25 ; sous 0,1 BB l'app refuse avant
+   d'écrire (`sizing-nudge`), un refus du moteur est dit sous la ligne.
+4. et 5. **SiqCluster** (Entrée enregistre, `onNoteDraft`) : importés ici, câblés par la MR de suite du lot Overlay.
+
+**Demandes de Romain du drop `.2`**, prises telles quelles : « Tout au survol » retiré de l'atelier Overlay (l'app ne le
+référence plus), fixtures bridées à Unibet 3-max (parité : région `overlay` seule, rebaselinée par construction).
+
+**Une demande pour un prochain drop** : un refus de l'interrupteur des raccourcis n'a pas d'emplacement à l'écran (l'app
+remet l'interrupteur dans son état et ne peut pas dire pourquoi). Demandé : `rejectFor("hotkeys-enabled")` rendu sous la
+carte, comme `refusal` sous celle de l'Overlay.
+
+Gates sur la tête poussée (MR [!566](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/566)) : typecheck, lint,
+React Doctor sans diagnostic, knip, gardes, verrou DS ; 1 046 tests front, 110 e2e, 27 comparaisons pixel ; 1 535 tests
+Rust, 717 tests du shell, rail rapide 2 005, clippy Windows. Aucune retouche d'un fichier DS.
