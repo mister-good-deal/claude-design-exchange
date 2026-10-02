@@ -104,3 +104,17 @@ inchangé.
 
 Tests front (1 019) et e2e (107) verts, parité pixel verte (27 comparaisons, région `overlay` avec l'interrupteur). Aucune demande
 nouvelle.
+
+## Nouvelle demande — interrupteurs, pas de molette, note siqnote (2 octobre, Ref #561 et #559)
+
+Publiée sur l'accord de Romain du 2 octobre. Demande complète : [atelier-082-interrupteurs.md](./atelier-082-interrupteurs.md).
+Export cumulatif avec le drop `2026-10-02` (Overlay v2) et le `2026-09-30`.
+
+1. **Hotkeys & bets** : FeatureSwitch en tête de l'écran (`hotkeysEnabled`, `onSetHotkeysEnabled`), comme le Layout
+   designer et l'Overlay. Coupé, Tatami n'intercepte aucune touche ; l'écran reste modifiable.
+2. **Halo des tables** : le même interrupteur dans le prototype ; ses mots dans `STRINGS.glow` ; « Aperçu » désactivé
+   coupé. L'app l'a déjà posé sur son écran avec des mots provisoires.
+3. **Pas de molette** réglable dans le sizing (`nudgeStepBb`, `onSetNudgeStep`, refus `sizing-nudge`) : saisie
+   décimale libre, aucun `step` HTML ; l'app valide et refuse en le disant.
+4. **SiqCluster** : Entrée enregistre, Maj+Entrée va à la ligne ; rien pendant une composition IME.
+5. **SiqCluster** : `onNoteDraft(playerId, text)` sur une fin d'édition imposée par l'app, avec l'id d'ouverture.
