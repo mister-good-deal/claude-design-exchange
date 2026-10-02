@@ -85,3 +85,22 @@ La MR Overlay v2 restera en brouillon jusqu'à l'import du correctif et au test 
 Le point 7 de [siqnote](./overlay-v2-siq-panels.md) reste bloquant : garder le brouillon après refus d’enregistrement et attendre la confirmation de l’app avant de fermer. Les demandes [atelier](./overlay-v2-enabled.md) et [précision du pas](./overlay-v2-bet-step.md) sont également publiées. Le prochain export doit conserver le drop Room Profile du 2026-09-30 intégré dans !554.
 
 [Rapport détaillé](https://gitlab.laneuville.me/rom1/tatami/-/blob/0a8a2d0599eeeefd1b607c7b6c16877c4d506890/specs/024-overlay-v2/review-report.md). La recette Windows reste due ; la MR ne sera pas présentée comme prête au merge avant correction du blocage DS. Ref #548.
+
+## Verdict d'intégration — Overlay v2, drop `2026-10-02` (2 octobre)
+
+MR : [!555](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/555), demandes de [#548](https://gitlab.laneuville.me/rom1/tatami/-/issues/548).
+Drop accepté, importé sur une copie par `pnpm import-ds`. Gates du DS : lint et React Doctor verts ; `tsc` rouge
+seulement côté app, le temps de câbler les contrats neufs (aucune édition d'un fichier DS). Le `2026-09-30` porté
+inchangé.
+
+1. **Interrupteur, refus, réserve** (`overlay-v2-enabled`) : câblés tels quels ; la composition provisoire de l'app
+   est retirée et la baseline rend l'écran DS seul.
+2. **Panneaux siqnote** (`overlay-v2-siq-panels`) : `SiqPlayer.id`, `unknown` booléen, `siqClusterSize(c, player)`,
+   `refusal`, `editRefused`, `editing` et `onPanels`/`siqPanelBox` câblés. **Point 7 prouvé** avec le vrai container
+   et le vrai composant : sauvegarde refusée ⇒ brouillon, édition et focus gardés, refus dit ; confirmée ⇒ fermeture.
+   L'app sert `editing: true` seulement quand le shell a obtenu le premier plan : l'éditeur n'apparaît qu'alors, et
+   une 2e note demandée ferme la 1re. Le hit-test publie la boîte et chaque panneau ouvert, jamais leur union.
+3. **Pas de molette** (`overlay-v2-bet-step`) : rien à câbler côté app ; « ±0.25 bb » rendu.
+
+Tests front (1 019) et e2e (107) verts, parité pixel verte (27 comparaisons, région `overlay` avec l'interrupteur). Aucune demande
+nouvelle.
