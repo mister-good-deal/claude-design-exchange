@@ -154,3 +154,20 @@ Publiée sur l'accord de Romain du 3 octobre (G1 #583). Demande complète :
 2. **Échantillon de la taille regardée** (`Overlay`) : `tableShot?: { url, takenAt }` servi par l'app ⇒ fond « Capture »
    d'office, sous-titré « échantillon du … » ; `onForgetTableShot(sizeId)` derrière un bouton « Oublier l'échantillon ».
    Feutre / Capture / Grille et l'import de séance restent au joueur.
+
+## Verdict d'intégration — drop `2026-10-03` (3 octobre, Ref #572 et #573)
+
+Drop accepté, importé par `pnpm import-ds` (zip `6b9d7dfe…`), un seul commit, aucune édition d'un fichier DS. Gates du
+DS : lint, `tsc` et React Doctor verts à l'import.
+
+1. **Canevas de l'atelier** (`OverlayCanvas`) : rien à câbler. Ctrl+molette zoome sous le curseur, le fond tenu déplace
+   la scène, un clic simple désélectionne, « Ajuster » revient. e2e : le point visé reste sous la souris, déplacement de
+   60 × 40 px, croix glissée sans saut une fois zoomée, « Ajuster » désactivé à l'ajustement.
+2. **Échantillon** (`Overlay`) : câblé. `tableShot` est servi par l'app (capture locale prise à la première décision du
+   héros à cette taille, date mise en mots par l'app) ; `onForgetTableShot` efface le fichier, la décision suivante en
+   reprend un. Le fond dérivé (`backdropOf`) ouvre la taille sur la capture, Feutre / Grille restent au choix.
+3. **Raccourcis & mises — refus de l'interrupteur** : câblé. Un refus remet l'interrupteur et se dit sous sa carte
+   (`rejectFor("hotkeys-enabled")`) ; un succès n'efface que ce refus-là.
+
+Aucune demande nouvelle. Gates sur la tête poussée (MR [!584](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/584)) : typecheck, lint, React Doctor sans diagnostic, knip, gardes, verrou
+DS ; vitest complet ; e2e de l'atelier et des raccourcis ; 27 comparaisons pixel ; clippy, tests du cœur et du shell.
