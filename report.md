@@ -142,3 +142,15 @@ carte, comme `refusal` sous celle de l'Overlay.
 Gates sur la tête poussée (MR [!566](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/566)) : typecheck, lint,
 React Doctor sans diagnostic, knip, gardes, verrou DS ; 1 046 tests front, 110 e2e, 27 comparaisons pixel ; 1 535 tests
 Rust, 717 tests du shell, rail rapide 2 005, clippy Windows. Aucune retouche d'un fichier DS.
+
+## Nouvelle demande — atelier : zoom et déplacement du canevas, échantillon de capture (3 octobre, Ref #572 et #573)
+
+Publiée sur l'accord de Romain du 3 octobre (G1 #583). Demande complète :
+[atelier-083-zoom-echantillon.md](./atelier-083-zoom-echantillon.md). Export cumulatif avec le drop `2026-10-02.2`.
+
+1. **Canevas de l'atelier** (`OverlayCanvas`) : Ctrl+molette zoome sous le curseur (de l'ajustement à 400 %), le clic
+   gauche maintenu sur le fond déplace la scène, un clic simple désélectionne toujours, « Ajuster » revient à
+   l'ajustement. État d'affichage interne : aucune prop, aucun callback.
+2. **Échantillon de la taille regardée** (`Overlay`) : `tableShot?: { url, takenAt }` servi par l'app ⇒ fond « Capture »
+   d'office, sous-titré « échantillon du … » ; `onForgetTableShot(sizeId)` derrière un bouton « Oublier l'échantillon ».
+   Feutre / Capture / Grille et l'import de séance restent au joueur.
