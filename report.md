@@ -1,173 +1,108 @@
-# Rapport de vague — 0.8.2, corrections de campagne (2026-09-30)
+# Demandes à Claude Design — vague 0.8.5
 
-Publication sur demande explicite de Romain. Cette vague prépare la fin des retours de la campagne Windows 0.8.1.
-MR d'intégration : [!554](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/554).
-L'itération bet bar (#297) menée directement avec Romain continue hors de ce rapport.
+Rédigée par lt-atelier le 05/10, publiée sur l'accord de Romain du 05/10. Ce fichier
+rassemble la demande neuve de la campagne 0.8.4 (§1) et toutes les demandes restées sans drop depuis la 0.8.3 (§2 à
+§8), vérifiées une à une contre le code DS du 04/10 (`.ds-sync.json` de la release 0.8.3). L'export est cumulatif avec
+le dernier drop. Côté app, tout est déjà servi ; en attendant le drop, un geste reste refusé en le disant, ou n'est pas
+offert, et aucune CSS app ne compense.
 
-## Deux corrections livrées dans le drop `2026-09-30`
+Ne sont **pas** reprises : `ds-request-083-atelier.md` (zoom du canevas, échantillon de capture) et
+`ds-request-082-molette-note.md` (pas de molette, note de la SiqCluster), livrées ; `ds-request-083-bet-bar.md`, caduque
+depuis #594.
 
-La demande complète est [roomprofile-082-campagne-windows.md](./roomprofile-082-campagne-windows.md).
+## 1. Overlay : à 100 % d'opacité, rien ne transparaît (#607, neuve)
 
-1. **#522 — supprimer « Références de validation »** entièrement, sans compteur ni bouton de remplacement.
-   Conserver les refus de sources du panneau Géométrie et les gestes de réparation servis.
-   Cette demande remplace le précédent allègement/repli du panneau de la vague 0.8.1.
-2. **#547 — version du client obligatoire pour valider** : saisie si la version observée manque, provenance
-   lue/saisie rendue depuis les données servies, callback `onValidateGeometry(clientVersion?: string)`.
-   Sans callback offert, aucun geste de validation ; occupé pendant l'écriture, refus servi visible.
-   Le backend exige une version et conserve sa provenance. Le câblage app est intégré dans !554.
+Campagne 0.8.4, vraie table Spin 1572×1080 : la bet bar réglée à `opacity { idle: 1, hover: 1 }` laisse lire « PAROLE »,
+« MISER » et la rangée de presets de la room sous Third / Half / Two thirds / Pot. Même chose dans l'aperçu de l'atelier.
+Règle de Romain : **à 100 % d'opacité, aucun composant de l'overlay n'a de transparence** ; il occulte complètement ce
+qui est dessous.
 
-## Continuité de la vague précédente
+L'opacité réglée arrive bien à ta maquette (`BetBar` → `opacityVars` → `--op-idle` / `--op-hover` sur `.bar`). La
+transparence restante vient des fonds de `TableElements.module.css`, mélangés avec `transparent` :
 
-Le dépôt 0.8.1 porte déjà le bouton « Valider la géométrie » (#521), le geste « Détacher de la prise » variante A
-(#518), et les lignes de montants illisibles (#478). Les conserver dans l'export cumulatif ; #547 complète le
-bouton de validation existant. Les demandes durables précédentes restent consultables :
-[validation](./roomprofile-081-valider-la-geometrie.md),
-[détachement](./roomprofile-081-detacher-de-la-prise.md),
-[illisibles](./roomprofile-081-montants-illisibles.md).
+- `.bar` : `color-mix(var(--bg-0) 74%, transparent)` plus `backdrop-filter: blur(5px)` ;
+- `.chip` (tuiles de preset) : `color-mix(var(--text-hi) 5%, transparent)`, presque sans fond ;
+- `.key` 8 %, `.stats` 86 %, `.aid` 85 %, `.railWarn` 88 %, `.siqGrid` 74 %, `.flyBox` 94 % plus `blur(7px)`,
+  `.noteArea` 7 %, `.noteBtn` 6 %, `.siqRefusal` 94 %, `.disc[data-off]` 7 %.
 
-## Contrat du drop reçu
+**Demande** : des fonds pleins pour les quatre éléments (BetBar, SeatStats, DecisionAid, SiqCluster) et ce qu'ils
+contiennent. Une teinte se pose sur un fond opaque (`color-mix(in srgb, var(--text-hi) 5%, var(--bg-0))` au lieu de
+`… transparent`), le `backdrop-filter` disparaît. La seule translucidité de l'élément est alors celle de son opacité
+réglée : à 1, la room ne se voit plus du tout ; à 0,58 (le défaut), l'élément entier s'estompe d'un bloc. L'en-tête du
+fichier (« Translucent grounds are the page background mixed down, so the table reads through ») change avec. L'aperçu
+de l'atelier (`OverlayCanvas`) rend les mêmes composants : il suit sans autre changement.
 
-Périmètre limité aux deux corrections, types, chaînes et postures associées. Déclarer les changements visuels dans
-`parity.declaredChanges`. Export cumulatif conforme à [contract.md](./contract.md), lint/typecheck verts et
-react-doctor à zéro diagnostic. Le drop a été transmis par Romain et importé après vérification sur une copie.
+## 2. Raccourcis & mises : le curseur « Maintenir en jeu » part (`Hotkeys.tsx`, demande 0.8.3)
 
-## Verdict d’intégration — 1er octobre
+La cible « maintenir N tables en jeu » n'a jamais été câblée (aucun clic lobby) ; elle est retirée de l'app (décision
+D4 du 03/10).
 
-Drop accepté : typecheck et lint verts, React Doctor sans diagnostic, knip et verrou DS verts (123 fichiers).
-Les 924 tests front, 79 e2e et 24 comparaisons pixel passent. Export et preview portent la même version.
+**Demande** : retirer le curseur (`keepTables`, `onSetKeepTables`, la chaîne `keepRunning`, et `tablesSuffix` s'il ne
+sert qu'à lui) ; l'interrupteur « Ré-inscription auto à la fin d'une partie » reste seul dans son bloc. `HotkeysWiring`
+perd `onSetKeepTables`. En attendant, l'app passe `keepTables: 4` et un rappel vide.
 
-Le vrai producteur Rust prouve le refus sans validation, l’enregistrement de la version et de sa provenance,
-la conservation après rechargement, puis l’offre renouvelée après modification d’une ROI. Ces DTO sont rejoués
-par le container et le DS. La charge terrain de 954 preuves ne monte plus de panneau aux stations 4, 5 et 6 ;
-les refus de sources et leur réparation restent accessibles.
+## 3. Halo des tables et Room Profile : le déclencheur et la ROI `timer` partent (demande 0.8.3)
 
-Aucune retouche sémantique manuelle du DS. Les 638 tests natifs du shell et les 1 370 autres tests Rust passent.
-Les corrections sont poussées dans !554, prête à relire.
-Les issues terrain restent ouvertes jusqu’au « ça OK » de Romain sous Windows. Aucune nouvelle demande DS
-pour cette vague ; la bet bar continue séparément.
+Le déclencheur « Chrono proche de la fin » n'a jamais produit de halo ; le profil ne connaît plus la ROI `timer`.
 
-## Nouvelle demande — Overlay v2 (1er octobre, Ref #22 et #548)
+**Demande** :
 
-Le développement Overlay v2 rapatrié de Claude Cloud est en revue complète avant sa MR vers `release/0.8.2`.
-Les deux demandes suivantes sont publiées sur instruction de Romain. Elles s’ajoutent aux corrections de campagne
-ci-dessus : le prochain export doit conserver les modifications Room Profile du drop `2026-09-30`.
+- `i18n.ts`, groupe `glow` : retirer `trigger.timer`, `hierTimerSub`, `timeLow`, `dataBlocked` et `unavailable`.
+- `RoomProfile.fixtures.ts` : retirer la zone de kind `timer` du prototype ; `ZoneKind` perd `"timer"`, la chaîne
+  `zoneKind.timer` disparaît, et le champ `timerThreshold` (ni lecteur ni source) aussi. L'état de capture « Timer
+  visible / absent » reste. Au drop, `tests/e2e/calibration-v3.spec.ts` passe de 10 à 9 zones après le seed.
 
-- [Interrupteur de l’atelier et refus servis](./overlay-v2-enabled.md) : l’écran reçoit `overlayEnabled`,
-  `onSetOverlayEnabled` et `refusal`, avec toutes les chaînes françaises et anglaises dans le DS.
-- [Cluster siqnote sur table](./overlay-v2-siq-panels.md) : état et géométrie des panneaux pour le hit-test,
-  libellé « non reconnu » entièrement lisible et localisé, refus servi ; fermeture d’édition imposée par l’app.
+## 4. Layout designer : le dernier layout se supprime (`LayoutDesigner.tsx`, `SavedRow`, demande 0.8.3, #609)
 
-La note s’enregistre bien avec **Ctrl+Entrée**, Entrée va à la ligne : décision de Romain, aucune demande de
-modification sur ce point. Aucun calcul de jeu ni décision métier ne doit être ajouté au DS.
-La revue peut préciser les scénarios de ces demandes ; ce rapport conserve les demandes de campagne déjà traitées.
+Décision D7 du 03/10 : la suppression du dernier layout est autorisée, le tuilage devient inerte. Campagne 0.8.4 : la
+corbeille du dernier layout est encore désactivée (curseur « sens interdit »), alors que les notes de version
+l'annoncent corrigée.
 
-### Compléments issus de la revue
+**Demande** : la corbeille de chaque layout enregistré est active, le dernier compris (`canRemove={data.saved.length >
+1}` disparaît, avec le titre `keepOneLayout`, fr et en). Sans aucun layout enregistré, la liste dit : **« Aucun layout :
+Tatami laisse chaque table à sa place et la lit là. »** (en : « No layout: Tatami leaves each table where it is and reads
+it there. »). Le shell accepte déjà la suppression du dernier layout.
 
-La demande siqnote décrit maintenant un défaut reproduit : « + » retire le champ de note sans signaler la fin
- d’édition. L’app ajoute une garde de fermeture ; le DS doit terminer l’édition proprement ou désactiver ce bouton
-pendant l’édition. Les mots de réserve épuisée et de refus d’ouverture d’édition figurent aussi dans les demandes.
+## 5. Mises : l'écran BetSizing et la sauvegarde de templates de glyphes partent (demande 0.8.4)
 
-Troisième demande : [précision du pas de molette](./overlay-v2-bet-step.md). Pour `nudgeStepBb = 0.25`, l’aide affiche
-actuellement `0.3 bb`. Elle doit conserver la valeur servie ; les montants des presets restent les chaînes Rust.
+Le ladder 019 est retiré de bout en bout (#594) ; la bet bar sert la liste de `[sizing]` de la table survolée.
 
-### Blocage confirmé — brouillon perdu après refus de sauvegarde
+**Demande** :
 
-Le test avec le vrai container et le vrai `SiqCluster` reproduit la perte du brouillon lorsque `set_player_note`
-échoue : le DS a déjà fermé l'éditeur. Le point 7 de [la demande siqnote](./overlay-v2-siq-panels.md) décrit le contrat
-attendu : `onSetNote(text): Promise<boolean>`, maintien du brouillon et du focus pendant l'attente et après refus,
-fermeture uniquement après succès ou annulation explicite, protection contre double sauvegarde et réponse périmée.
-La MR Overlay v2 restera en brouillon jusqu'à l'import du correctif et au test de ce parcours. Ref #548.
+- Retirer `BetSizing.tsx`, `BetSizing.module.css` et leurs exports (`screens/index.ts`, `standalone.entry.tsx`,
+  `contract.ts`). Garder `SizingStreet`, `SizingPresetCfg` et `SIZING_FIXTURE` dans un module qui survit, par exemple
+  `SizingUnit.fixtures.ts` ; l'app suit l'import au drop.
+- `RoomProfile.fixtures.ts` : retirer le rappel `onSaveGlyphTemplates` et la mention qui en parle (l. ~1682) ;
+  `i18n.ts` : retirer la clé `saveTemplates` (type, en, fr).
 
-## Revue Overlay v2 publiée — MR !555
+## 6. Géométrie : une archive abîmée se liste et se supprime (`GeometryPanel.tsx`, demande 0.8.4)
 
-[MR !555](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/555), vers `release/0.8.2`, en brouillon. La revue a corrigé 17 défauts côté moteur, shell et app ; aucune retouche manuelle du DS. Les 1 499 tests Rust, 690 tests Tauri, 1 011 tests front, 106 e2e et 27 comparaisons pixel passent.
+Une archive dont la vérification échoue ne bloque plus l'écran : le shell la sert à part
+(`RoomGeometryDto.damagedArchives`, `id` et `reason`), et `geometry_delete_damaged_archive` la supprime.
 
-Le point 7 de [siqnote](./overlay-v2-siq-panels.md) reste bloquant : garder le brouillon après refus d’enregistrement et attendre la confirmation de l’app avant de fermer. Les demandes [atelier](./overlay-v2-enabled.md) et [précision du pas](./overlay-v2-bet-step.md) sont également publiées. Le prochain export doit conserver le drop Room Profile du 2026-09-30 intégré dans !554.
+**Demande** : sous `ArchivedList`, une liste « Archives abîmées » (n), une ligne par archive : son identifiant (mono),
+la raison servie telle quelle, et un bouton **« Supprimer »** (en : « Delete »), seul geste offert ; une note : **« Une
+archive abîmée ne se consulte plus : elle se supprime. »** (en : « A damaged archive can no longer be read: it can only
+be deleted. »). Données : `damaged: readonly { id: string; reason: string }[]`, rappel `onDeleteDamaged(id)`.
 
-[Rapport détaillé](https://gitlab.laneuville.me/rom1/tatami/-/blob/0a8a2d0599eeeefd1b607c7b6c16877c4d506890/specs/024-overlay-v2/review-report.md). La recette Windows reste due ; la MR ne sera pas présentée comme prête au merge avant correction du blocage DS. Ref #548.
+## 7. Room Profile : stations et gestes que le shell refuse (demandes 0.8.4, #595)
 
-## Verdict d'intégration — Overlay v2, drop `2026-10-02` (2 octobre)
+- **F3, « Valider la géométrie » sans version** (`GeometryPanel.tsx`, `ValidateBlock`) : le shell inscrit la validation
+  même sans version de client (`lastValidation.client` vaut `null`). Ta maquette désactive encore le bouton tant
+  qu'aucune version n'est lue ni saisie (`disabled={busy || !ready}`). **Demande** : l'offrir sans version (la saisie
+  reste facultative) et rendre une validation sans client avec « version inconnue » / « unknown version ».
+- **F17/F18, onglets et ‹ › vers une station verrouillée** (`RoomProfileWizard.tsx`) : le shell sert
+  `StationStatusDto.locked` (`metrology` | `no_size`) ; l'app refuse le geste en le disant. **Demande** : désactiver
+  l'onglet et la flèche d'une station dont `data.stations[i].status === "locked"`.
+- **F20, « Tester en direct » et « Conserver ces règles » sans règles** (`DetectStation.tsx`) : **Demande** : ne pas
+  les offrir (`disabled`) quand `detect.rules` est vide.
+- **F6, corrections de découpe d'une découpe caduque** (`GlyphTool.tsx`) : le crop sert `staleCutEdits` (scissions et
+  jointures posées contre une découpe automatique qui a changé), la réponse d'un geste de découpe `droppedCutEdits`
+  (celles qu'il a effacées). **Demande** : la même note que pour `staleRejections`, sur le crop pour `staleCutEdits` et
+  à la réponse du geste pour `droppedCutEdits`.
 
-MR : [!555](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/555), demandes de [#548](https://gitlab.laneuville.me/rom1/tatami/-/issues/548).
-Drop accepté, importé sur une copie par `pnpm import-ds`. Gates du DS : lint et React Doctor verts ; `tsc` rouge
-seulement côté app, le temps de câbler les contrats neufs (aucune édition d'un fichier DS). Le `2026-09-30` porté
-inchangé.
+## 8. Raccourcis : le refus d'une préférence d'automatisation (`Hotkeys.tsx`, demande 0.8.4, F21)
 
-1. **Interrupteur, refus, réserve** (`overlay-v2-enabled`) : câblés tels quels ; la composition provisoire de l'app
-   est retirée et la baseline rend l'écran DS seul.
-2. **Panneaux siqnote** (`overlay-v2-siq-panels`) : `SiqPlayer.id`, `unknown` booléen, `siqClusterSize(c, player)`,
-   `refusal`, `editRefused`, `editing` et `onPanels`/`siqPanelBox` câblés. **Point 7 prouvé** avec le vrai container
-   et le vrai composant : sauvegarde refusée ⇒ brouillon, édition et focus gardés, refus dit ; confirmée ⇒ fermeture.
-   L'app sert `editing: true` seulement quand le shell a obtenu le premier plan : l'éditeur n'apparaît qu'alors, et
-   une 2e note demandée ferme la 1re. Le hit-test publie la boîte et chaque panneau ouvert, jamais leur union.
-3. **Pas de molette** (`overlay-v2-bet-step`) : rien à câbler côté app ; « ±0.25 bb » rendu.
-
-Tests front (1 019) et e2e (107) verts, parité pixel verte (27 comparaisons, région `overlay` avec l'interrupteur). Aucune demande
-nouvelle.
-
-## Nouvelle demande — interrupteurs, pas de molette, note siqnote (2 octobre, Ref #561 et #559)
-
-Publiée sur l'accord de Romain du 2 octobre. Demande complète : [atelier-082-interrupteurs.md](./atelier-082-interrupteurs.md).
-Export cumulatif avec le drop `2026-10-02` (Overlay v2) et le `2026-09-30`.
-
-1. **Hotkeys & bets** : FeatureSwitch en tête de l'écran (`hotkeysEnabled`, `onSetHotkeysEnabled`), comme le Layout
-   designer et l'Overlay. Coupé, Tatami n'intercepte aucune touche ; l'écran reste modifiable.
-2. **Halo des tables** : le même interrupteur dans le prototype ; ses mots dans `STRINGS.glow` ; « Aperçu » désactivé
-   coupé. L'app l'a déjà posé sur son écran avec des mots provisoires.
-3. **Pas de molette** réglable dans le sizing (`nudgeStepBb`, `onSetNudgeStep`, refus `sizing-nudge`) : saisie
-   décimale libre, aucun `step` HTML ; l'app valide et refuse en le disant.
-4. **SiqCluster** : Entrée enregistre, Maj+Entrée va à la ligne ; rien pendant une composition IME.
-5. **SiqCluster** : `onNoteDraft(playerId, text)` sur une fin d'édition imposée par l'app, avec l'id d'ouverture.
-
-## Verdict d'intégration — drop `2026-10-02.2` (2 octobre, Ref #561 et #559)
-
-Drop accepté, importé sur une copie par `pnpm import-ds` (il remplace le `.1`, porté inchangé). Gates du DS : lint et
-React Doctor verts ; `tsc` rouge seulement côté app, le temps du câblage (aucune édition d'un fichier DS).
-
-1. **Raccourcis & mises — interrupteur** : câblé (`hotkeysEnabled` servi par le profil, `onSetHotkeysEnabled`).
-   Coupé, le moteur ne lie plus aucune touche, kill switch compris, et lève une suspension en cours.
-2. **Halo des tables — mots** : l'écran app prend `featureHelp` / `featureOn` / `featureOff` ; ses mots provisoires sont
-   retirés. Coupé, « Aperçu » est désactivé.
-3. **Pas de molette** : câblé (`nudgeStepBb`, `onSetNudgeStep`) ; 0,25 reste 0,25 ; sous 0,1 BB l'app refuse avant
-   d'écrire (`sizing-nudge`), un refus du moteur est dit sous la ligne.
-4. et 5. **SiqCluster** (Entrée enregistre, `onNoteDraft`) : importés ici, câblés par la MR de suite du lot Overlay.
-
-**Demandes de Romain du drop `.2`**, prises telles quelles : « Tout au survol » retiré de l'atelier Overlay (l'app ne le
-référence plus), fixtures bridées à Unibet 3-max (parité : région `overlay` seule, rebaselinée par construction).
-
-**Une demande pour un prochain drop** : un refus de l'interrupteur des raccourcis n'a pas d'emplacement à l'écran (l'app
-remet l'interrupteur dans son état et ne peut pas dire pourquoi). Demandé : `rejectFor("hotkeys-enabled")` rendu sous la
-carte, comme `refusal` sous celle de l'Overlay.
-
-Gates sur la tête poussée (MR [!566](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/566)) : typecheck, lint,
-React Doctor sans diagnostic, knip, gardes, verrou DS ; 1 046 tests front, 110 e2e, 27 comparaisons pixel ; 1 535 tests
-Rust, 717 tests du shell, rail rapide 2 005, clippy Windows. Aucune retouche d'un fichier DS.
-
-## Nouvelle demande — atelier : zoom et déplacement du canevas, échantillon de capture (3 octobre, Ref #572 et #573)
-
-Publiée sur l'accord de Romain du 3 octobre (G1 #583). Demande complète :
-[atelier-083-zoom-echantillon.md](./atelier-083-zoom-echantillon.md). Export cumulatif avec le drop `2026-10-02.2`.
-
-1. **Canevas de l'atelier** (`OverlayCanvas`) : Ctrl+molette zoome sous le curseur (de l'ajustement à 400 %), le clic
-   gauche maintenu sur le fond déplace la scène, un clic simple désélectionne toujours, « Ajuster » revient à
-   l'ajustement. État d'affichage interne : aucune prop, aucun callback.
-2. **Échantillon de la taille regardée** (`Overlay`) : `tableShot?: { url, takenAt }` servi par l'app ⇒ fond « Capture »
-   d'office, sous-titré « échantillon du … » ; `onForgetTableShot(sizeId)` derrière un bouton « Oublier l'échantillon ».
-   Feutre / Capture / Grille et l'import de séance restent au joueur.
-
-## Verdict d'intégration — drop `2026-10-03` (3 octobre, Ref #572 et #573)
-
-Drop accepté, importé par `pnpm import-ds` (zip `6b9d7dfe…`), un seul commit, aucune édition d'un fichier DS. Gates du
-DS : lint, `tsc` et React Doctor verts à l'import.
-
-1. **Canevas de l'atelier** (`OverlayCanvas`) : rien à câbler. Ctrl+molette zoome sous le curseur, le fond tenu déplace
-   la scène, un clic simple désélectionne, « Ajuster » revient. e2e : le point visé reste sous la souris, déplacement de
-   60 × 40 px, croix glissée sans saut une fois zoomée, « Ajuster » désactivé à l'ajustement.
-2. **Échantillon** (`Overlay`) : câblé. `tableShot` est servi par l'app (capture locale prise à la première décision du
-   héros à cette taille, date mise en mots par l'app) ; `onForgetTableShot` efface le fichier, la décision suivante en
-   reprend un. Le fond dérivé (`backdropOf`) ouvre la taille sur la capture, Feutre / Grille restent au choix.
-3. **Raccourcis & mises — refus de l'interrupteur** : câblé. Un refus remet l'interrupteur et se dit sous sa carte
-   (`rejectFor("hotkeys-enabled")`) ; un succès n'efface que ce refus-là.
-
-Aucune demande nouvelle. Gates sur la tête poussée (MR [!584](https://gitlab.laneuville.me/rom1/tatami/-/merge_requests/584)) : typecheck, lint, React Doctor sans diagnostic, knip, gardes, verrou
-DS ; vitest complet ; e2e de l'atelier et des raccourcis ; 27 comparaisons pixel ; clippy, tests du cœur et du shell.
+`updateAutomation` peut refuser ; l'app remet alors la valeur servie. **Demande** : `rejectFor("automation")` sous le
+panneau « Automatisation », comme les autres refus de l'écran ; l'app pose `data.rejection = { id: "automation",
+message }`.
