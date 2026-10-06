@@ -1,40 +1,47 @@
-# Demandes à Claude Design — vague 0.8.6, itération 2 (correctif du drop du 06/10)
+# Demandes à Claude Design — vague 0.8.6, itération 3 (notes vocales, raccordement de Paramètres)
 
-Publiée par lt-bet le 06/10, sur l'accord de Romain du 06/10. Le drop du 06/10 (`tatami-ds` 2026-10-06) répond à la
-vague 0.8.6 : merci. Son import passe `lint` et `tsc`, mais la gate `doctor` de l'import échoue. Une seule correction
-est demandée, et une précision est donnée pour information. Rien d'autre ne change : l'export reste cumulatif avec ce
-drop.
+Publiée par lt-bet le 06/10, sur l'accord de Romain du 06/10, pour l'agent qui câble les notes vocales. Le drop du
+06/10 (`tatami-ds` 2026-10-06.1) est importé et passe toutes les gates. Une seule demande : les états que le
+raccordement de Paramètres ne peut pas rendre honnêtement avec le contrat actuel. L'export reste cumulatif avec ce
+drop ; l'avis All-in (#615) n'a rien à corriger.
 
-## 1. `ui/screens/VoiceLevels.tsx` : un composant par fichier (#627, bloquant)
+## 1. Paramètres : états absents du contrat (#627)
 
-`react-doctor` 0.4.2, lancé comme la gate le lance (`react-doctor --no-telemetry --blocking warning --yes`, aucun
-diagnostic toléré, erreurs ET warnings), signale 6 warnings `no-multi-comp` (« Multiple components in one file —
-move secondary components into their own files ») :
+**Fichiers DS concernés** : `ui/screens/Settings.fixtures.ts` (types `GpuDetect`, `GpuSituation`, fixtures),
+`ui/screens/VoiceExec.tsx` (`CardPicker`), `ui/screens/VoiceGpuHelp.tsx`, `ui/screens/VoiceSetup.tsx` (étapes du
+parcours, étape micro), `ui/screens/settingsModel.ts`, `ui/screens/i18n.ts`.
 
-| Ligne | Composant |
-| --- | --- |
-| 49 | `LevelDetails` |
-| 70 | `LevelBadge` |
-| 80 | `LevelCard` |
-| 103 | `LevelChoice` (exporté) |
-| 119 | `DiskRow` |
-| 146 | `DiskResources` (exporté) |
+**En bref** :
 
-Le fichier porte aussi `ResourceState` (ligne 22), le premier composant, que la règle laisse en place.
+- `GpuDetect` : un état « non encore détecté » et un état « échec » avec motif, en plus de `running` et de `done`.
+- `GpuSituation` : une situation indisponible ou inconnue, sans verdict matériel.
+- Le choix de la carte est offert dès qu'il y a UNE carte utilisable, avec « Choisir une carte » tant que rien n'est
+  choisi.
+- Paramètres reste consultable pendant une dictée, sans lancer d'inventaire concurrent.
+- Un callback signale le changement d'étape du parcours (sortie de l'étape micro).
 
-**Demande** : un composant par fichier sous `ui/screens/`, par exemple `VoiceLevelChoice.tsx` (avec `LevelCard`,
-`LevelBadge` et `LevelDetails` dans leurs propres fichiers) et `VoiceDiskResources.tsx` (avec `DiskRow` dans le sien),
-ou tout autre découpage pour lequel `react-doctor` rend **0** diagnostic. Le markup, les classes et les fixtures restent
-les mêmes : c'est un déplacement, pas un changement de rendu. Merci de lancer `react-doctor --blocking warning` sur
-l'export avant de zipper : l'app ne retouche jamais un fichier DS et n'assouplit aucune règle.
+**Le détail, tel que l'a écrit l'agent qui câble l'écran :**
 
-## 2. Pour information : `onSetNote` sur une note inchangée (#627, aucune demande)
+Le ZIP du 6 octobre 2026 (`8759cb864c9c1d9d9f846b027fb0b3085715030bb2863da544d077d99eeb7ac9`) ne permet pas
+de rendre honnêtement un inventaire GPU qui échoue : `GpuDetect` impose `running` ou `done { at }`, et
+`GpuSituation` impose une conclusion matérielle. Une panne du processus ou un refus de Windows ne prouvent pas
+l’absence de carte. Il faut un état de détection échouée avec motif, et une situation indisponible/inconnue.
+Un état initial non encore détecté évite également une fausse date de détection après refus d’une opération occupée.
+Ouvrir Paramètres pendant une dictée doit garder les réglages consultables sans lancer un inventaire concurrent.
+Le snapshot n’autorise alors aucune conclusion sur une éventuelle détection antérieure.
+Le raccordement actuel isole les erreurs de détection dans la frontière d’erreur de cet écran ; ce repli ne
+constitue pas le parcours attendu. La recette d’ouverture pendant une dictée et la recette d’inventaire échoué
+restent non livrées jusqu’à adaptation du contrat, sans spinner permanent ni verdict matériel fictif.
 
-Le `SiqCluster` du drop appelle `onSetNote` à chaque validation, texte inchangé compris, pour qu'une dictée en attente
-parte avec l'écriture. C'est noté. Côté app, la règle reste « vide ou inchangé : rien n'est écrit » : le shell n'écrit
-rien quand le texte est celui de la note. La note garde sa date, et `onSetNote` se résout quand même à `true`. Aucun
-changement n'est attendu dans le DS.
+`VoiceExec.CardPicker` n’apparaît qu’avec deux cartes utilisables. Avec une carte utilisable et aucun choix
+enregistré (`gpuId: null`), le parcours nominal n’offre donc aucun choix explicite : il indique « Aucune carte
+détectée », puis oblige à ouvrir l’aide pour choisir celle qui est pourtant connue. Afficher le choix explicite
+dès qu’une carte utilisable existe, avec une entrée « Choisir une carte » tant que l’utilisateur n’a pas choisi.
+Aucune sélection ni bascule de mode automatique ne sera ajoutée dans l’app pour contourner ce cas.
 
-## Côté #615 (avis All-in refusé)
+La carte `backend_unavailable` peut se rendre avec `vulkan: false` : la formulation livrée « Accès Vulkan
+indisponible » décrit l’accès et ne diagnostique pas arbitrairement l’absence du chargeur.
 
-`AllInNotice` et `allInNoticeBox` sont conformes à la demande : aucune correction. L'app les câble sur ce drop corrigé.
+Le wizard ne fournit aucun callback de changement d’étape ni d’arrêt de l’essai : le backend limite donc
+l’essai à sa durée maximale et efface la calibration lors de la sortie de Paramètres ou de la fin du wizard.
+Pour effacer le tampon dès la sortie de l’étape micro, le contrat doit notifier ce changement d’étape.
