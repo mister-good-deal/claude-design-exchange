@@ -1,13 +1,14 @@
 # Demandes à Claude Design — vague 0.8.7
 
-Publiée par lt-bet le 07/10, sur l'accord de Romain. Trois demandes indépendantes l'une de l'autre ; l'export reste
-cumulatif avec le dernier drop (0.8.6, itération 3). Côté app, les données sont servies ou le seront au lot suivant
-(dit dans chaque section). En attendant le drop, aucune CSS app ne compense.
+Publiée par lt-bet le 07/10, sur l'accord de Romain. Complétée par lt-voix le 09/10 (§2.4, §4). Quatre demandes
+indépendantes l'une de l'autre ; l'export reste cumulatif avec le dernier drop (0.8.6, itération 3). Côté app, les
+données sont servies ou le seront au lot suivant (dit dans chaque section). En attendant le drop, aucune CSS app ne compense.
 
 - §1 — notices de table : un seul élément, centré en haut de la table (#637) ;
 - §2 — Paramètres vocaux : arrêter et transcrire l'essai (#634), une ressource partagée affichée une fois (#636),
-  raccourci « Arrêter et transcrire » de la dictée (#643) ;
-- §3 — atelier d'overlay : un geste de slider = une écriture (#639).
+  raccourci « Arrêter et transcrire » de la dictée et zone « Tester » (#643) ;
+- §3 — atelier d'overlay : un geste de slider = une écriture (#639) ;
+- §4 — panneau des notes du siège : ouverture pilotée par le survol servi, plus par `:hover` (#658).
 
 ## 1. Notices de table : un seul élément, centré en haut de la table (#637)
 
@@ -113,6 +114,27 @@ overlay est au premier plan ; ailleurs, la touche passe (règle déjà servie pa
 
 **Côté app.** Le réglage et son interception sont le lot suivant de lt-voix (#643).
 
+### 4. « Tester » dans les Paramètres vocaux (demande de Romain, 07/10)
+
+**Le cas.** Une fois la voix configurée et le niveau choisi, le joueur veut essayer librement : parler, lire ce qui est
+transcrit, juger si c'est juste, et voir combien de temps la transcription a pris. Aujourd'hui, l'essai n'existe que
+dans le parcours guidé.
+
+**Ce que l'app demande.**
+1. Dans la section des réglages vocaux (configuration terminée), une zone **« Tester »** qui reprend l'essai du
+   parcours : bouton « Parler » (état `idle`), puis pendant l'enregistrement le vu-mètre et **« Arrêter et
+   transcrire »** (même rappel `onStopTrial`), puis « Transcription… », puis le texte transcrit.
+2. Mêmes données que l'essai : `trial` (`VoiceTrial`), avec dans l'état `done` un champ servi **`took: string`**
+   (par exemple « 4,2 s ») affiché à la fin, sous le texte : « Transcrit en 4,2 s » (en : « Transcribed in 4.2 s »).
+   L'écran ne calcule aucune durée ; le texte n'apparaît qu'une fois transcrit (pas de transcription mot à mot).
+3. Échec : servi dans `trial.failed`, affiché une seule fois (même règle que l'étape 5). « Recommencer » relance.
+4. Mêmes rappels que l'essai (`onStartTrial`, `onStopTrial`), aucun nouveau. La zone ne change aucun réglage et ne
+   vaut pas activation.
+5. Fixtures : `idle`, `recording`, `transcribing`, `done` avec `took`, `failed`, fr et en.
+
+**Côté app.** Même opération que l'essai, même Stop, même délai ; la durée est servie par le parent (fin de
+transcription moins début). Lot du raccourci (#643) ; servi depuis `transcription_ms`.
+
 ## 3. Atelier d’overlay : un geste de slider = une écriture (#639)
 
 **Fichiers DS concernés** : `ui/Slider.tsx` (`onCommit`), `ui/screens/OverlayInspector.tsx` (`SizeAndOpacity`) et
@@ -141,3 +163,24 @@ Onglet Overlay, inspecteur, section « Size & opacity » (`OverlayInspector.tsx`
 
 Aucun nouveau callback : `onGeo` garde sa signature. Test e2e de l'atelier après import : glisser l'opacité de 10
 crans → un seul `updateOverlayElement`, et le rendu du canevas a suivi pendant le glisser.
+
+## 4. Panneau des notes du siège : ouverture pilotée par le survol servi, plus par `:hover` (#658)
+
+**Le cas.** Pré-test 0.8.7 (capture `note-reste-affichee-1912.png`) : après une dictée ajoutée, le panneau des notes
+reste ouvert sur la table, en-tête « NOTE », sans phase ni édition. Le hold (`data-hold`) est levé ; le panneau tient
+par `.noteWrap:hover` (ou `:focus-within`) dans `TableElements.module.css`. Sur Windows, la fenêtre d'overlay devient
+traversable dès que le curseur quitte les zones qu'elle capte : la page ne reçoit jamais la sortie de souris, et
+`:hover` reste figé jusqu'au prochain survol.
+
+**Ce que l'app sert déjà.** Le shell calcule l'élément sous la souris et le sert à la page (`Hover { element }`, lu
+par l'app comme l'élément survolé, `data-hover` sur l'instance). Cet état, lui, retombe à `None` quand le curseur sort.
+
+**Demande.**
+1. `NotePanel` s'ouvre sur une prop servie par l'app (par exemple `open` / `hovered: boolean` sur la cellule de note),
+   plus `data-hold` ; `.noteWrap:hover` et `.noteWrap:focus-within` ne pilotent plus sa visibilité.
+2. Le reste du contrat ne change pas : transition 180 ms, `onHidden` à la fin de la transition, hold pendant
+   édition ou phase de dictée.
+3. Fixtures : panneau fermé avec la souris absente (même après une phase `added`), ouvert sur `hovered`, ouvert en
+   hold sans survol ; fr et en.
+
+Côté app (après le drop) : passer l'élément survolé du shell à la cellule de note.
