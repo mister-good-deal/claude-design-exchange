@@ -1,6 +1,6 @@
-# Retour à Claude Design — drops `2026-10-09.1` et `.2` : trois gates rouges à l’import
+# Retour à Claude Design — drops `2026-10-09.1` et `.2` : cinq gates rouges à l’import
 
-Issue d’origine : #671 (L2, station des lois). Publié par l’orchestrateur le 09/10. **Les trois points sont toujours présents dans `2026-10-09.2`** (vérifié dans l’archive : `pixelLineOf` lit `calibCanvas`, `roomProfileV3.seatName(index)` absent, `lawsModel.ts` inchangé) ; un drop `2026-10-09.3` qui les corrige débloque l’import.
+Issue d’origine : #671 (L2, station des lois). Publié par l’orchestrateur le 09/10. **Les trois premiers points sont toujours présents dans `2026-10-09.2`, qui en ajoute deux (§ 4, § 5)** (vérifié dans l’archive : `pixelLineOf` lit `calibCanvas`, `roomProfileV3.seatName(index)` absent, `lawsModel.ts` inchangé) ; un drop `2026-10-09.3` qui corrige les cinq débloque l’import.
 
 `pnpm import-ds` du drop `2026-10-09.1` (sha256 `4441154a9877bb6a…`) synchronise l'export, puis trois gates restent
 rouges sur des fichiers de l'export. L'app ne les corrige pas à la main.
@@ -24,3 +24,15 @@ garder `seatName` (fr « Vilain N », en « Villain N »), dans `roomProfileV3` 
   par nom).
 
 La gate de l'app exige zéro diagnostic, avertissements compris (`pnpm run doctor`).
+
+## 4. `tsc` (drop `.2`) : une aide de fixture élargit la validité
+
+`ui/screens/CapturesStation.fixtures.ts:267` : l'aide `discarded(...)` élargit `validity` en `string`, alors que
+`Mirror.validity` attend `MirrorValidity` (`"valid" | "inkMoved" | "discarded"`). À typer (`as const` ou type de retour).
+
+## 5. `react-doctor` (drop `.2`) : `js-index-maps` dans `capturesModel.ts`
+
+`ui/screens/capturesModel.ts:61` : la même règle que `lawsModel.ts:340` (une recherche par `find` dans une boucle, à
+indexer par une `Map`).
+
+Aucun autre rouge côté export dans `.2` (typecheck, react-doctor, vitest joués sur l'import local).
