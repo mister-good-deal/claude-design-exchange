@@ -1,6 +1,6 @@
 # Demande à Claude Design — Room Profile V4 : les autres stations, dans la langue de la station des lois B
 
-Publiée par l'orchestrateur le 10/10 sur la demande de Romain. Décisions de conception : issue #624 (description =
+Publiée par l'orchestrateur le 09/10 sur la demande de Romain. Décisions de conception : issue #624 (description =
 état qui fait foi). Le vocabulaire des lois est celui de ta demande précédente (station des lois).
 
 ## Où on en est
