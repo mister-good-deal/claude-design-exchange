@@ -1,7 +1,8 @@
 # Demandes à Claude Design — vague V4 (Room Profile V4)
 
-- §1 — **À faire maintenant** : retirer les écrans V3 de l'export et porter la station des lois B dans `ui/` :
-  `roomprofile-v4-retrait-et-portage-B.md` (contrat de la station = ton § Station 5, aligné avec l'app : ROI choisie et
-  axe de l'épure passés à `onRequestSize`, refus `sections_unordered`, `rejection.id = "__root"` pour la loi par défaut).
+- Drop `2026-10-09.1` (retrait V3 + station des lois B) reçu le 09/10 au soir : merci, il part au câblage (lot L2, #671).
+- §1 — **À faire maintenant** : porter la station 3 (captures) dans `ui/`, avec l'unité d'affichage et le délai de
+  capture que `TourStation` emportait : `roomprofile-v4-portage-station-3.md`. La 0.8.8 attend ce drop (Romain, 09/10).
+- §2 — **Même drop** : le bandeau « profil mis à jour » dans `AppShell` : `roomprofile-v4-bandeau-mise-a-jour.md`.
 - Rappel : décisions de Romain sur tes contrats et tes 8 questions : `roomprofile-v4-decisions-contrats.md`.
-- Les stations 2, 3, 4, 6 et 7 se porteront dans une vague suivante, quand leurs commandes seront prêtes côté app.
+- Les stations 2, 4, 6 et 7 se porteront dans une vague suivante, quand leurs commandes seront prêtes côté app.
