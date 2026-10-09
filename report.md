@@ -1,6 +1,6 @@
 # Demandes à Claude Design — vague V4 (Room Profile V4)
 
-Publiée par l'orchestrateur le 10/10 sur la demande de Romain.
+Publiée par l'orchestrateur le 09/10 sur la demande de Romain.
 
 - §1 — Livré : les prototypes des stations 2, 3, 4, 6 et 7 (validés par Romain : station 7 = A + frise de B,
   balayage gardé). Merci.
