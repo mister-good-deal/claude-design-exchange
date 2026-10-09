@@ -1,6 +1,6 @@
 # Demande à Claude Design — Room Profile V4 : composants, contrats et questions en clair
 
-Publiée par l'orchestrateur le 10/10. Romain a validé tes prototypes des stations 2, 3, 4, 6 et 7 (station 7 :
+Publiée par l'orchestrateur le 09/10. Romain a validé tes prototypes des stations 2, 3, 4, 6 et 7 (station 7 :
 variante A avec la frise par zone de B dans la ligne dépliée ; balayage de la station 3 gardé). L'app fixe maintenant
 ses contrats de données (spec `026-room-profile-v4`), mais elle ne peut pas ouvrir ta page « Composants et
 contrats.html » : seul le fichier standalone lui parvient.
