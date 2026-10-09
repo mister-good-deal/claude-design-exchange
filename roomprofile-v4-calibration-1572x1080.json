@@ -1,0 +1,504 @@
+{
+ "source": "reference/Unibet.fr.json5 (release/0.8.7 @ 75fe2d80), bucket 1572x1080",
+ "note": "Fractions de la capture de la taille 1572x1080, telles que le profil livre les ecrit. rect = [x0, y0, x1, y1]. point = [x, y]. Cartes (board_*, hero_*) : le profil ecrit le coin haut-gauche (point) et le gabarit de la famille (card_templates, [w, h]) ; rect en est deduit. Sondes et bet_blur : un point, sans rectangle.",
+ "card_templates": {
+  "board": [
+   0.051391,
+   0.102961
+  ],
+  "hero": [
+   0.046821,
+   0.102302
+  ]
+ },
+ "zones": {
+  "actions": {
+   "state": "adjusted",
+   "rect": [
+    0.328934,
+    0.906488,
+    0.67076,
+    0.987961
+   ]
+  },
+  "actions.three_buttons.call": {
+   "state": "adjusted",
+   "rect": [
+    0.443102,
+    0.907367,
+    0.553284,
+    0.98724
+   ]
+  },
+  "actions.three_buttons.fold": {
+   "state": "adjusted",
+   "rect": [
+    0.329209,
+    0.907063,
+    0.439622,
+    0.987946
+   ]
+  },
+  "actions.three_buttons.raise": {
+   "state": "adjusted",
+   "rect": [
+    0.559586,
+    0.907334,
+    0.669999,
+    0.987544
+   ]
+  },
+  "actions.two_buttons.call": {
+   "state": "adjusted",
+   "rect": [
+    0.442878,
+    0.907345,
+    0.553523,
+    0.987218
+   ]
+  },
+  "actions.two_buttons.fold": {
+   "state": "adjusted",
+   "rect": [
+    0.329425,
+    0.907367,
+    0.439839,
+    0.98724
+   ]
+  },
+  "actions.two_buttons_check_bet.bet": {
+   "state": "adjusted",
+   "rect": [
+    0.557489,
+    0.905641,
+    0.668698,
+    0.986166
+   ]
+  },
+  "actions.two_buttons_check_bet.check": {
+   "state": "adjusted",
+   "rect": [
+    0.329411,
+    0.907895,
+    0.55365,
+    0.987263
+   ]
+  },
+  "bet_blur": {
+   "state": "adjusted",
+   "point": [
+    0.737277,
+    0.939815
+   ]
+  },
+  "bet_input": {
+   "state": "adjusted",
+   "rect": [
+    0.561321,
+    0.871434,
+    0.668457,
+    0.904067
+   ]
+  },
+  "blind_big": {
+   "state": "adjusted",
+   "rect": [
+    0.52924,
+    0.062732,
+    0.598622,
+    0.114923
+   ]
+  },
+  "blind_small": {
+   "state": "adjusted",
+   "rect": [
+    0.399655,
+    0.063157,
+    0.467393,
+    0.113201
+   ]
+  },
+  "board_1": {
+   "state": "adjusted",
+   "point": [
+    0.360566,
+    0.375314
+   ],
+   "rect": [
+    0.360566,
+    0.375314,
+    0.411957,
+    0.478275
+   ]
+  },
+  "board_2": {
+   "state": "adjusted",
+   "point": [
+    0.417492,
+    0.375072
+   ],
+   "rect": [
+    0.417492,
+    0.375072,
+    0.468883,
+    0.478033
+   ]
+  },
+  "board_3": {
+   "state": "adjusted",
+   "point": [
+    0.474044,
+    0.374472
+   ],
+   "rect": [
+    0.474044,
+    0.374472,
+    0.525435,
+    0.477433
+   ]
+  },
+  "board_4": {
+   "state": "adjusted",
+   "point": [
+    0.531053,
+    0.37483
+   ],
+   "rect": [
+    0.531053,
+    0.37483,
+    0.582444,
+    0.477791
+   ]
+  },
+  "board_5": {
+   "state": "adjusted",
+   "point": [
+    0.587563,
+    0.37483
+   ],
+   "rect": [
+    0.587563,
+    0.37483,
+    0.638954,
+    0.477791
+   ]
+  },
+  "hero_1": {
+   "state": "adjusted",
+   "point": [
+    0.599203,
+    0.605678
+   ],
+   "rect": [
+    0.599203,
+    0.605678,
+    0.646024,
+    0.70798
+   ]
+  },
+  "hero_2": {
+   "state": "adjusted",
+   "point": [
+    0.629126,
+    0.605596
+   ],
+   "rect": [
+    0.629126,
+    0.605596,
+    0.675947,
+    0.707898
+   ]
+  },
+  "hero_bet": {
+   "state": "adjusted",
+   "rect": [
+    0.48154,
+    0.55526,
+    0.579911,
+    0.590267
+   ]
+  },
+  "hero_dealer": {
+   "state": "adjusted",
+   "rect": [
+    0.418169,
+    0.56277,
+    0.439105,
+    0.584855
+   ]
+  },
+  "hero_stack": {
+   "state": "adjusted",
+   "rect": [
+    0.487398,
+    0.660931,
+    0.576821,
+    0.690013
+   ]
+  },
+  "pot": {
+   "state": "adjusted",
+   "rect": [
+    0.525794,
+    0.32862,
+    0.606871,
+    0.364179
+   ]
+  },
+  "pot_collected": {
+   "state": "adjusted",
+   "rect": [
+    0.529295,
+    0.471049,
+    0.627365,
+    0.503724
+   ]
+  },
+  "probe.three_buttons.call": {
+   "state": "adjusted",
+   "point": [
+    0.537085,
+    0.942595
+   ]
+  },
+  "probe.three_buttons.call#2": {
+   "state": "adjusted",
+   "point": [
+    0.464519,
+    0.91945
+   ]
+  },
+  "probe.three_buttons.call#3": {
+   "state": "adjusted",
+   "point": [
+    0.536448,
+    0.961112
+   ]
+  },
+  "probe.three_buttons.fold": {
+   "state": "adjusted",
+   "point": [
+    0.353123,
+    0.929634
+   ]
+  },
+  "probe.three_buttons.fold#2": {
+   "state": "adjusted",
+   "point": [
+    0.353123,
+    0.94167
+   ]
+  },
+  "probe.three_buttons.fold#3": {
+   "state": "adjusted",
+   "point": [
+    0.428235,
+    0.934263
+   ]
+  },
+  "probe.three_buttons.raise": {
+   "state": "adjusted",
+   "point": [
+    0.654846,
+    0.926856
+   ]
+  },
+  "probe.three_buttons.raise#2": {
+   "state": "adjusted",
+   "point": [
+    0.604559,
+    0.973148
+   ]
+  },
+  "probe.three_buttons.raise#3": {
+   "state": "adjusted",
+   "point": [
+    0.577188,
+    0.924079
+   ]
+  },
+  "probe.two_buttons.call": {
+   "state": "adjusted",
+   "point": [
+    0.532629,
+    0.933337
+   ]
+  },
+  "probe.two_buttons.call#2": {
+   "state": "adjusted",
+   "point": [
+    0.535175,
+    0.934263
+   ]
+  },
+  "probe.two_buttons.call#3": {
+   "state": "adjusted",
+   "point": [
+    0.453061,
+    0.950928
+   ]
+  },
+  "probe.two_buttons.fold": {
+   "state": "adjusted",
+   "point": [
+    0.350577,
+    0.925005
+   ]
+  },
+  "probe.two_buttons.fold#2": {
+   "state": "adjusted",
+   "point": [
+    0.414231,
+    0.934263
+   ]
+  },
+  "probe.two_buttons.fold#3": {
+   "state": "adjusted",
+   "point": [
+    0.349304,
+    0.939818
+   ]
+  },
+  "probe.two_buttons_check_bet.bet": {
+   "state": "adjusted",
+   "point": [
+    0.571459,
+    0.922227
+   ]
+  },
+  "probe.two_buttons_check_bet.bet#2": {
+   "state": "adjusted",
+   "point": [
+    0.646571,
+    0.923153
+   ]
+  },
+  "probe.two_buttons_check_bet.bet#3": {
+   "state": "adjusted",
+   "point": [
+    0.574005,
+    0.971296
+   ]
+  },
+  "probe.two_buttons_check_bet.check": {
+   "state": "adjusted",
+   "point": [
+    0.519262,
+    0.934263
+   ]
+  },
+  "probe.two_buttons_check_bet.check#2": {
+   "state": "adjusted",
+   "point": [
+    0.509077,
+    0.937966
+   ]
+  },
+  "probe.two_buttons_check_bet.check#3": {
+   "state": "adjusted",
+   "point": [
+    0.356942,
+    0.962964
+   ]
+  },
+  "requeue": {
+   "state": "adjusted",
+   "rect": [
+    0.483543,
+    0.559054,
+    0.742459,
+    0.626414
+   ]
+  },
+  "villain_1": {
+   "state": "adjusted",
+   "rect": [
+    0.119338,
+    0.284489,
+    0.25381,
+    0.318364
+   ]
+  },
+  "villain_1_bet": {
+   "state": "adjusted",
+   "rect": [
+    0.287617,
+    0.322426,
+    0.385891,
+    0.357287
+   ]
+  },
+  "villain_1_cards": {
+   "state": "adjusted",
+   "rect": [
+    0.205305,
+    0.226568,
+    0.249494,
+    0.26938
+   ]
+  },
+  "villain_1_dealer": {
+   "state": "adjusted",
+   "rect": [
+    0.291912,
+    0.297657,
+    0.311912,
+    0.319671
+   ]
+  },
+  "villain_1_stack": {
+   "state": "adjusted",
+   "rect": [
+    0.119674,
+    0.312475,
+    0.209371,
+    0.347184
+   ]
+  },
+  "villain_2": {
+   "state": "adjusted",
+   "rect": [
+    0.739812,
+    0.286849,
+    0.874873,
+    0.319149
+   ]
+  },
+  "villain_2_bet": {
+   "state": "adjusted",
+   "rect": [
+    0.605203,
+    0.32113,
+    0.706146,
+    0.357162
+   ]
+  },
+  "villain_2_cards": {
+   "state": "adjusted",
+   "rect": [
+    0.750801,
+    0.226089,
+    0.794419,
+    0.263299
+   ]
+  },
+  "villain_2_dealer": {
+   "state": "adjusted",
+   "rect": [
+    0.681092,
+    0.297071,
+    0.701294,
+    0.320802
+   ]
+  },
+  "villain_2_stack": {
+   "state": "adjusted",
+   "rect": [
+    0.782778,
+    0.315788,
+    0.874122,
+    0.348261
+   ]
+  }
+ }
+}
