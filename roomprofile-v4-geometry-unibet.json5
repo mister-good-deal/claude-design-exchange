@@ -1,0 +1,152 @@
+// geometry V4 d'Unibet, VERSION 2 (lt-loi, 08/10) — plages en ratio d'AIRE CLIENTE ; slideWithRatio = centre de la ROI en
+// fraction de la hauteur de table ; ROI de référence = 1572×1080 (release/0.8.7 ; montants : fichier ajusté) ; généré par
+// geometry-v4-v2.cjs. v2 : sièges retirés (#649), villain_N → villain_N_pseudo, hero_N → hero_card_N, barre d'action et
+// requeue explicites. « follows: actions » = même loi que le conteneur, le rect de 1572 gardé en proportion de actions.
+// Sonde : marge = distance minimale du point au bord de l'aplat de son bouton, sur toutes les tailles mesurées.
+geometry: {
+  reference: [1572, 1080],
+  chrome: { title_bar: 31, border: 1 },
+  table: { ratio: [1.30, 1.78], align: "center" },
+},
+regions: [
+  { name: "hero_stack", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [ { position: { x: "proportional", y: { slideWithRatio: { "1.32": 0.6168, "1.78": 0.7433 } } } } ] } },
+  { name: "villain_1_stack", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.3] }, position: { x: "proportional", y: { slideWithRatio: { "1.3": 0.3084 } } } },
+      { range: { ratio: [1.3, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.3": 0.3021, "1.78": 0.3213 } } } },
+    ] } },
+  { name: "villain_2_stack", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.28] }, position: { x: "proportional", y: { slideWithRatio: { "1.28": 0.3105 } } } },
+      { range: { ratio: [1.28, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.28": 0.3033, "1.78": 0.3239 } } } },
+    ] } },
+  { name: "pot", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.39] }, position: { x: "proportional", y: { slideWithRatio: { "1.39": 0.3231 } } } },
+      { range: { ratio: [1.39, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.39": 0.3198, "1.73": 0.3426 } } } },
+    ] } },
+  { name: "blind_small", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.29] }, position: { x: "proportional", y: { slideWithRatio: { "1.29": 0.0659 } } } },
+      { range: { ratio: [1.29, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.29": 0.053, "1.78": 0.0723 } } } },
+    ] } },
+  { name: "blind_big", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.32] }, position: { x: "proportional", y: { slideWithRatio: { "1.32": 0.0665 } } } },
+      { range: { ratio: [1.32, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.32": 0.0548, "1.78": 0.0731 } } } },
+    ] } },
+  { name: "hero_bet", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.27] }, position: { x: "proportional", y: { slideWithRatio: { "1.27": 0.5248 } } } },
+      { range: { ratio: [1.27, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.27": 0.5129, "1.78": 0.6183 } } } },
+    ] } },
+  { name: "pot_collected", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.28] }, position: { x: "proportional", y: { slideWithRatio: { "1.28": 0.4489 } } } },
+      { range: { ratio: [1.28, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.28": 0.44, "1.78": 0.5137 } } } },
+    ] } },
+  { name: "villain_1_bet", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.34] }, position: { x: "proportional", y: { slideWithRatio: { "1.34": 0.317 } } } },
+      { range: { ratio: [1.34, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.34": 0.3129, "1.78": 0.3336 } } } },
+    ] } },
+  { name: "villain_2_bet", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.26] }, position: { x: "proportional", y: { slideWithRatio: { "1.26": 0.3166 } } } },
+      { range: { ratio: [1.26, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.26": 0.3087, "1.79": 0.333 } } } },
+    ] } },
+  { name: "hero_dealer", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.25] }, position: { x: "proportional", y: { slideWithRatio: { "1.25": 0.5254 } } } },
+      { range: { ratio: [1.25, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.25": 0.5086, "1.78": 0.6208 } } } },
+    ] } },
+  { name: "villain_1_dealer", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.31] }, position: { x: "proportional", y: { slideWithRatio: { "1.31": 0.289 } } } },
+      { range: { ratio: [1.31, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.31": 0.2827, "1.77": 0.2961 } } } },
+    ] } },
+  { name: "villain_2_dealer", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.27] }, position: { x: "proportional", y: { slideWithRatio: { "1.27": 0.2896 } } } },
+      { range: { ratio: [1.27, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.27": 0.2807, "1.77": 0.2978 } } } },
+    ] } },
+  { name: "villain_1_cards", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.3] }, position: { x: "proportional", y: { slideWithRatio: { "1.3": 0.2352 } } } },
+      { range: { ratio: [1.3, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.3": 0.2294, "1.75": 0.2211 } } } },
+    ] } },
+  { name: "villain_2_cards", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.33] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.2318 } } } },
+      { range: { ratio: [1.33, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.2259, "1.72": 0.2177 } } } },
+    ] } },
+  { name: "villain_1_pseudo", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.32] }, position: { x: "proportional", y: { slideWithRatio: { "1.32": 0.2808 } } } },
+      { range: { ratio: [1.32, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.32": 0.2753, "1.68": 0.2863 } } } },
+    ] } },
+  { name: "villain_2_pseudo", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.31] }, position: { x: "proportional", y: { slideWithRatio: { "1.31": 0.2836 } } } },
+      { range: { ratio: [1.31, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.31": 0.2782, "1.77": 0.2884 } } } },
+    ] } },
+  { name: "hero_card_1", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.33] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.5996 } } } },
+      { range: { ratio: [1.33, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.6019, "1.78": 0.7214 } } } },
+    ] } },
+  { name: "hero_card_2", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.33] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.5995 } } } },
+      { range: { ratio: [1.33, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.6018, "1.78": 0.7213 } } } },
+    ] } },
+  { name: "board_1", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.33] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3953 } } } },
+      { range: { ratio: [1.33, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3919, "1.78": 0.4397 } } } },
+    ] } },
+  { name: "board_2", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.33] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3951 } } } },
+      { range: { ratio: [1.33, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3917, "1.78": 0.4395 } } } },
+    ] } },
+  { name: "board_3", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.33] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3945 } } } },
+      { range: { ratio: [1.33, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3911, "1.78": 0.4389 } } } },
+    ] } },
+  { name: "board_4", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.33] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3949 } } } },
+      { range: { ratio: [1.33, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3915, "1.78": 0.4393 } } } },
+    ] } },
+  { name: "board_5", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.33] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3949 } } } },
+      { range: { ratio: [1.33, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.3915, "1.78": 0.4393 } } } },
+    ] } },
+  { name: "actions", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.27] }, position: { x: "proportional", y: { slideWithRatio: { "1.27": 0.939 } } } },
+      { range: { ratio: [1.27, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.27": 0.9536, "1.78": 0.9359 } } } },
+    ] } },   // LOI DE LA BARRE ; union des 3 boutons : redim p90 1.8, calibrées max 1.9
+  // three_buttons (fold, call, raise) : suit la loi de la barre, proportionnellement (rect de 1572 en fraction de actions)
+  { layout: "three_buttons", zones: [
+    { name: "actions.three_buttons.fold", follows: "actions" },   // bords redim p90 2.4 max 3.5 (n 95), calibrées max 2.0 (n 8)
+    { name: "probe.three_buttons.fold", follows: "actions" },   // marge min au bord de fold : 8.1 px
+    { name: "probe.three_buttons.fold#2", follows: "actions" },   // marge min au bord de fold : 13.1 px
+    { name: "probe.three_buttons.fold#3", follows: "actions" },   // marge min au bord de fold : 7.2 px
+    { name: "actions.three_buttons.call", follows: "actions" },   // bords redim p90 2.0 max 3.2 (n 95), calibrées max 1.9 (n 10)
+    { name: "probe.three_buttons.call", follows: "actions" },   // marge min au bord de call : 9.7 px
+    { name: "probe.three_buttons.call#2", follows: "actions" },   // marge min au bord de call : 3.7 px
+    { name: "probe.three_buttons.call#3", follows: "actions" },   // marge min au bord de call : 9.8 px
+    { name: "actions.three_buttons.raise", follows: "actions" },   // bords redim p90 1.3 max 2.4 (n 95), calibrées max 1.7 (n 10)
+    { name: "probe.three_buttons.raise", follows: "actions" },   // marge min au bord de raise : 7.5 px
+    { name: "probe.three_buttons.raise#2", follows: "actions" },   // marge min au bord de raise : 4.9 px
+    { name: "probe.three_buttons.raise#3", follows: "actions" },   // marge min au bord de raise : 6.3 px
+    { name: "bet_input", follows: "actions" },   // aussi en two_buttons_check_bet, même place ; bords max 4.4 (1386×1058), ≤ 2.1 ailleurs (loi racine seule : 12.5)
+    { name: "bet_blur", follows: "actions" },   // point : feutre nu (rgb ≤ 21) aux 10 tailles, ≥ 42.9 px à droite du vert (640×440)
+  ] },
+  // two_buttons (fold, call) : suit la loi de la barre, proportionnellement (rect de 1572 en fraction de actions)
+  { layout: "two_buttons", zones: [
+    { name: "actions.two_buttons.fold", follows: "actions" },   // bords redim p90 2.3 max 2.3 (n 2), calibrées max 1.9 (n 9)
+    { name: "probe.two_buttons.fold", follows: "actions" },   // marge min au bord de fold : 6.1 px
+    { name: "probe.two_buttons.fold#2", follows: "actions" },   // marge min au bord de fold : 9.9 px
+    { name: "probe.two_buttons.fold#3", follows: "actions" },   // marge min au bord de fold : 11.3 px
+    { name: "actions.two_buttons.call", follows: "actions" },   // bords redim p90 2.3 max 2.3 (n 2), calibrées max 1.9 (n 10)
+    { name: "probe.two_buttons.call", follows: "actions" },   // marge min au bord de call : 9.5 px
+    { name: "probe.two_buttons.call#2", follows: "actions" },   // marge min au bord de call : 9.9 px
+    { name: "probe.two_buttons.call#3", follows: "actions" },   // marge min au bord de call : 5.5 px
+  ] },
+  // two_buttons_check_bet (check, bet) : suit la loi de la barre, proportionnellement (rect de 1572 en fraction de actions)
+  { layout: "two_buttons_check_bet", zones: [
+    { name: "actions.two_buttons_check_bet.check", follows: "actions" },   // bords redim p90 1.7 max 2.3 (n 31), calibrées max 3.2 (n 10)
+    { name: "probe.two_buttons_check_bet.check", follows: "actions" },   // marge min au bord de check : 10.4 px
+    { name: "probe.two_buttons_check_bet.check#2", follows: "actions" },   // marge min au bord de check : 12.0 px
+    { name: "probe.two_buttons_check_bet.check#3", follows: "actions" },   // marge min au bord de check : 10.4 px
+    { name: "actions.two_buttons_check_bet.bet", follows: "actions" },   // bords redim p90 1.8 max 2.0 (n 38), calibrées max 2.5 (n 10)
+    { name: "probe.two_buttons_check_bet.bet", follows: "actions" },   // marge min au bord de bet : 6.4 px
+    { name: "probe.two_buttons_check_bet.bet#2", follows: "actions" },   // marge min au bord de bet : 6.8 px
+    { name: "probe.two_buttons_check_bet.bet#3", follows: "actions" },   // marge min au bord de bet : 5.1 px
+  ] },
+  { name: "requeue", geometry: { anchor: "table.topLeft", size: "scaleByWidth", sections: [
+      { range: { ratio: [null, 1.33] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.5717 } } } },
+      { range: { ratio: [1.33, null] }, position: { x: "proportional", y: { slideWithRatio: { "1.33": 0.5726, "1.78": 0.5942 } } } },
+    ] } },   // popup de fin de partie, bouton « 1€ | INSCRIPTION » : bords max 4.1 (1386×1058), 214 captures / 10 tailles ; loi racine seule : 15.0
+],
